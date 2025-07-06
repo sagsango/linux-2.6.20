@@ -1348,6 +1348,7 @@ void save_msrs(struct vmx_msr_entry *e, int n)
 }
 EXPORT_SYMBOL_GPL(save_msrs);
 
+/*  XXX: Start running the vcpu  */
 static int kvm_dev_ioctl_run(struct kvm *kvm, struct kvm_run *kvm_run)
 {
 	struct kvm_vcpu *vcpu;
@@ -1372,6 +1373,10 @@ static int kvm_dev_ioctl_run(struct kvm *kvm, struct kvm_run *kvm_run)
 
 	vcpu->mmio_needed = 0;
 
+    /*
+     * XXX:
+     *  calls arch spesific run (see x86 or vtx) 
+     */
 	r = kvm_arch_ops->run(vcpu, kvm_run);
 
 	vcpu_put(vcpu);
@@ -1712,6 +1717,9 @@ out:
 }
 
 /*
+ * XXX: see cmnt
+ */
+/*
  * Translate a guest virtual address to a guest physical address.
  */
 static int kvm_dev_ioctl_translate(struct kvm *kvm, struct kvm_translation *tr)
@@ -1774,6 +1782,14 @@ static int kvm_dev_ioctl_debug_guest(struct kvm *kvm,
 	return r;
 }
 
+/*
+ * XXX:
+ *  These are all the ioctl supported!
+ *
+ *  See the use in v6.8; and order of ioctl
+ *  https://github.com/sagsango/cs561-examples/blob/main/w08l2-kvm/kvm_example.c
+ *  https://docs.kernel.org/6.9/virt/kvm/api.html
+ */
 static long kvm_dev_ioctl(struct file *filp,
 			  unsigned int ioctl, unsigned long arg)
 {
@@ -1781,15 +1797,18 @@ static long kvm_dev_ioctl(struct file *filp,
 	int r = -EINVAL;
 
 	switch (ioctl) {
+    /*XXX: get kvm api version */
 	case KVM_GET_API_VERSION:
 		r = KVM_API_VERSION;
 		break;
+    /*XXX: create vcpu */
 	case KVM_CREATE_VCPU: {
 		r = kvm_dev_ioctl_create_vcpu(kvm, arg);
 		if (r)
 			goto out;
 		break;
 	}
+    /*XXX: run the vcpu */
 	case KVM_RUN: {
 		struct kvm_run kvm_run;
 
@@ -1805,6 +1824,7 @@ static long kvm_dev_ioctl(struct file *filp,
 		}
 		break;
 	}
+    /*XXX: get the general registers */
 	case KVM_GET_REGS: {
 		struct kvm_regs kvm_regs;
 
@@ -1820,6 +1840,7 @@ static long kvm_dev_ioctl(struct file *filp,
 		r = 0;
 		break;
 	}
+    /*XXX: set the general registers */
 	case KVM_SET_REGS: {
 		struct kvm_regs kvm_regs;
 
@@ -1832,6 +1853,7 @@ static long kvm_dev_ioctl(struct file *filp,
 		r = 0;
 		break;
 	}
+    /*XXX: get the segment registers */
 	case KVM_GET_SREGS: {
 		struct kvm_sregs kvm_sregs;
 
@@ -1847,6 +1869,7 @@ static long kvm_dev_ioctl(struct file *filp,
 		r = 0;
 		break;
 	}
+    /*XXX: set the segment registers */
 	case KVM_SET_SREGS: {
 		struct kvm_sregs kvm_sregs;
 
@@ -1859,6 +1882,7 @@ static long kvm_dev_ioctl(struct file *filp,
 		r = 0;
 		break;
 	}
+    /*XXX: translate the va to pa */
 	case KVM_TRANSLATE: {
 		struct kvm_translation tr;
 
@@ -1874,6 +1898,7 @@ static long kvm_dev_ioctl(struct file *filp,
 		r = 0;
 		break;
 	}
+    /*XXX: queue an interrupt to cpu */
 	case KVM_INTERRUPT: {
 		struct kvm_interrupt irq;
 

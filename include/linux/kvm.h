@@ -1,3 +1,11 @@
+/*
+ * XXX:
+ *  ioctl realted structs better to search in :-
+ *  https://docs.kernel.org/6.9/virt/kvm/api.html
+ *
+ *  Its interesting that the core functionalities/
+ *  ioctl remains same even in the kernel 6.8
+ */
 #ifndef __LINUX_KVM_H
 #define __LINUX_KVM_H
 
@@ -37,6 +45,10 @@ struct kvm_memory_region {
 #define KVM_EXIT_TYPE_FAIL_ENTRY 1
 #define KVM_EXIT_TYPE_VM_EXIT    2
 
+/*
+ * XXX:
+ *  Why cpu exit from guest mode
+ */
 enum kvm_exit_reason {
 	KVM_EXIT_UNKNOWN          = 0,
 	KVM_EXIT_EXCEPTION        = 1,
@@ -49,6 +61,11 @@ enum kvm_exit_reason {
 	KVM_EXIT_SHUTDOWN         = 8,
 };
 
+/*
+ * XXX:
+ *  This struct will contain the details of the exit regions
+ *  and user has to take care of that
+ */
 /* for KVM_RUN */
 struct kvm_run {
 	/* in */
@@ -107,6 +124,10 @@ struct kvm_run {
 	};
 };
 
+/*
+ * XXX:
+ *  ioctl support
+ */
 /* for KVM_GET_REGS and KVM_SET_REGS */
 struct kvm_regs {
 	/* in */
@@ -121,6 +142,11 @@ struct kvm_regs {
 	__u64 rip, rflags;
 };
 
+/*
+ * XXX:
+ *  We had segmnets during that time;
+ *  no page table
+ */
 struct kvm_segment {
 	__u64 base;
 	__u32 limit;
@@ -153,6 +179,10 @@ struct kvm_sregs {
 	__u64 interrupt_bitmap[KVM_IRQ_BITMAP_SIZE(__u64)];
 };
 
+/*
+ * XXX:
+ *  msr = modle spesific register
+ */
 struct kvm_msr_entry {
 	__u32 index;
 	__u32 reserved;
@@ -173,6 +203,9 @@ struct kvm_msr_list {
 	__u32 indices[0];
 };
 
+/*
+ * XXX: Guest VA -> Guest PA
+ */
 /* for KVM_TRANSLATE */
 struct kvm_translation {
 	/* in */
@@ -187,6 +220,9 @@ struct kvm_translation {
 	__u8  usermode;
 };
 
+/*XXX:
+ * Queues a hardware interrupt vector to be injected
+ */
 /* for KVM_INTERRUPT */
 struct kvm_interrupt {
 	/* in */
@@ -209,6 +245,11 @@ struct kvm_debug_guest {
 	__u32 singlestep;
 };
 
+/*
+ * XXX:
+ *  Given a memory slot, return a bitmap containing
+ *  any pages dirtied since the last call to this ioctl
+ */
 /* for KVM_GET_DIRTY_LOG */
 struct kvm_dirty_log {
 	__u32 slot;

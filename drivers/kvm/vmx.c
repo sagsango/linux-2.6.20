@@ -1,4 +1,10 @@
 /*
+ * XXX:
+ *  Intel support
+ */
+
+
+/*
  * Kernel-based Virtual Machine driver for Linux
  *
  * This module enables machines with Intel VT-x extensions to run virtual
@@ -191,6 +197,9 @@ static void vmcs_write64(unsigned long field, u64 value)
 #endif
 }
 
+/*
+ * XXX: see cmnts
+ */
 /*
  * Switches to specified vcpu, until a matching vcpu_put(), but assumes
  * vcpu mutex is already taken.
@@ -1290,6 +1299,14 @@ static int handle_rmode_exception(struct kvm_vcpu *vcpu,
 	return 0;
 }
 
+/*
+ * XXX:
+ *  vcpu got exception; kvm is going to
+ *  first check if it can handle if not
+ *  it will set the exit reason and
+ *  ask userland deamon (qemu) to handle
+ *  it.
+ */
 static int handle_exception(struct kvm_vcpu *vcpu, struct kvm_run *kvm_run)
 {
 	u32 intr_info, error_code;
@@ -1343,6 +1360,10 @@ static int handle_exception(struct kvm_vcpu *vcpu, struct kvm_run *kvm_run)
 			return 1;
 		case EMULATE_DO_MMIO:
 			++kvm_stat.mmio_exits;
+            /*XXX:
+             * Set exit reason if kvm cant handloe it
+             * and return to the userland (qemu)
+             */
 			kvm_run->exit_reason = KVM_EXIT_MMIO;
 			return 0;
 		 case EMULATE_FAIL:
@@ -1627,6 +1648,11 @@ static int handle_halt(struct kvm_vcpu *vcpu, struct kvm_run *kvm_run)
 }
 
 /*
+ * XXX:
+ *  these are the primary handler of guest
+ *  exception by the kvm
+ */
+/*
  * The exit handlers return 1 if the exit was handled fully and guest execution
  * may resume.  Otherwise they set the kvm_run parameter to indicate what needs
  * to be done to userspace and return 0.
@@ -1687,6 +1713,11 @@ static int dm_request_for_irq_injection(struct kvm_vcpu *vcpu,
 		(vmcs_readl(GUEST_RFLAGS) & X86_EFLAGS_IF));
 }
 
+/*
+ * XXX:
+ *  called by kvm run;
+ *  this is x86 vcpu run
+ */
 static int vmx_vcpu_run(struct kvm_vcpu *vcpu, struct kvm_run *kvm_run)
 {
 	u8 fail;
@@ -1922,6 +1953,10 @@ static void vmx_flush_tlb(struct kvm_vcpu *vcpu)
 	vmcs_writel(GUEST_CR3, vmcs_readl(GUEST_CR3));
 }
 
+/*
+ * XXX:
+ *  Arch spesific page_fault injection to vcpu
+ */
 static void vmx_inject_page_fault(struct kvm_vcpu *vcpu,
 				  unsigned long addr,
 				  u32 err_code)
@@ -1966,6 +2001,10 @@ static void vmx_free_vcpu(struct kvm_vcpu *vcpu)
 	vmx_free_vmcs(vcpu);
 }
 
+/*
+ * XXX:
+ *  Arch spesific vcpu create
+ */
 static int vmx_create_vcpu(struct kvm_vcpu *vcpu)
 {
 	struct vmcs *vmcs;
@@ -1999,6 +2038,11 @@ out_free_guest_msrs:
 	return -ENOMEM;
 }
 
+/*
+ * XXX:
+ *  These ops are used by the kvm;
+ *  these are arch spesific & for x86 intel
+ */
 static struct kvm_arch_ops vmx_arch_ops = {
 	.cpu_has_kvm_support = cpu_has_kvm_support,
 	.disabled_by_bios = vmx_disabled_by_bios,

@@ -117,6 +117,10 @@ union kvm_mmu_page_role {
 	};
 };
 
+/*
+ * XXX:
+ *  kvm page!
+ */
 struct kvm_mmu_page {
 	struct list_head link;
 	struct hlist_node hash_link;
@@ -151,6 +155,10 @@ struct vmcs {
 
 struct kvm_vcpu;
 
+/*
+ * XXX:
+ *  kvm mmu
+ */
 /*
  * x86 supports 3 paging modes (4-level 64-bit, 3-level 64-bit, and 2-level
  * 32-bit).  The kvm_mmu structure abstracts the details of the current mmu
@@ -218,6 +226,10 @@ enum {
 	VCPU_SREG_LDTR,
 };
 
+/*
+ * XXX:
+ *  kvm cpu (not arch sepsefic - intel/amd)
+ */
 struct kvm_vcpu {
 	struct kvm *kvm;
 	union {
@@ -290,6 +302,10 @@ struct kvm_memory_slot {
 	unsigned long *dirty_bitmap;
 };
 
+/*
+ * XXX: 
+ *  kvm
+ */
 struct kvm {
 	spinlock_t lock; /* protects everything except vcpus */
 	int nmemslots;
@@ -327,6 +343,10 @@ struct descriptor_table {
 	unsigned long base;
 } __attribute__((packed));
 
+/*
+ * XXX:
+ *  kvm ops
+ */
 struct kvm_arch_ops {
 	int (*cpu_has_kvm_support)(void);          /* __init */
 	int (*disabled_by_bios)(void);             /* __init */

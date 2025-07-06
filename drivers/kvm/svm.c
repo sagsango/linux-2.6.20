@@ -1,4 +1,8 @@
 /*
+ * XXX:
+ *  amd support
+ */
+/*
  * Kernel-based Virtual Machine driver for Linux
  *
  * AMD SVM support

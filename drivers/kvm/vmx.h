@@ -1,3 +1,7 @@
+/*
+ * XXX:
+ *  Intel support
+ */
 #ifndef VMX_H
 #define VMX_H
 
@@ -48,7 +52,10 @@
 #define VM_EXIT_ACK_INTR_ON_EXIT        0x00008000
 #define VM_EXIT_HOST_ADD_SPACE_SIZE     0x00000200
 
-
+/*
+ * XXX:
+ *  Virtual Machine Control Structure
+ */
 /* VMCS Encodings */
 enum vmcs_field {
 	GUEST_ES_SELECTOR               = 0x00000800,

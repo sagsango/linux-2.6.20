@@ -1,3 +1,7 @@
+/*
+ * XXX:
+ *  amd support
+ */
 #ifndef __SVM_H
 #define __SVM_H
 

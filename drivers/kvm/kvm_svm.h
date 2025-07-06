@@ -21,6 +21,11 @@ static const u32 host_save_msrs[] = {
 #define NR_HOST_SAVE_MSRS (sizeof(host_save_msrs) / sizeof(*host_save_msrs))
 #define NUM_DB_REGS 4
 
+/*
+ * XXX:
+ *  svm = Secure Virtual Machine
+ *  intel vt-x equivalenet of amd.
+ */
 struct vcpu_svm {
 	struct vmcb *vmcb;
 	unsigned long vmcb_pa;

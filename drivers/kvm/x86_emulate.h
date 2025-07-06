@@ -1,3 +1,16 @@
+/*
+ *
+ * XXX:
+ *  During 2.6.20 kernel version; vtx was not fully 
+ *  developed. 
+ *
+ *  I am not sure what is the case when we use thses
+ *  or multi level page table is just absent and we
+ *  are doing emulated read-write.
+ *
+ *  Or may be the cases where guest mode exited and
+ *  kvm have to handle some special instruction
+ */
 /******************************************************************************
  * x86_emulate.h
  *
