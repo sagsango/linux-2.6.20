@@ -705,6 +705,10 @@ struct file_ra_state {
 #define RA_FLAG_MISS 0x01	/* a cache miss occured against this file */
 #define RA_FLAG_INCACHE 0x02	/* file is already in cache */
 
+/*
+ * XXX:
+ *  struct file
+ */
 struct file {
 	/*
 	 * fu_list becomes invalid after file_free is called and queued via
@@ -1067,6 +1071,10 @@ typedef int (*read_actor_t)(read_descriptor_t *, struct page *, unsigned long, u
 #define HAVE_UNLOCKED_IOCTL 1
 
 /*
+ * XXX:
+ *  file operations
+ */
+/*
  * NOTE:
  * read, write, poll, fsync, readv, writev, unlocked_ioctl and compat_ioctl
  * can be called without the big kernel lock held in all filesystems.
@@ -1101,6 +1109,10 @@ struct file_operations {
 	ssize_t (*splice_read)(struct file *, loff_t *, struct pipe_inode_info *, size_t, unsigned int);
 };
 
+/*
+ * XXX:
+ *  inode operations
+ */
 struct inode_operations {
 	int (*create) (struct inode *,struct dentry *,int, struct nameidata *);
 	struct dentry * (*lookup) (struct inode *,struct dentry *, struct nameidata *);
@@ -1140,6 +1152,10 @@ extern ssize_t vfs_readv(struct file *, const struct iovec __user *,
 extern ssize_t vfs_writev(struct file *, const struct iovec __user *,
 		unsigned long, loff_t *);
 
+/*
+ * XXX:
+ *  superblock operations
+ */
 /*
  * NOTE: write_inode, delete_inode, clear_inode, put_inode can be called
  * without the big kernel lock held in all filesystems.
@@ -1233,6 +1249,10 @@ static inline void file_accessed(struct file *file)
 
 int sync_inode(struct inode *inode, struct writeback_control *wbc);
 
+/*
+ * XXX:
+ *  Export operations
+ */
 /**
  * struct export_operations - for nfsd to communicate with file systems
  * @decode_fh:      decode a file handle fragment and return a &struct dentry

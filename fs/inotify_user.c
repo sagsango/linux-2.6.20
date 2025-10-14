@@ -66,6 +66,10 @@ int inotify_max_queued_events __read_mostly;
  */
 
 /*
+ * XXX:
+ *  Notification instance
+ */
+/*
  * struct inotify_device - represents an inotify instance
  *
  * This structure is protected by the mutex 'mutex'.
@@ -602,6 +606,12 @@ out_put_fd:
 	return ret;
 }
 
+/*
+ *
+ * XXX:
+ *  add a watch to an initialized inotify instance
+ *  See man page
+ */
 asmlinkage long sys_inotify_add_watch(int fd, const char __user *path, u32 mask)
 {
 	struct inode *inode;
@@ -632,6 +642,10 @@ asmlinkage long sys_inotify_add_watch(int fd, const char __user *path, u32 mask)
 
 	/* inode held in place by reference to nd; dev by fget on fd */
 	inode = nd.dentry->d_inode;
+    /*
+     * XXX:
+     *  notify fd points to a file, that file have the inotify_device instance
+     */
 	dev = filp->private_data;
 
 	mutex_lock(&dev->up_mutex);

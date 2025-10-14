@@ -205,6 +205,16 @@ struct file fastcall *fget(unsigned int fd)
 EXPORT_SYMBOL(fget);
 
 /*
+ * XXX:
+ *  Interesting how file will be shared
+ *  during clone we fd table might get shared 
+ *  but both fd will point to same file pointer.
+ *
+ *  And this question was asked in Hypervisor interview!
+ *
+ *  NOTE: files_struct is a wapper on fd table so that it can be shared
+ */
+/*
  * Lightweight file lookup - no refcnt increment if fd table isn't shared. 
  * You can use this only if it is guranteed that the current task already 
  * holds a refcnt to that file. That check has to be done at fget() only

@@ -36,6 +36,11 @@ struct fdtable {
 };
 
 /*
+ * XXX:
+ * This is a wapper on fd table
+ * so that multiple task_struct can share it
+ */
+/*
  * Open file table structure
  */
 struct files_struct {

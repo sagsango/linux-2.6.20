@@ -800,6 +800,11 @@ fail:
 }
 
 /*
+ * XXX:
+ *  This is the core path name to dentry resolution
+ *  (we get the inode number of given path)
+ */
+/*
  * Name resolution.
  * This is the basic name resolution function, turning a pathname into
  * the final dentry. We expect 'base' to be positive and a directory.
