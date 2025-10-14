@@ -1,0 +1,41 @@
+.
+├── callback_proc.c
+├── callback_xdr.c
+├── callback.c
+├── callback.h
+├── client.c
+├── delegation.c
+├── delegation.h
+├── dir.c
+├── direct.c
+├── file.c
+├── getroot.c
+├── idmap.c
+├── inode.c
+├── internal.h
+├── iostat.h
+├── Makefile
+├── mount_clnt.c
+├── namespace.c
+├── nfs2xdr.c
+├── nfs3acl.c
+├── nfs3proc.c
+├── nfs3xdr.c
+├── nfs4_fs.h
+├── nfs4namespace.c
+├── nfs4proc.c
+├── nfs4renewd.c
+├── nfs4state.c
+├── nfs4xdr.c
+├── nfsroot.c
+├── NOTES.md
+├── pagelist.c
+├── proc.c
+├── read.c
+├── super.c
+├── symlink.c
+├── sysctl.c
+├── unlink.c
+└── write.c
+
+1 directory, 38 files
