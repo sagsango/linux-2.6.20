@@ -976,6 +976,11 @@ no_page_table:
 	return page;
 }
 
+/*
+ *
+ * XXX:
+ *	This function maps the user pages in tha given range
+ */
 int get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 		unsigned long start, int len, int write, int force,
 		struct page **pages, struct vm_area_struct **vmas)

@@ -31,6 +31,7 @@ __SYSCALL(__NR_poll, sys_poll)
 
 #define __NR_lseek                               8
 __SYSCALL(__NR_lseek, sys_lseek)
+/* XXX: syscall number for the mmap */
 #define __NR_mmap                                9
 __SYSCALL(__NR_mmap, sys_mmap)
 #define __NR_mprotect                           10

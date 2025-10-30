@@ -883,6 +883,10 @@ void vm_stat_account(struct mm_struct *mm, unsigned long flags,
 #endif /* CONFIG_PROC_FS */
 
 /*
+ * XXX:
+ *	sys_mmap -> do_mmap_pgoff
+ */
+/*
  * The caller must hold down_write(current->mm->mmap_sem).
  */
 
@@ -962,6 +966,10 @@ unsigned long do_mmap_pgoff(struct file * file, unsigned long addr,
 
 	inode = file ? file->f_path.dentry->d_inode : NULL;
 
+	/*
+	 * XXX:
+	 *	If file
+	 */
 	if (file) {
 		switch (flags & MAP_TYPE) {
 		case MAP_SHARED:
@@ -1005,6 +1013,10 @@ unsigned long do_mmap_pgoff(struct file * file, unsigned long addr,
 			return -EINVAL;
 		}
 	} else {
+		/*
+		 * XXX:
+		 *	If not file
+		 */
 		switch (flags & MAP_TYPE) {
 		case MAP_SHARED:
 			vm_flags |= VM_SHARED | VM_MAYSHARE;
@@ -1020,6 +1032,10 @@ unsigned long do_mmap_pgoff(struct file * file, unsigned long addr,
 		}
 	}
 
+	/*
+	 * XXX:
+	 *	It seems like security check, but not sure where its implemented
+	 */
 	error = security_file_mmap(file, reqprot, prot, flags);
 	if (error)
 		return error;
@@ -1027,13 +1043,29 @@ unsigned long do_mmap_pgoff(struct file * file, unsigned long addr,
 	/* Clear old maps */
 	error = -ENOMEM;
 munmap_back:
+	/*
+	 * XXX:
+	 *	Get the vma at given adress,
+	 *	if no vma contains that address then return value will be NULL
+	 *	We also get these
+	 *		rb_link : link address which will point to the new_vma
+	 *		rb_parent : the parent node which will link to new_vma
+	 *			    either by rb_parent->left or rb_parent->right
+	 *	        prev : the rb node whose vma will be prev to new_vma in
+	 *	                 the vma linked list
+	 *	these wil;l help us to insert the new vma in linked list and rb tree
+	 */
 	vma = find_vma_prepare(mm, addr, &prev, &rb_link, &rb_parent);
+	/* XXX: vma exist for that adress first unmap that */
 	if (vma && vma->vm_start < addr + len) {
 		if (do_munmap(mm, addr, len))
 			return -ENOMEM;
 		goto munmap_back;
 	}
 
+	/* XXX:
+	 *	Return true if the calling process may expand its vm space by the passed number of pages
+	 */
 	/* Check against address space limit. */
 	if (!may_expand_vm(mm, len >> PAGE_SHIFT))
 		return -ENOMEM;
@@ -1055,6 +1087,12 @@ munmap_back:
 	}
 
 	/*
+	 *
+	 * XXX:
+	 *	Merge if it vma become continuos with the previous or next or
+	 *	(previous and next, TODO: confirm that both side can be merged)
+	 */
+	/*
 	 * Can we just expand an old private anonymous mapping?
 	 * The VM_SHARED test is necessary because shmem_zero_setup
 	 * will create the file object for a shared anonymous map below.
@@ -1064,6 +1102,10 @@ munmap_back:
 					NULL, NULL, pgoff, NULL))
 		goto out;
 
+	/*
+	 * XXX:
+	 *	alloc new vma
+	 */
 	/*
 	 * Determine the object being mapped and call the appropriate
 	 * specific mapper. the address has already been validated, but
@@ -1099,6 +1141,7 @@ munmap_back:
 		if (error)
 			goto unmap_and_free_vma;
 	} else if (vm_flags & VM_SHARED) {
+		/* XXX: setup a shares anon mapping */
 		error = shmem_zero_setup(vma);
 		if (error)
 			goto free_vma;
@@ -1127,7 +1170,18 @@ munmap_back:
 
 	if (!file || !vma_merge(mm, prev, addr, vma->vm_end,
 			vma->vm_flags, NULL, file, pgoff, vma_policy(vma))) {
+		/*
+		 * XXX:
+		 *	not file or !merged
+		 *	then we have to link it to vma rbtree & list
+		 *
+		 *	so we dont put file mapping in the vma list & rbtree
+		 *	TODO: How then we take care of thoese things
+		 *	(data-structure)
+		 */
 		file = vma->vm_file;
+		/* XXX:
+		 * put it into vma list & rb tree */
 		vma_link(mm, vma, prev, rb_link, rb_parent);
 		if (correct_wcount)
 			atomic_inc(&inode->i_writecount);
@@ -1145,9 +1199,18 @@ out:
 	vm_stat_account(mm, vm_flags, file, len >> PAGE_SHIFT);
 	if (vm_flags & VM_LOCKED) {
 		mm->locked_vm += len >> PAGE_SHIFT;
+		/* XXX:
+		 *	We map the pages here (eager mapping)
+		 *	for anon mapping!
+		 */
+
 		make_pages_present(addr, addr + len);
 	}
 	if (flags & MAP_POPULATE) {
+		/*
+		 * XXX:
+		 *	for file mapping we do eager mapping here
+		 */
 		up_write(&mm->mmap_sem);
 		sys_remap_file_pages(addr, len, 0,
 					pgoff, flags & MAP_NONBLOCK);
@@ -1197,6 +1260,9 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 	if (len > TASK_SIZE)
 		return -ENOMEM;
 
+	/* XXX:
+	 *	If have preferred address
+	 */
 	if (addr) {
 		addr = PAGE_ALIGN(addr);
 		vma = find_vma(mm, addr);
@@ -1204,6 +1270,11 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 		    (!vma || addr + len <= vma->vm_start))
 			return addr;
 	}
+	/*
+	 * XXX:
+	 *	If not have preferrred adress
+	 *	then get some unmapped address
+	 */
 	if (len > mm->cached_hole_size) {
 	        start_addr = addr = mm->free_area_cache;
 	} else {
@@ -1212,6 +1283,12 @@ arch_get_unmapped_area(struct file *filp, unsigned long addr,
 	}
 
 full_search:
+	/*
+	 * XXX:
+	 *	first find the starting vma;
+	 *	then just traverse the whole link list of vma
+	 *	untill get the appropriate gap between 2 vma
+	 */
 	for (vma = find_vma(mm, addr); ; vma = vma->vm_next) {
 		/* At this point:  (!vma || addr < vma->vm_end). */
 		if (TASK_SIZE - len < addr) {
@@ -1362,6 +1439,10 @@ get_unmapped_area(struct file *file, unsigned long addr, unsigned long len,
 	if (!(flags & MAP_FIXED)) {
 		unsigned long (*get_area)(struct file *, unsigned long, unsigned long, unsigned long, unsigned long);
 
+		/*
+		 * XXX:
+		 *	get the address
+		 */
 		get_area = current->mm->get_unmapped_area;
 		if (file && file->f_op && file->f_op->get_unmapped_area)
 			get_area = file->f_op->get_unmapped_area;
@@ -1405,6 +1486,14 @@ struct vm_area_struct * find_vma(struct mm_struct * mm, unsigned long addr)
 		/* (Cache hit rate is typically around 35%.) */
 		vma = mm->mmap_cache;
 		if (!(vma && vma->vm_end > addr && vma->vm_start <= addr)) {
+
+
+			/*
+			 * XXX:
+			 *	If cache hit does not happen
+			 *	then to search in the rb tree from the root
+			 *	O(h) complexity
+			 */
 			struct rb_node * rb_node;
 
 			rb_node = mm->mm_rb.rb_node;
@@ -1424,6 +1513,10 @@ struct vm_area_struct * find_vma(struct mm_struct * mm, unsigned long addr)
 				} else
 					rb_node = rb_node->rb_right;
 			}
+			/*
+			 * XXX:
+			 *	If found add in the cache
+			 */
 			if (vma)
 				mm->mmap_cache = vma;
 		}
