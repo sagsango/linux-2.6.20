@@ -53,6 +53,48 @@ void copy_page(void *, void *);
 
 #define alloc_zeroed_user_highpage(vma, vaddr) alloc_page_vma(GFP_HIGHUSER | __GFP_ZERO, vma, vaddr)
 #define __HAVE_ARCH_ALLOC_ZEROED_USER_HIGHPAGE
+
+/*
+ *
+ * XXX:
+ *	4 level: pml4, pdpt, pd, pt -> pte
+ *	3 level: pdpt, pd, pt -> pte
+ *	2 level: pd, pt -> pte
+ *
+ *
+Modern Linux >= v4.0
++-----+
+| PGD |
++-----+
+   |
+   |   +-----+
+   +-->| P4D |
+       +-----+
+          |
+          |   +-----+
+          +-->| PUD |
+              +-----+
+                 |
+                 |   +-----+
+                 +-->| PMD |
+                     +-----+
+                        |
+                        |   +-----+
+                        +-->| PTE |
+                            +-----+
+
+
+v.2.6: from include/asm-x86_64/pgtable.h
+	NOTE: cr3 contains the phycial address; but mm_struct have virtual address
+	12 + 9 + 9 + 9 + 9 = 48
+        mm_struct->pgd; // level 4
+	pgd_t *pgd = ((mm)->pgd + pgd_index(addr));level 3;PGDIR_SHIFT=39[39-47]
+	pud_t *pud = ((pud_t *) pgd_page_vaddr(*(pgd)) + pud_index(address));level 2;PUD_SHIFT=30[30,38]
+	pmd_t *pmd = ((pmd_t *) pud_page_vaddr(*(dir)) + pmd_index(address));level 1;PMD_SHIFT=21[21,29]
+	pte_t *pte = ((pte_t *) pmd_page_vaddr(*(dir)) + pte_index(address));PAGE_SHIFT=12[12,20]
+	frame = ((pte_val(pte) & PHYSICAL_PAGE_MASK)
+*/
+
 /*
  * These are used to make use of C type-checking..
  */

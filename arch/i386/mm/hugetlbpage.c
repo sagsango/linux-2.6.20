@@ -142,6 +142,15 @@ pte_t *huge_pte_alloc(struct mm_struct *mm, unsigned long addr)
 	return pte;
 }
 
+/*
+ *
+ * XXX:
+ *	this is page walk for the huge page table
+ *	Only 3 level of page table and 3rd level points to the pte
+ *	See vmalloc_fault() here you will see the 4 levels
+ *
+ *	For 3 levels for huge page table; huge_page_size = 2^9 x 4KB = 2^9 x 2^12 = 2 x 2^10 = 2 MB
+ */
 pte_t *huge_pte_offset(struct mm_struct *mm, unsigned long addr)
 {
 	pgd_t *pgd;

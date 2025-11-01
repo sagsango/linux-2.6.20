@@ -576,6 +576,11 @@ int hugetlb_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 	return ret;
 }
 
+/*
+ * XXX:
+ *	Maps the huge pages in the given range if the vma belogs to hugetlb
+ *	from from get_user_pages()
+ */
 int follow_hugetlb_page(struct mm_struct *mm, struct vm_area_struct *vma,
 			struct page **pages, struct vm_area_struct **vmas,
 			unsigned long *position, int *length, int i)
@@ -588,6 +593,10 @@ int follow_hugetlb_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	while (vaddr < vma->vm_end && remainder) {
 		pte_t *pte;
 		struct page *page;
+
+		/* XXX:
+		 * Page walk of 3 levels
+		 */
 
 		/*
 		 * Some archs (sparc64, sh*) have multiple pte_ts to

@@ -980,6 +980,16 @@ no_page_table:
  *
  * XXX:
  *	This function maps the user pages in tha given range
+ *
+ * args:
+ *	arg1: stask_struct *
+ *	args: mm_struct *
+ *	arg3: start address
+ *	arg4: len = number of pages to map
+ *	arg5:
+ *	arg6:
+ *	arg7: pages array polulated; why?
+ *	arg8: vma array populated; why?
  */
 int get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 		unsigned long start, int len, int write, int force,
@@ -988,7 +998,7 @@ int get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 	int i;
 	unsigned int vm_flags;
 
-	/* 
+	/*
 	 * Require read or write permissions.
 	 * If 'force' is set, we only require the "MAY" flags.
 	 */
@@ -1000,8 +1010,15 @@ int get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 		struct vm_area_struct *vma;
 		unsigned int foll_flags;
 
+		/* XXX: First find the owner vma */
 		vma = find_extend_vma(mm, start);
+		/*
+		 * XXX;
+		 *	If its NULL and a part of vdso */
 		if (!vma && in_gate_area(tsk, start)) {
+			/*
+			 * XXX: We do 4 level page for here for the vdso
+			 */
 			unsigned long pg = start & PAGE_MASK;
 			struct vm_area_struct *gate_vma = get_gate_vma(tsk);
 			pgd_t *pgd;
@@ -1037,6 +1054,7 @@ int get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 			i++;
 			start += PAGE_SIZE;
 			len--;
+			/* XXX: mapped one page in vdso */
 			continue;
 		}
 
@@ -1044,6 +1062,10 @@ int get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 				|| !(vm_flags & vma->vm_flags))
 			return i ? : -EFAULT;
 
+		/*
+		 * XXX:
+		 *	If huge page table then we map the pages from here
+		 */
 		if (is_vm_hugetlb_page(vma)) {
 			i = follow_hugetlb_page(mm, vma, pages, vmas,
 						&start, &len, i);
@@ -1064,8 +1086,12 @@ int get_user_pages(struct task_struct *tsk, struct mm_struct *mm,
 				foll_flags |= FOLL_WRITE;
 
 			cond_resched();
+			/* XXX: First try to get the page, and if null then only
+			 *      callocate new one.
+			 */
 			while (!(page = follow_page(vma, start, foll_flags))) {
 				int ret;
+				/* XXX: If page was not there allocate one */
 				ret = __handle_mm_fault(mm, vma, start,
 						foll_flags & FOLL_WRITE);
 				/*
@@ -2448,6 +2474,12 @@ unlock:
 }
 
 /*
+ *
+ * XXX:
+ *	Page fault handler for the 4 level nor mal page table
+ *	At given address
+ */
+/*
  * By the time we get here, we already hold the mm semaphore
  */
 int __handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
@@ -2542,6 +2574,9 @@ int __pmd_alloc(struct mm_struct *mm, pud_t *pud, unsigned long address)
 }
 #endif /* __PAGETABLE_PMD_FOLDED */
 
+/*
+ * XXX: sys_mmap() -> do_mmap_pgoff(): if eager -> make_pages_present() -> get_user_pages()
+ */
 int make_pages_present(unsigned long addr, unsigned long end)
 {
 	int ret, len, write;
@@ -2606,6 +2641,14 @@ EXPORT_SYMBOL(vmalloc_to_pfn);
 #if defined(AT_SYSINFO_EHDR)
 static struct vm_area_struct gate_vma;
 
+/*
+ * XXX:
+ * The function gate_vma_init sets up a special virtual memory area (VMA)
+ * structure called gate_vma, which represents the fixed-address mapping
+ * for the vDSO—a kernel-provided shared library that allows user-space
+ * programs to perform certain syscalls (e.g., gettimeofday) efficiently
+ * without trapping into the kernel.
+*/
 static int __init gate_vma_init(void)
 {
 	gate_vma.vm_mm = NULL;

@@ -271,6 +271,19 @@ static noinline void pgtable_bad(unsigned long address, struct pt_regs *regs,
 }
 
 /*
+ *
+ * XXX:
+ *	Normal page walk + fault handling
+ *	We have 4 levels of page table as normal 4KB page size
+ *	See:
+ *		./include/asm-x86_64/page.h
+ *		./include/asm-x86_64/pgtable.h
+ *	For huge page table we have only 3 levels, and 3rd level directly points
+ *	to the pte.
+ *	See:
+ *		follow_hugetlb_page()
+ */
+/*
  * Handle a fault on the vmalloc area
  *
  * This assumes no large pages in there.
