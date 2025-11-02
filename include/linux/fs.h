@@ -430,8 +430,20 @@ struct address_space_operations {
 };
 
 struct backing_dev_info;
+/* XXX:
+ *	vm_area_struct → "A range of virtual addresses in a process"
+ *	address_space → "The mapping between a file and physical pages (page cache)"
+ *
+ *	mm_struct have multiple vma
+ *	address_space have multiple pages from page cache (page cache - only for file data)
+ *
+ *	Both are 2 unrelated things!!
+ *	Unlike block cache in xv6, we have page cache.
+ */
 struct address_space {
 	struct inode		*host;		/* owner: inode, block_device */
+	/* XXX: pages are present by key = page_index; see
+	 * __do_page_cache_readahead() */
 	struct radix_tree_root	page_tree;	/* radix tree of all pages */
 	rwlock_t		tree_lock;	/* and rwlock protecting it */
 	unsigned int		i_mmap_writable;/* count VM_SHARED mappings */
@@ -574,6 +586,7 @@ struct inode {
 	struct dnotify_struct	*i_dnotify; /* for directory notifications */
 #endif
 
+	/* XXX: file events/notification see man inotify(7)  */
 #ifdef CONFIG_INOTIFY
 	struct list_head	inotify_watches; /* watches on this inode */
 	struct mutex		inotify_mutex;	/* protects the watches list */
@@ -1224,6 +1237,8 @@ static inline void inode_dec_link_count(struct inode *inode)
 	mark_inode_dirty(inode);
 }
 
+/*
+ * XXX: Everytime we access it, it will update the atime of inode */
 extern void touch_atime(struct vfsmount *mnt, struct dentry *dentry);
 static inline void file_accessed(struct file *file)
 {

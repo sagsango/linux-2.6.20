@@ -47,6 +47,7 @@ struct buffer_head;
 struct address_space;
 typedef void (bh_end_io_t)(struct buffer_head *bh, int uptodate);
 
+/* XXX: This is only for blocks within a page */
 /*
  * Historically, a buffer_head was used to map a single block
  * within a page, and of course as the unit of I/O through the

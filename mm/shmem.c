@@ -2451,6 +2451,7 @@ out3:
 }
 module_init(init_tmpfs)
 
+/* XXX: tmpfs file entry creation to show inside /proc/pid/maps */
 /*
  * shmem_file_setup - get an unlinked file living in tmpfs
  *
@@ -2515,6 +2516,8 @@ put_memory:
 }
 
 /*
+ * XXX:	all shared anon mapping are backed by file */
+/*
  * shmem_zero_setup - setup a shared anonymous mapping
  *
  * @vma: the vma to be mmapped is prepared by do_mmap_pgoff
@@ -2524,6 +2527,7 @@ int shmem_zero_setup(struct vm_area_struct *vma)
 	struct file *file;
 	loff_t size = vma->vm_end - vma->vm_start;
 
+	/* XXX: This file will in /proc/pic/mmap */
 	file = shmem_file_setup("dev/zero", size, vma->vm_flags);
 	if (IS_ERR(file))
 		return PTR_ERR(file);

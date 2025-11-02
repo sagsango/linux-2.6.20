@@ -102,6 +102,17 @@ out:
 unsigned long hugetlb_get_unmapped_area(struct file *file, unsigned long addr,
 		unsigned long len, unsigned long pgoff, unsigned long flags);
 #else
+/*
+ * XXX:
+ *	Seems like files mapping are done using the huge page table
+ *	and this gives the address of size len which is free to use
+ *
+ *
+ *	tries to give the address which is between 2 consecultive vma
+ *	otherwise address after the last one
+ *
+ *	called by: do_mmap_pgoff() -> get_unmapped_area();
+ */
 static unsigned long
 hugetlb_get_unmapped_area(struct file *file, unsigned long addr,
 		unsigned long len, unsigned long pgoff, unsigned long flags)

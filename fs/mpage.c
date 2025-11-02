@@ -163,6 +163,8 @@ map_buffer_to_page(struct page *page, struct buffer_head *bh, int page_block)
 	} while (page_bh != head);
 }
 
+/* XXX: How burst block io is submistted for performance improvemnet 
+ * TODO: */
 /*
  * This is the worker routine which does all the work of mapping the disk
  * blocks and constructs largest possible bios, submits them for IO if the
@@ -184,7 +186,7 @@ do_mpage_readpage(struct bio *bio, struct page *page, unsigned nr_pages,
 	sector_t block_in_file;
 	sector_t last_block;
 	sector_t last_block_in_file;
-	sector_t blocks[MAX_BUF_PER_PAGE];
+	sector_t blocks[MAX_BUF_PER_PAGE]; /* Blocks only within the page */
 	unsigned page_block;
 	unsigned first_hole = blocks_per_page;
 	struct block_device *bdev = NULL;
@@ -203,6 +205,7 @@ do_mpage_readpage(struct bio *bio, struct page *page, unsigned nr_pages,
 		last_block = last_block_in_file;
 	page_block = 0;
 
+	/* XXX: map blocks */
 	/*
 	 * Map blocks using the result from the previous get_blocks call first.
 	 */
@@ -298,6 +301,7 @@ do_mpage_readpage(struct bio *bio, struct page *page, unsigned nr_pages,
 		SetPageMappedToDisk(page);
 	}
 
+	/* XXX: when we do submit this understand TODO: */
 	/*
 	 * This page will go to BIO.  Do we need to send this BIO off first?
 	 */
@@ -336,6 +340,8 @@ confused:
 	goto out;
 }
 
+/*XXX: read the file pages into the adress_space
+ *TODO: */
 /**
  * mpage_readpages - populate an address space with some pages, and
  *                       start reads against them.
@@ -398,6 +404,7 @@ mpage_readpages(struct address_space *mapping, struct list_head *pages,
 	for (page_idx = 0; page_idx < nr_pages; page_idx++) {
 		struct page *page = list_entry(pages->prev, struct page, lru);
 
+		/* XXX: we call do_mpage_readpage() per page */
 		prefetchw(&page->flags);
 		list_del(&page->lru);
 		if (!add_to_page_cache(page, mapping,
@@ -415,6 +422,7 @@ mpage_readpages(struct address_space *mapping, struct list_head *pages,
 	}
 	pagevec_lru_add(&lru_pvec);
 	BUG_ON(!list_empty(pages));
+	/* XXX: If we have bio then submit the read request */
 	if (bio)
 		mpage_bio_submit(READ, bio);
 	return 0;

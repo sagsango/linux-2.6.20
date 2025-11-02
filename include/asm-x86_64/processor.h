@@ -168,6 +168,11 @@ static inline void clear_in_cr4 (unsigned long mask)
 
 
 /*
+ * XXX:
+ *	This gives us the limit of the address space we can use
+ *	of the user process
+ */
+/*
  * User space process size. 47bits minus one guard page.
  */
 #define TASK_SIZE64	(0x800000000000UL - 4096)

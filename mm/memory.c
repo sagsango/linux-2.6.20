@@ -2710,6 +2710,12 @@ int access_process_vm(struct task_struct *tsk, unsigned long addr, void *buf, in
 		int bytes, ret, offset;
 		void *maddr;
 
+		/*
+		 * XXX:
+		 *	here is one example where we are use the pages return
+		 *	by the get_user_pages()
+		 *	TODO: Understand the page cache
+		 */
 		ret = get_user_pages(tsk, mm, addr, 1,
 				write, 1, &page, &vma);
 		if (ret <= 0)

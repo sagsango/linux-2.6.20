@@ -934,6 +934,13 @@ unsigned long do_mmap_pgoff(struct file * file, unsigned long addr,
 	if (mm->map_count > sysctl_max_map_count)
 		return -ENOMEM;
 
+	/* XXX:
+	 *	Get the adress where we will create the mappings
+	 *	if its not MAP_FIXED
+	 *
+	 *	calls fs/hugetlbfs/inode.c
+	 *		: hugetlb_get_unmapped_area()
+	 */
 	/* Obtain the address to map to. we verify (or select) it and ensure
 	 * that it represents a valid section of the address space.
 	 */
@@ -972,6 +979,16 @@ unsigned long do_mmap_pgoff(struct file * file, unsigned long addr,
 	 */
 	if (file) {
 		switch (flags & MAP_TYPE) {
+		/*
+		 *
+		 * XXX:
+		 *	File can have 2 types of mapping PRIVATE or SHARED
+		 *
+		 *	TODO: How exactly file share and private diff
+		 *	      share -> how COW works
+		 *	      private -> how address_space & vma track that and
+		 *	      what they track?
+		 */
 		case MAP_SHARED:
 			if ((prot&PROT_WRITE) && !(file->f_mode&FMODE_WRITE))
 				return -EACCES;
@@ -1101,7 +1118,6 @@ munmap_back:
 	    vma_merge(mm, prev, addr, addr + len, vm_flags,
 					NULL, NULL, pgoff, NULL))
 		goto out;
-
 	/*
 	 * XXX:
 	 *	alloc new vma
@@ -1126,6 +1142,7 @@ munmap_back:
 	vma->vm_pgoff = pgoff;
 
 	if (file) {
+		/* XXX: file mmap */
 		error = -EINVAL;
 		if (vm_flags & (VM_GROWSDOWN|VM_GROWSUP))
 			goto free_vma;
@@ -1136,12 +1153,27 @@ munmap_back:
 			correct_wcount = 1;
 		}
 		vma->vm_file = file;
+
 		get_file(file);
+		/*
+		 *
+		 * XXX: Lets see mmap = generic_file_mmap()
+		 *      We totaly ignore the mapping as it will
+		 *      de done later based on if eager mapping is needed
+		 *
+		 *      It only init the vma->vm_ops = &generic_file_vm_ops;
+		 */
 		error = file->f_op->mmap(file, vma);
 		if (error)
 			goto unmap_and_free_vma;
 	} else if (vm_flags & VM_SHARED) {
-		/* XXX: setup a shares anon mapping */
+		/* XXX: setup a shares anon mapping
+		 *	This will be file backed
+		 *	also it will be shown in the /proc/pid/maps
+		 *
+		 *	TODO: How the entry in /proc/pid/maps will handle
+		 *	runtiume read()
+		 */
 		error = shmem_zero_setup(vma);
 		if (error)
 			goto free_vma;
@@ -1196,6 +1228,7 @@ munmap_back:
 	}
 out:	
 	mm->total_vm += len >> PAGE_SHIFT;
+	/* XXX: Add these page count in the mm_struct */
 	vm_stat_account(mm, vm_flags, file, len >> PAGE_SHIFT);
 	if (vm_flags & VM_LOCKED) {
 		mm->locked_vm += len >> PAGE_SHIFT;
@@ -1441,7 +1474,8 @@ get_unmapped_area(struct file *file, unsigned long addr, unsigned long len,
 
 		/*
 		 * XXX:
-		 *	get the address
+		 *	get the approriate address if no preffered adress was given!
+		 *	for files : hugetlb_get_unmapped_area()
 		 */
 		get_area = current->mm->get_unmapped_area;
 		if (file && file->f_op && file->f_op->get_unmapped_area)

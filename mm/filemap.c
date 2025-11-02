@@ -1652,6 +1652,11 @@ err:
 	return NULL;
 }
 
+/*
+ * XXX: sys_mmap() -> do_mmap_pgoff() -> sys_remap_file_pages() -> filemap_populate()
+ * NOTE: This is the most importnat function to polpulate the file mapped pages
+ * inside a vma.
+ */
 int filemap_populate(struct vm_area_struct *vma, unsigned long addr,
 		unsigned long len, pgprot_t prot, unsigned long pgoff,
 		int nonblock)
@@ -1664,6 +1669,7 @@ int filemap_populate(struct vm_area_struct *vma, unsigned long addr,
 	struct page *page;
 	int err;
 
+	/* XXX: And its start from page cache :) */
 	if (!nonblock)
 		force_page_cache_readahead(mapping, vma->vm_file,
 					pgoff, len >> PAGE_CACHE_SHIFT);
@@ -1673,6 +1679,7 @@ repeat:
 	if (pgoff + (len >> PAGE_CACHE_SHIFT) > size)
 		return -EINVAL;
 
+	/* XXX: get a page */
 	page = filemap_getpage(file, pgoff, nonblock);
 
 	/* XXX: This is wrong, a filesystem I/O error may have happened. Fix that as
@@ -1681,6 +1688,7 @@ repeat:
 		return -ENOMEM;
 
 	if (page) {
+		/* XXX: map these pages into page table */
 		err = install_page(mm, vma, addr, page, prot);
 		if (err) {
 			page_cache_release(page);
@@ -1690,6 +1698,9 @@ repeat:
 		/* No page was found just because we can't read it in now (being
 		 * here implies nonblock != 0), but the page may exist, so set
 		 * the PTE to fault it in later. */
+
+		/* XXX: no page found and we want to read later so set the pte
+		 * flag for the mmu to generate the page fault */
 		err = install_file_pte(mm, vma, addr, pgoff, prot);
 		if (err)
 			return err;
@@ -1710,6 +1721,8 @@ struct vm_operations_struct generic_file_vm_ops = {
 	.populate	= filemap_populate,
 };
 
+/*
+ * XXX: sys_mmap() -> do_mmap_pgoff() -> mmap = generic_file_mmap();for ext2 */
 /* This is used for a general mmap of a disk file */
 
 int generic_file_mmap(struct file * file, struct vm_area_struct * vma)
@@ -1719,6 +1732,7 @@ int generic_file_mmap(struct file * file, struct vm_area_struct * vma)
 	if (!mapping->a_ops->readpage)
 		return -ENOEXEC;
 	file_accessed(file);
+	/* XXX: init the vma ops */
 	vma->vm_ops = &generic_file_vm_ops;
 	return 0;
 }

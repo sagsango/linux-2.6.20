@@ -44,6 +44,10 @@ static int zap_pte(struct mm_struct *mm, struct vm_area_struct *vma,
 	return !!page;
 }
 
+/* XXX: Called by filemap_populate() to map the files pages to page table
+ *	These pages came from page cache
+ *	These pages are present in adreess_space of the file
+ */
 /*
  * Install a file page to a given virtual memory address, release any
  * previously existing mapping.
@@ -126,6 +130,11 @@ out:
 	return err;
 }
 
+
+/*
+ * XXX: sys_mmap() -> do_mmap_pgoff() -> sys_remap_file_pages() for eager file mappings
+ */
+
 /***
  * sys_remap_file_pages - remap arbitrary pages of a shared backing store
  *                        file within an existing vma.
@@ -198,6 +207,10 @@ asmlinkage long sys_remap_file_pages(unsigned long start, unsigned long size,
 				has_write_lock = 1;
 				goto retry;
 			}
+			/* XXX:
+			 * fs/open.c:	f->f_mapping = inode->i_mapping;
+			 *		insert the vma in the mapping
+			 */
 			mapping = vma->vm_file->f_mapping;
 			spin_lock(&mapping->i_mmap_lock);
 			flush_dcache_mmap_lock(mapping);
@@ -208,6 +221,12 @@ asmlinkage long sys_remap_file_pages(unsigned long start, unsigned long size,
 			spin_unlock(&mapping->i_mmap_lock);
 		}
 
+		/*
+		 * XXX: vma ops kowns how to polupate vma
+		 *	regular file
+		 *	anon file
+		 *	etc
+		 */
 		err = vma->vm_ops->populate(vma, start, size,
 					    vma->vm_page_prot,
 					    pgoff, flags & MAP_NONBLOCK);

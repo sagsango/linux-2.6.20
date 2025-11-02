@@ -9,6 +9,25 @@
 struct address_space;
 
 /*
+ * XXX:
+ *	Page
+ *	Page cache has pages for the file data cache.
+ *	Page will be allocated to mm_struct->pagedir too, but they are not part of the
+ *	mm_struct has vm_area_struct too, they are just metadata about address-ranges
+ *	cache (if not file backed)
+ *
+ *
+ *	If we mmap a file in shared mode;
+ *	all the data of the file will be present in the page cache.
+ *	so we will just get all the pages present in the address_space and map
+ *	those pages to the continous address in the page-table, and metadata
+ *	of the mapping will be present in the vma.
+ *
+ *	if we map a file in private mode.
+ *	we will just copy all the pages from address_space which are
+ *	from the page cache, and create new pages in page-table by copy.
+ */
+/*
  * Each physical page in the system has a struct page associated with
  * it to keep track of whatever it is we are using the page for at the
  * moment. Note that we have no way to track which tasks are using

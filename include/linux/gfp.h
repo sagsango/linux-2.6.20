@@ -1,3 +1,4 @@
+/* XXX: gfp = get free page :) */
 #ifndef __LINUX_GFP_H
 #define __LINUX_GFP_H
 

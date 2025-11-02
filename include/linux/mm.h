@@ -63,14 +63,26 @@ struct vm_area_struct {
 	unsigned long vm_end;		/* The first byte after our end address
 					   within vm_mm. */
 
+	/* XXX: all vma within one mm_struct are part of linked list in sorted
+	 * order by the start address */
 	/* linked list of VM areas per task, sorted by address */
 	struct vm_area_struct *vm_next;
 
 	pgprot_t vm_page_prot;		/* Access permissions of this VMA. */
 	unsigned long vm_flags;		/* Flags, listed below. */
 
+	/* XXX: all vma within one mm_struct are also have link to the rb node
+	 * red black tree nodes are sorted by the start address */
 	struct rb_node vm_rb;
 
+	/*
+	 * XXX: FILE mappping (PRIVATE or SHARED)
+	 *	Seems like shared pages metada are put here,
+	 *	because those will be file-backed (logical or physical)
+	 *	shared_anon_mapping will always be backed by logical files
+	 *	shared_file_mapping whill always be backed by physical file)
+	 *	TODO: Understand this properly
+	 */
 	/*
 	 * For areas with an address space and backing store,
 	 * linkage into the address_space->i_mmap prio tree, or
@@ -88,6 +100,10 @@ struct vm_area_struct {
 	} shared;
 
 	/*
+	 * XXX: ANON mapping
+	 *	COPY ON WRITE of the private mapping of the file
+	 */
+	/*
 	 * A file's MAP_PRIVATE vma can be in both i_mmap tree and anon_vma
 	 * list, after a COW of one of the file pages.  A MAP_SHARED vma
 	 * can only be in the i_mmap tree.  An anonymous MAP_PRIVATE, stack
@@ -102,6 +118,7 @@ struct vm_area_struct {
 	/* Information about our backing store: */
 	unsigned long vm_pgoff;		/* Offset (within vm_file) in PAGE_SIZE
 					   units, *not* PAGE_CACHE_SIZE */
+	/* XXX: Non null for File mapping */
 	struct file * vm_file;		/* File we map to (can be NULL). */
 	void * vm_private_data;		/* was vm_pte (shared mem) */
 	unsigned long vm_truncate_count;/* truncate_count or restart_addr */

@@ -160,6 +160,7 @@ int read_cache_pages(struct address_space *mapping, struct list_head *pages,
 
 EXPORT_SYMBOL(read_cache_pages);
 
+/*XXX: Reading the file content into the pages */
 static int read_pages(struct address_space *mapping, struct file *filp,
 		struct list_head *pages, unsigned nr_pages)
 {
@@ -168,6 +169,7 @@ static int read_pages(struct address_space *mapping, struct file *filp,
 	int ret;
 
 	if (mapping->a_ops->readpages) {
+		/*XXX: check ext2 address_space ops */
 		ret = mapping->a_ops->readpages(filp, mapping, pages, nr_pages);
 		/* Clean up the remaining pages */
 		put_pages_list(pages);
@@ -192,6 +194,8 @@ out:
 	return ret;
 }
 
+/* XXX: Page cache readahead the file to address_space
+ * TODO: Its very core logic*/
 /*
  * Readahead design.
  *
@@ -276,15 +280,16 @@ __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
 	if (isize == 0)
 		goto out;
 
- 	end_index = ((isize - 1) >> PAGE_CACHE_SHIFT);
+	end_index = ((isize - 1) >> PAGE_CACHE_SHIFT);
 
+	/* XXX: First allocate all the pages */
 	/*
 	 * Preallocate as many pages as we will need.
 	 */
 	read_lock_irq(&mapping->tree_lock);
 	for (page_idx = 0; page_idx < nr_to_read; page_idx++) {
 		pgoff_t page_offset = offset + page_idx;
-		
+
 		if (page_offset > end_index)
 			break;
 
@@ -293,16 +298,21 @@ __do_page_cache_readahead(struct address_space *mapping, struct file *filp,
 			continue;
 
 		read_unlock_irq(&mapping->tree_lock);
+		/* XXX: allocate the file-pages from the page cache */
 		page = page_cache_alloc_cold(mapping);
 		read_lock_irq(&mapping->tree_lock);
 		if (!page)
 			break;
 		page->index = page_offset;
 		list_add(&page->lru, &page_pool);
+
+		/* XXX: ret counts the number of pages which yet top be
+		 * populated from the disk */
 		ret++;
 	}
 	read_unlock_irq(&mapping->tree_lock);
 
+	/* XXX: Now fill the page by reading the data from disk */
 	/*
 	 * Now start the IO.  We ignore I/O errors - if the page is not
 	 * uptodate then the caller will launch readpage again, and
