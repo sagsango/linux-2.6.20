@@ -25,5 +25,7 @@ Page loaded / mapped into page tables
 
 Points:
 1. Done anon mapping
-2. TODO: file mapping
+2. TODO: file mapping [DONE]
+3. TODO: page-cache and block io
+4. TODO: interrupts
 
