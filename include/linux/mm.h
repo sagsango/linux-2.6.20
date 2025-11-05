@@ -43,6 +43,60 @@ extern int sysctl_legacy_va_layout;
 #define nth_page(page,n) pfn_to_page(page_to_pfn((page)) + (n))
 
 /*
+ * XXX: On file getting maped to page table
+                     process
+                   task_struct
+                          |
+                          v
+                      mm_struct
+                          |
+                  ----- list of VMAs -----
+                 |                        |
+                 v                        v
+         vm_area_struct A       vm_area_struct B (file mmap)
+                 |                        |
+         vm_file = NULL            vm_file = file*
+                                     |
+                                     v
+                              struct file
+                                     |
+                                     v
+                          file->f_mapping (address_space)
+                                     |
+                                     v
+                            page cache (struct page[])
+
+
+*
+*
+*
+* XXX: file maped vs non file maped pages:
+*
+*
+*
+                        task_struct
+                              |
+                              v
+                         mm_struct
+                              |
+        ------------------------------------------------
+        |                                              |
+        v                                              v
+  list of VMAs                                    page tables (pgd)
+        |                                              |
+        v                                              |
+  vm_area_struct     ← maps virtual ranges →     virtual→physical map
+        |
+        | (if VMA maps a file)
+        v
+  address_space (in inode)
+        |
+        v
+  page cache pages (struct page)
+
+*/
+
+/*
  * Linux kernel virtual memory manager primitives.
  * The idea being to have a "virtual" mm in the same way
  * we have a virtual fs - giving a cleaner interface to the
@@ -118,7 +172,11 @@ struct vm_area_struct {
 	/* Information about our backing store: */
 	unsigned long vm_pgoff;		/* Offset (within vm_file) in PAGE_SIZE
 					   units, *not* PAGE_CACHE_SIZE */
-	/* XXX: Non null for File mapping */
+	/* XXX: Non null for File mapping 
+	 *	file have its address_space
+	 *	so this is how we can reach to file pages
+	 *	from the vm_area_struct
+	 */
 	struct file * vm_file;		/* File we map to (can be NULL). */
 	void * vm_private_data;		/* was vm_pte (shared mem) */
 	unsigned long vm_truncate_count;/* truncate_count or restart_addr */
