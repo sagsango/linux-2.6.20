@@ -973,10 +973,14 @@ long do_sys_open(int dfd, const char __user *filename, int flags, int mode)
 	return fd;
 }
 
+/*XXX:
+ *	open starts here
+ */
 asmlinkage long sys_open(const char __user *filename, int flags, int mode)
 {
 	long ret;
 
+	/*XXX: O_LARGEFILE */
 	if (force_o_largefile())
 		flags |= O_LARGEFILE;
 
