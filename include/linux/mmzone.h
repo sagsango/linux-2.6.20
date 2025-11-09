@@ -46,6 +46,9 @@ struct zone_padding {
 #define ZONE_PADDING(name)
 #endif
 
+/* XXX:
+ *	memory zone stat
+ */
 enum zone_stat_item {
 	NR_ANON_PAGES,	/* Mapped anonymous pages */
 	NR_FILE_MAPPED,	/* pagecache pages mapped into pagetables.
@@ -90,6 +93,10 @@ struct per_cpu_pageset {
 #define zone_pcp(__z, __cpu) (&(__z)->pageset[(__cpu)])
 #endif
 
+/*
+ * XXX:
+ *	memory zone types enum
+ */
 enum zone_type {
 	/*
 	 * ZONE_DMA is used when there are devices that are not able
@@ -152,7 +159,7 @@ enum zone_type {
 #else
 #define ZONES_SHIFT 2
 #endif
-
+/* XXX: metadata of a zone, sturct zone */
 struct zone {
 	/* Fields commonly accessed by the page allocator */
 	unsigned long		free_pages;
