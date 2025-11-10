@@ -1,4 +1,11 @@
 /*
+ * XXX:
+ * This file implements low-level I/O for swapping pages between:
+ * Physical RAM
+ * Swap device (swap partition or swapfile)
+ */
+
+/*
  *  linux/mm/page_io.c
  *
  *  Copyright (C) 1991, 1992, 1993, 1994  Linus Torvalds

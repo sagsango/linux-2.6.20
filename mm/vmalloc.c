@@ -501,6 +501,10 @@ void *__vmalloc(unsigned long size, gfp_t gfp_mask, pgprot_t prot)
 }
 EXPORT_SYMBOL(__vmalloc);
 
+/*
+ * XXX:
+ *  vmalloc()
+ */
 /**
  *	vmalloc  -  allocate virtually contiguous memory
  *	@size:		allocation size

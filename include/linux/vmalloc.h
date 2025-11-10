@@ -22,6 +22,10 @@ struct vm_area_struct;
 #define IOREMAP_MAX_ORDER	(7 + PAGE_SHIFT)	/* 128 pages */
 #endif
 
+/*
+ * XXX:
+ *  See NOTES-04.md
+ */
 struct vm_struct {
 	/* keep next,addr,size together to speedup lookups */
 	struct vm_struct	*next;

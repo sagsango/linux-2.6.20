@@ -1,3 +1,163 @@
+/* XXX: Summary
+#1:
+Physical Memory (all RAM)
+        │
+        ▼
++---------------------------+
+|   pg_data_t (per node)   |   ← NUMA node (or one global node on UP/SMP)
++---------------------------+
+       │
+       ├── node_zones[]   → DMA, DMA32, NORMAL, HIGHMEM
+       │
+       ├── node_zonelists[] → Allocation search order
+       │
+       ├── node_mem_map[] → struct page descriptors
+       │
+       └── kswapd, watermarks, metadata...
+
+
+#2:
+struct zone
+    ├── free_area[MAX_ORDER]   → buddy allocator lists
+    ├── per_cpu_pageset        → per-CPU hot/cold pages
+    ├── LRU lists              → active/inactive file/anon
+    ├── wait_table             → page waitqueues
+    ├── watermarks (min/low/high)
+    └── stats + locks
+
+
+#3:
+zonelist (a list of zone*)
+    zones[0] = preferred zone (e.g., NORMAL)
+    zones[1] = fallback zone (e.g., DMA32)
+    ...
+    zones[n] = NULL (terminator)
+
+#4:
+System RAM
+   ↓ subdivided by physical address limits
++---------------------------+
+| Node 0: pg_data_t         |
++---------------------------+
+|   ZONE_DMA                |  → low 16MB
+|   ZONE_DMA32 (optional)   |  → low 4GB
+|   ZONE_NORMAL             |  → kernel-addressable RAM
+|   ZONE_HIGHMEM (optional) |  → >896MB on 32-bit x86
++---------------------------+
+
+
+#5:
+pg_data_t
+    ├── node_zones[MAX_NR_ZONES]        ← struct zone array
+    ├── node_zonelists[MAX_NR_ZONES]    ← allocation search lists
+    ├── node_mem_map                    ← struct page[] for whole node
+    ├── node_start_pfn
+    ├── node_present_pages
+    └── kswapd (page reclaim daemon)
+
+
+pg_data_t (node)
+    ┌─────────────────────────────────────────┐
+    │ node_zones[0] = DMA                     │
+    │ node_zones[1] = DMA32 (if enabled)      │
+    │ node_zones[2] = NORMAL                  │
+    │ node_zones[3] = HIGHMEM                 │
+    └─────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────┐
+    │ node_zonelists[] → fallback order       │
+    │   e.g. NORMAL → NORMAL → DMA32 → DMA    │
+    └─────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────┐
+    │ node_mem_map[] → array of struct page   │
+    └─────────────────────────────────────────┘
+
+#6:
+zone
+ ├── watermarks: pages_min/pages_low/pages_high
+ ├── free_area[MAX_ORDER]    (buddy lists)
+ │     order=0 → 1 page
+ │     order=1 → 2 pages
+ │     order=2 → 4 pages
+ │     ...
+ ├── per_cpu_pageset[NR_CPUS]
+ │     ├── hot list
+ │     └── cold list
+ ├── LRU:
+ │     ├── active_list
+ │     ├── inactive_list
+ ├── wait_table (hashed waitqueues)
+ ├── vm_stat[]
+ ├── zone_start_pfn
+ └── name = "DMA"/"NORMAL"/"HIGHMEM"
+
+#7:
+alloc_pages(GFP_KERNEL, order)
+
+zonelist->zones[] =
+    [0] NORMAL
+    [1] DMA32
+    [2] DMA
+    [3] NULL
+
+
+__alloc_pages()
+    → gfp_zone(gfp_mask) → selects target zone index
+    → zonelist = pg_data.node_zonelists[index]
+    → get_page_from_freelist(zonelist)
+         → scan zones in order
+         → check watermarks
+         → try buddy allocator
+         → fall back to next zone if needed
+
+
+alloc_pages(gfp, order)
+       │
+       ▼
+Get zonelist for the requested GFP flags
+       │
+       ▼
+zonelist->zones[]
+    ┌─────────────┬─────────────┬──────────────┐
+    │ NORMAL      │ DMA32       │ DMA          │
+    └─────────────┴─────────────┴──────────────┘
+       │
+Iterate zones:
+       │
+       ▼
+zone_watermark_ok()
+       │
+       ▼
+Try buddy free_area[order]
+       │
+       ├── success → return page
+       │
+       └── fail → try next zone (fallback)
+
+
+#8:
+node_mem_map[]  (array of struct page)
+    index = pfn - node_start_pfn
+    struct page describes each physical page frame
+
+
+
+Physical Memory
+    ↓
+pg_data_t (per node)
+    ↓
+Zones (DMA, NORMAL, HIGHMEM)
+    ↓
+Buddy allocator + pcp caches
+    ↓
+Zonelists (fallback chains)
+    ↓
+alloc_pages / get_free_pages
+
+*/
+
+
 #ifndef _LINUX_MMZONE_H
 #define _LINUX_MMZONE_H
 
@@ -16,6 +176,10 @@
 #include <asm/atomic.h>
 #include <asm/page.h>
 
+/* XXX: Buddy allocator 
+ *      manages the pages in each zones
+ *      budday allocator allocates the number of pages in the power of 2
+ */
 /* Free memory management - zoned buddy allocator.  */
 #ifndef CONFIG_FORCE_MAX_ZONEORDER
 #define MAX_ORDER 11
@@ -79,6 +243,12 @@ struct per_cpu_pages {
 	struct list_head list;	/* the list of pages */
 };
 
+/*
+ * XXX:
+ *  Per CPU pages
+ *  NOTE: we have 2 lists hot & cold
+ *  part of the struct zone
+ */
 struct per_cpu_pageset {
 	struct per_cpu_pages pcp[2];	/* 0: hot.  1: cold */
 #ifdef CONFIG_SMP
@@ -147,6 +317,9 @@ enum zone_type {
 };
 
 /*
+ * XXX: one zone representation 
+ */
+/*
  * When a memory allocation must conform to specific limitations (such
  * as being suitable for DMA) the caller will pass in hints to the
  * allocator in the gfp_mask, in the zone modifier bits.  These bits
@@ -174,6 +347,7 @@ struct zone {
 	 */
 	unsigned long		lowmem_reserve[MAX_NR_ZONES];
 
+    /* XXX: Per cpu pages */
 #ifdef CONFIG_NUMA
 	int node;
 	/*
@@ -193,6 +367,11 @@ struct zone {
 	/* see spanned/present_pages for more description */
 	seqlock_t		span_seqlock;
 #endif
+    /*
+     * XXX: per zone; free pages are managed by the buddy allocator
+     *      order = 2^i pages togather
+     */
+     *
 	struct free_area	free_area[MAX_ORDER];
 
 
@@ -397,6 +576,46 @@ struct node_active_region {
 /* The array of struct pages - for discontigmem use pgdat->lmem_map */
 extern struct page *mem_map;
 #endif
+
+/*
+ * XXX:
+
+ pg_data_t (node)
+ ├── node_zones[]
+ │     ├── struct zone (DMA)
+ │     ├── struct zone (DMA32)
+ │     ├── struct zone (NORMAL)
+ │     └── struct zone (HIGHMEM)
+ │
+ └── node_mem_map[]   → all struct page descriptors
+
+
+
+    Physical memory
+        ↓
+    pg_data_t
+        ↓
+    Zones (DMA/NORMAL/etc)
+        ↓
+    Buddy allocator free lists
+        ↓
+    struct page for each PFN
+
+
+
+
+
+alloc_pages(GFP_KERNEL, order)
+ └─ __alloc_pages()
+      └─ zonelist = node_zonelists[gfp_zone(gfp)]
+      └─ get_page_from_freelist(zonelist)
+*
+*
+*
+*
+*
+*/
+
 
 /*
  * The pg_data_t structure is used in machines with CONFIG_DISCONTIGMEM

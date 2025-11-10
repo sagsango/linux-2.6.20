@@ -403,6 +403,11 @@ out_nc:
 	return ret;
 }
 
+/* XXX:
+ * mremap() expands (or shrinks) an existing memory mapping (mmaped),
+ * potentially moving it at the same time (controlled by the flags
+ * argument and the available virtual address space).
+*/
 asmlinkage unsigned long sys_mremap(unsigned long addr,
 	unsigned long old_len, unsigned long new_len,
 	unsigned long flags, unsigned long new_addr)

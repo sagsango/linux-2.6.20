@@ -36,6 +36,9 @@
 #include <linux/module.h>
 #include <linux/timer.h>
 
+/*
+ * XXX: See NOTES-09.md
+ */
 struct slob_block {
 	int units;
 	struct slob_block *next;

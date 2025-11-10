@@ -23,6 +23,7 @@ struct pglist_data *next_online_pgdat(struct pglist_data *pgdat)
 	return NODE_DATA(nid);
 }
 
+/*XXX: Next zone after the given */
 /*
  * next_zone - helper magic for for_each_zone()
  */
