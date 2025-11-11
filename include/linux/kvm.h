@@ -260,6 +260,11 @@ struct kvm_dirty_log {
 	};
 };
 
+/* XXX:
+ *  kvm ioctls
+ *      TODO: Make branch for each ioctl in qemu and kernel
+ *            And get the flow one by one
+ */
 #define KVMIO 0xAE
 
 #define KVM_GET_API_VERSION       _IO(KVMIO, 1)
@@ -268,11 +273,11 @@ struct kvm_dirty_log {
 #define KVM_SET_REGS              _IOW(KVMIO, 4, struct kvm_regs)
 #define KVM_GET_SREGS             _IOWR(KVMIO, 5, struct kvm_sregs)
 #define KVM_SET_SREGS             _IOW(KVMIO, 6, struct kvm_sregs)
-#define KVM_TRANSLATE             _IOWR(KVMIO, 7, struct kvm_translation)
-#define KVM_INTERRUPT             _IOW(KVMIO, 8, struct kvm_interrupt)
+#define KVM_TRANSLATE             _IOWR(KVMIO, 7, struct kvm_translation)       /*XXX: Guest debuuging support, like attaching gdb on the guest */
+#define KVM_INTERRUPT             _IOW(KVMIO, 8, struct kvm_interrupt)          /*XXX: Interrupts injection */
 #define KVM_DEBUG_GUEST           _IOW(KVMIO, 9, struct kvm_debug_guest)
-#define KVM_SET_MEMORY_REGION     _IOW(KVMIO, 10, struct kvm_memory_region)
-#define KVM_CREATE_VCPU           _IOW(KVMIO, 11, int /* vcpu_slot */)
+#define KVM_SET_MEMORY_REGION     _IOW(KVMIO, 10, struct kvm_memory_region)     /*XXX: Set guest memory */
+#define KVM_CREATE_VCPU           _IOW(KVMIO, 11, int /* vcpu_slot */)          /*XXX: Creating vcpus */
 #define KVM_GET_DIRTY_LOG         _IOW(KVMIO, 12, struct kvm_dirty_log)
 #define KVM_GET_MSRS              _IOWR(KVMIO, 13, struct kvm_msrs)
 #define KVM_SET_MSRS              _IOWR(KVMIO, 14, struct kvm_msrs)
