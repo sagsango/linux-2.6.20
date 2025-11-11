@@ -55,6 +55,7 @@
 /*
  * XXX:
  *  Virtual Machine Control Structure
+ *  see comment in svm.h for the vmcs
  */
 /* VMCS Encodings */
 enum vmcs_field {

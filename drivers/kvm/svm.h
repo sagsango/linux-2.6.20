@@ -122,6 +122,16 @@ struct __attribute__ ((__packed__)) vmcb_seg {
 	u64 base;
 };
 
+/*
+ * XXX:
+ * Virtual Machine Control Block, a crucial data structure used by a hypervisor
+ * to manage the state of a virtual machine (VM). It contains the VM's CPU 
+ * state, control information, and instructions for how the guest operating 
+ * system should run, including what events trigger a switch to the hypervisor
+ * (called a VMEXIT). On AMD processors, the VMCB is the specific data 
+ * structure, while on Intel platforms, it is known as the Virtual Machine 
+ * Control Structure (VMCS). 
+ */
 struct __attribute__ ((__packed__)) vmcb_save_area {
 	struct vmcb_seg es;
 	struct vmcb_seg cs;
@@ -235,6 +245,12 @@ struct __attribute__ ((__packed__)) vmcb {
 #define SVM_EXITINTINFO_VALID SVM_EVTINJ_VALID
 #define SVM_EXITINTINFO_VALID_ERR SVM_EVTINJ_VALID_ERR
 
+/*
+ * XXX:
+ *  These are the arch spesific exit reasons
+ *  KVM always give KVM_EXIT_ to usrrspace
+ *  so qemu will only have to handle the KVM_EXIT_
+ */
 #define	SVM_EXIT_READ_CR0 	0x000
 #define	SVM_EXIT_READ_CR3 	0x003
 #define	SVM_EXIT_READ_CR4 	0x004
