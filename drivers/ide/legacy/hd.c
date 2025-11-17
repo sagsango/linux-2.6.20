@@ -1,3 +1,12 @@
+/* XXX: This is legacy hd disk driver, similar to the xv6
+ *      Go to other drivers source code, because driver 
+ *      does not do scheduling, thats done before the the
+ *      driver layer ex (block/elevator.c)
+ *
+ *      in this file we are doing the port io
+ *      we should look for the dma cdrom etc.
+ */
+
 /*
  *  Copyright (C) 1991, 1992  Linus Torvalds
  *
