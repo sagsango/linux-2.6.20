@@ -785,7 +785,7 @@ static int fsync_buffers_list(spinlock_t *lock, struct list_head *list)
 				 * contents - it is a noop if I/O is still in
 				 * flight on potentially older contents.
 				 */
-				ll_rw_block(SWRITE, 1, &bh);
+				ll_rw_block(SWRITE, 1, &bh); /* XXX: submited the block list for io to driver*/
 				brelse(bh);
 				spin_lock(lock);
 			}
@@ -797,6 +797,7 @@ static int fsync_buffers_list(spinlock_t *lock, struct list_head *list)
 		list_del_init(&bh->b_assoc_buffers);
 		get_bh(bh);
 		spin_unlock(lock);
+        /* XXX: wait for the io to get complete */
 		wait_on_buffer(bh);
 		if (!buffer_uptodate(bh))
 			err = -EIO;
@@ -2639,6 +2640,9 @@ static int end_bio_bh_io_sync(struct bio *bio, unsigned int bytes_done, int err)
 	return 0;
 }
 
+/*
+ * XXX: Submitting the block io request
+ */
 int submit_bh(int rw, struct buffer_head * bh)
 {
 	struct bio *bio;
@@ -2678,6 +2682,9 @@ int submit_bh(int rw, struct buffer_head * bh)
 	bio->bi_private = bh;
 
 	bio_get(bio);
+    /*
+     * XXX: We go to block layer
+     */
 	submit_bio(rw, bio);
 
 	if (bio_flagged(bio, BIO_EOPNOTSUPP))
@@ -2687,6 +2694,8 @@ int submit_bh(int rw, struct buffer_head * bh)
 	return ret;
 }
 
+/* XXX: submiting the indivisual blocks for the io
+ */
 /**
  * ll_rw_block: low-level access to block devices (DEPRECATED)
  * @rw: whether to %READ or %WRITE or %SWRITE or maybe %READA (readahead)

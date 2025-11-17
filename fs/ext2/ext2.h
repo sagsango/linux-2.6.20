@@ -1,6 +1,8 @@
 #include <linux/fs.h>
 #include <linux/ext2_fs.h>
 
+/*XXX: mount options
+ */
 /*
  * ext2 mount options
  */
@@ -10,6 +12,78 @@ struct ext2_mount_options {
 	gid_t s_resgid;
 };
 
+/*
++----------------------------- DISK START ---------------------------------------+
+|                                            i                                   |
+| BLOCK 0 : BOOT BLOCK                                                           |
+|   - Reserved for bootloader code (e.g., GRUB stage 1)                          |
+|   - EXT2 does NOT store filesystem data here                                   |
+|                                                                                |
++--------------------------------------------------------------------------------+
+| BLOCK 1 : SUPERBLOCK (MAIN COPY)                                               |
+|   Contains:                                                                    |
+|     - total number of inodes                                                   |
+|     - total number of blocks                                                   |
+|     - block size, fragment size                                                |
+|     - blocks per group, inodes per group                                       |
+|     - mount counts, last mount time                                            |
+|     - compatible/incompatible features                                         |
+|     - magic signature (0xEF53)                                                 |
+|                                              i                                 |
++--------------------------------------------------------------------------------+
+| BLOCKS 2..N : GROUP DESCRIPTOR TABLE                                           |
+|   Array of `ext2_group_desc` entries:                                          |
+|     struct ext2_group_desc {                                                   |
+|        block_bitmap;       // block number                                     |
+|        inode_bitmap;       // block number                                     |
+|        inode_table;        // starting block                                   |
+|        free_blocks_count;                                                      |
+|        free_inodes_count;                                                      |
+|        used_dirs_count;                                                        |
+|     };                                                                         |
+|                                                                                |
++--------------------------------------------------------------------------------+
+|                                                                                |
+|                              BLOCK GROUP 0                                     |
+| (Starts immediately after GDT; location depends on block size)                 |
+|--------------------------------------------------------------------------------|
+| Superblock COPY (always appears in BG 0)                                       |
+| Group Descriptor Table COPY (always appears in BG 0)                           |
+| Block Bitmap (1 bit per block *in this group*)                                 |
+| Inode Bitmap (1 bit per inode *in this group*)                                 |
+| Inode Table (array of inode structures)                                        |
+| Data Blocks (files, dirs, indirect blocks, symlinks)                           |
+|                                                                                |
++--------------------------------------------------------------------------------+
+|                              BLOCK GROUP 1                                     |
+|--------------------------------------------------------------------------------|
+| Superblock COPY? (only if sparse_super says so)                                |
+| Group Descriptor TABLE copy?                                                   |
+| Block Bitmap                                                                   |
+| Inode Bitmap                                                                   |
+| Inode Table                                                                    |
+| Data Blocks                                                                    |
++--------------------------------------------------------------------------------+
+|                              BLOCK GROUP 2                                     |
+|--------------------------------------------------------------------------------|
+| Block Bitmap                                                                   |
+| Inode Bitmap                                                                   |
+| Inode Table                                                                    |
+| Data Blocks                                                                    |
++--------------------------------------------------------------------------------+
+|                                            ...                                 |
++--------------------------------------------------------------------------------+
+|                              BLOCK GROUP N                                     |
+|--------------------------------------------------------------------------------|
+| Block Bitmap                                                                   |
+| Inode Bitmap                                                                   |
+| Inode Table                                                                    |
+| Data Blocks                                                                    |
++------------------------------ DISK END ----------------------------------------+
+
+Putting the inodes and all the data bloc togather reduces the seektime, and in 
+give massive performance inhancement
+*/
 /*
  * second extended file system inode data in memory
  */
@@ -88,6 +162,7 @@ static inline struct ext2_inode_info *EXT2_I(struct inode *inode)
 	return container_of(inode, struct ext2_inode_info, vfs_inode);
 }
 
+/* XXX: block ops */
 /* balloc.c */
 extern int ext2_bg_has_super(struct super_block *sb, int group);
 extern unsigned long ext2_bg_num_gdb(struct super_block *sb, int group);
@@ -102,6 +177,7 @@ extern struct ext2_group_desc * ext2_get_group_desc(struct super_block * sb,
 						    unsigned int block_group,
 						    struct buffer_head ** bh);
 
+/* XXX: dir ops*/
 /* dir.c */
 extern int ext2_add_link (struct dentry *, struct inode *);
 extern ino_t ext2_inode_by_name(struct inode *, struct dentry *);
@@ -112,9 +188,11 @@ extern int ext2_empty_dir (struct inode *);
 extern struct ext2_dir_entry_2 * ext2_dotdot (struct inode *, struct page **);
 extern void ext2_set_link(struct inode *, struct ext2_dir_entry_2 *, struct page *, struct inode *);
 
+/* XXX: fsync */
 /* fsync.c */
 extern int ext2_sync_file (struct file *, struct dentry *, int);
 
+/* XXX: inode ops */
 /* ialloc.c */
 extern struct inode * ext2_new_inode (struct inode *, int);
 extern void ext2_free_inode (struct inode *);
@@ -142,6 +220,7 @@ extern long ext2_compat_ioctl(struct file *, unsigned int, unsigned long);
 /* namei.c */
 struct dentry *ext2_get_parent(struct dentry *child);
 
+/* XXX: superblock ops*/
 /* super.c */
 extern void ext2_error (struct super_block *, const char *, const char *, ...)
 	__attribute__ ((format (printf, 3, 4)));
@@ -150,6 +229,7 @@ extern void ext2_warning (struct super_block *, const char *, const char *, ...)
 extern void ext2_update_dynamic_rev (struct super_block *sb);
 extern void ext2_write_super (struct super_block *);
 
+/* XXX: ops structs */
 /*
  * Inodes and files operations
  */

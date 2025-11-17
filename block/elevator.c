@@ -1,4 +1,7 @@
 /*
+ * XXX: Block io scheduler
+ */
+/*
  *  Block device elevator/IO-scheduler.
  *
  *  Copyright (C) 2000 Andrea Arcangeli <andrea@suse.de> SuSE
@@ -561,6 +564,16 @@ void elv_insert(request_queue_t *q, struct request *rq, int where)
 		 *   processing.
 		 */
 		blk_remove_plug(q);
+        /* XXX: Start the io queue processing 
+         *      There can be any driver but we will take:
+         *      drivers/ide/legacy/hd.c
+         *          hd_init():
+         *              blk_init_queue(do_hd_request, &hd_lock);
+         *      so request_fn = do_hd_request
+         *
+         *      TODO: So this is the first place where the is going to 
+         *            the driver layer after the block scheduler layer
+         */
 		q->request_fn(q);
 		break;
 

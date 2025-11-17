@@ -395,6 +395,7 @@ struct page;
 struct address_space;
 struct writeback_control;
 
+/* XXX: Address space operations */
 struct address_space_operations {
 	int (*writepage)(struct page *page, struct writeback_control *wbc);
 	int (*readpage)(struct file *, struct page *);
@@ -430,6 +431,7 @@ struct address_space_operations {
 };
 
 struct backing_dev_info;
+/* XXX: Address space */
 struct address_space {
 	struct inode		*host;		/* owner: inode, block_device */
 	struct radix_tree_root	page_tree;	/* radix tree of all pages */
@@ -454,6 +456,7 @@ struct address_space {
 	 * of struct page's "mapping" pointer be used for PAGE_MAPPING_ANON.
 	 */
 
+/* XXX: Block device */
 struct block_device {
 	dev_t			bd_dev;  /* not a kdev_t - it's a search key */
 	struct inode *		bd_inode;	/* will die */
@@ -472,6 +475,7 @@ struct block_device {
 	/* number of times partitions within this device have been opened. */
 	unsigned		bd_part_count;
 	int			bd_invalidated;
+    /* XXX: disk */
 	struct gendisk *	bd_disk;
 	struct list_head	bd_list;
 	struct backing_dev_info *bd_inode_backing_dev_info;

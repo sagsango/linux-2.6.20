@@ -27,6 +27,7 @@
 #include <linux/buffer_head.h>		/* for sync_mapping_buffers() */
 
 
+/*XXX: sync the in memory file with the disk */
 /*
  *	File may be NULL when we are called. Perhaps we shouldn't
  *	even pass file to fsync ?

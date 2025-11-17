@@ -2902,6 +2902,8 @@ static void init_request_from_bio(struct request *req, struct bio *bio)
 	req->start_time = jiffies;
 }
 
+/* XXX: called by the generic_make_request()
+ */
 static int __make_request(request_queue_t *q, struct bio *bio)
 {
 	struct request *req;
@@ -2930,6 +2932,7 @@ static int __make_request(request_queue_t *q, struct bio *bio)
 	if (unlikely(barrier) || elv_queue_empty(q))
 		goto get_rq;
 
+    /* XXX: merge the block io requests */
 	el_ret = elv_merge(q, &req, bio);
 	switch (el_ret) {
 		case ELEVATOR_BACK_MERGE:
@@ -3021,6 +3024,12 @@ end_io:
 	return 0;
 }
 
+
+/*
+ * XXX:
+ * If this device has partitions, remap block n
+ * of partition p to block n+start(p) of the disk.
+ */
 /*
  * If bio->bi_dev is a partition, remap the location
  */
@@ -3090,6 +3099,9 @@ static inline int should_fail_request(struct bio *bio)
 
 #endif /* CONFIG_FAIL_MAKE_REQUEST */
 
+/*
+ * XXX: called by submit_bio()
+ */
 /**
  * generic_make_request: hand a buffer to its device driver for I/O
  * @bio:  The bio describing the location in memory and on the device.
@@ -3178,6 +3190,10 @@ end_io:
 		if (should_fail_request(bio))
 			goto end_io;
 
+        /*
+         * XXX:
+         *  partition handling
+         */
 		/*
 		 * If this device has partitions, remap block n
 		 * of partition p to block n+start(p) of the disk.
@@ -3209,12 +3225,17 @@ end_io:
 			}
 		}
 
+        /* XXX: Make request, its driver request function 
+         *      _q->make_request_fn = __make_request()*/
 		ret = q->make_request_fn(q, bio);
 	} while (ret);
 }
 
 EXPORT_SYMBOL(generic_make_request);
 
+/* XXX: block layer submitiing an io 
+ *      called by fs/buffer.c:submit_bh()
+ */
 /**
  * submit_bio: submit a bio to the block device layer for I/O
  * @rw: whether to %READ or %WRITE, or maybe to %READA (read ahead)
@@ -3232,6 +3253,7 @@ void submit_bio(int rw, struct bio *bio)
 	BIO_BUG_ON(!bio->bi_size);
 	BIO_BUG_ON(!bio->bi_io_vec);
 	bio->bi_rw |= rw;
+    /* XXX: keep track of the stats */
 	if (rw & WRITE) {
 		count_vm_events(PGPGOUT, count);
 	} else {

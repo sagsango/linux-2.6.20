@@ -52,6 +52,10 @@
 #define BIO_MAX_SECTORS		(BIO_MAX_SIZE >> 9)
 
 /*
+ * XXX: struct bio data is represented by
+ *      the page, offset and length.
+ */
+/*
  * was unsigned short, but we might as well be ready for > 64kB I/O pages
  */
 struct bio_vec {
@@ -65,6 +69,11 @@ struct bio;
 typedef int (bio_end_io_t) (struct bio *, unsigned int, int);
 typedef void (bio_destructor_t) (struct bio *);
 
+/*
+ * XXX: block for the io
+ *      its just a metadata which points to a page of
+ *      the file and have start offset and length.
+ */
 /*
  * main unit of I/O for the block layer and lower layers (ie drivers and
  * stacking drivers)

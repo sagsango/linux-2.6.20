@@ -291,7 +291,13 @@ static int controller_ready(unsigned int drive, unsigned int head)
 	return 0;
 }
 
-		
+	
+/*
+ * XXX: Finally we do the port io to the disk
+ *      for the block io, its legecy driver
+ *      which is very similar to the xv6 disk
+ *      driver.
+ */
 static void hd_out(struct hd_i_struct *disk,
 		   unsigned int nsect,
 		   unsigned int sect,
@@ -651,6 +657,9 @@ repeat:
 	}
 }
 
+/*
+ * XXX: driver submits the io request to the disk
+ */
 static void do_hd_request (request_queue_t * q)
 {
 	disable_irq(HD_IRQ);

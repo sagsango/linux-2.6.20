@@ -25,3 +25,12 @@ include/linux/ext2_fs.h
 include/linux/ext2_fs_sb.h
 include/asm-generic/bitops/ext2-non-atomic.h
 include/asm-generic/bitops/ext2-atomic.h
+
+
+block_layer:
+block
+
+
+driver_layer:
+driver/ide
+(We could use other derivers too like, scsi or sata)

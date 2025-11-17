@@ -103,7 +103,34 @@ struct disk_stats {
 	unsigned long io_ticks;
 	unsigned long time_in_queue;
 };
-	
+
+/*
+ * XXX: disk 
+ *      A disk can have multiple device
+ *      because of the parttitions
+
+               ┌────────────────────────┐
+               │      one gendisk       │   (entire device, e.g. “sda”)
+               │  major=8, minors=16    │
+               └─────┬──────────┬───────┘
+                     │part[]     │
+                     │           │
+   ┌─────────────────┼───────────┼──────────────────┐
+   │                 │           │                  │
+┌──▼───┐        ┌────▼──┐   ┌────▼──┐          ┌────▼──┐
+│sda   │        │sda1   │   │sda2   │          │sdaN   │   ← partitions
+└───┬──┘        └────┬──┘   └────┬──┘          └────┬──┘
+    │                 │           │                ┌─┘
+    │                 │           │                │
+┌───▼────────┐    ┌───▼────────┐ ┌───▼────────┐   │
+│block_device│    │block_device│ │block_device│   │  (one for each open)
+│   for sda  │    │ for sda1   │ │ for sda2   │ ←─┘
+└────────────┘    └────────────┘ └────────────┘
+        │               │               │
+        └───────────────┴───────────────┘
+                 points to same gendisk
+
+*/
 struct gendisk {
 	int major;			/* major number of driver */
 	int first_minor;
@@ -113,6 +140,10 @@ struct gendisk {
 	struct hd_struct **part;	/* [indexed by minor] */
 	int part_uevent_suppress;
 	struct block_device_operations *fops;
+    /* XXX: Request queue 
+     *      which will be used by all partitions
+     *      to submit the block io requests
+     */
 	struct request_queue *queue;
 	void *private_data;
 	sector_t capacity;
