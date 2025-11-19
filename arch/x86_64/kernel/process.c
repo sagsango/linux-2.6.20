@@ -668,6 +668,7 @@ __switch_to(struct task_struct *prev_p, struct task_struct *next_p)
 	return prev_p;
 }
 
+/* XXX: Starts here */
 /*
  * sys_execve() executes a new program.
  */

@@ -1118,6 +1118,53 @@ int search_binary_handler(struct linux_binprm *bprm,struct pt_regs *regs)
 EXPORT_SYMBOL(search_binary_handler);
 
 /*
+ sys_execve()/do_execve()
+          │
+          ▼
+   Allocate linux_binprm (bprm)
+          │
+          ▼
+       open_exec()
+          │
+          ▼
+    Allocate new mm_struct
+          │
+          ▼
+     Count argv/envp strings
+          │
+          ▼
+   prepare_binprm() → read file header
+          │
+          ▼
+   copy_strings() → copy args/env to kernel pages
+          │
+          ▼
+ search_binary_handler() ──> iterate linux_binfmt
+          │                     │
+          │                     ▼
+          │               load_binary() (handler)
+          │                     │
+          │           success? ──► yes → continue
+          │                     │
+          ▼                     no
+ flush_old_exec()  ←─────────────┘
+          │
+          ▼
+    de_thread() → ensure private sighand
+          │
+          ▼
+   exec_mmap() → switch old mm to new mm
+          │
+          ▼
+  setup_arg_pages() → map arg/env pages on stack
+          │
+          ▼
+  finalize (free bprm, update credentials, task name)
+          │
+          ▼
+       Program starts
+*/
+/*
  * sys_execve() executes a new program.
  */
 int do_execve(char * filename,
@@ -1125,7 +1172,7 @@ int do_execve(char * filename,
 	char __user *__user *envp,
 	struct pt_regs * regs)
 {
-	struct linux_binprm *bprm;
+	struct linux_binprm *bprm; /* XXX: binary param */
 	struct file *file;
 	int retval;
 	int i;
