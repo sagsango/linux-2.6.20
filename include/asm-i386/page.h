@@ -122,10 +122,20 @@ extern int page_is_ram(unsigned long pagenr);
 #define PAGE_OFFSET		((unsigned long)__PAGE_OFFSET)
 #define VMALLOC_RESERVE		((unsigned long)__VMALLOC_RESERVE)
 #define MAXMEM			(-__PAGE_OFFSET-__VMALLOC_RESERVE)
+/* XXX: Seems like the kernel VA to PA  conversion
+ *      its exactly same as the xv6
+ *      va = pa + OFFSET
+ *      pa = va - OFFSE
+ *
+ *
+ *      OFFSET if configurable and normally 0xc0000000
+ */
 #define __pa(x)			((unsigned long)(x)-PAGE_OFFSET)
 /* __pa_symbol should be used for C visible symbols.
    This seems to be the official gcc blessed way to do such arithmetic. */
 #define __pa_symbol(x)          __pa(RELOC_HIDE((unsigned long)(x),0))
+/* XXX: kernel pa to va
+ */
 #define __va(x)			((void *)((unsigned long)(x)+PAGE_OFFSET))
 #define pfn_to_kaddr(pfn)      __va((pfn) << PAGE_SHIFT)
 #ifdef CONFIG_FLATMEM

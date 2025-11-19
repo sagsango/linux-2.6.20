@@ -73,6 +73,9 @@ static inline void pgd_list_del(pgd_t *pgd)
 
 static inline pgd_t *pgd_alloc(struct mm_struct *mm)
 {
+    /* XXX: get_free_page will  by pass the slab allocator
+     *      
+     */
 	unsigned boundary;
 	pgd_t *pgd = (pgd_t *)__get_free_page(GFP_KERNEL|__GFP_REPEAT);
 	if (!pgd)
@@ -83,11 +86,20 @@ static inline pgd_t *pgd_alloc(struct mm_struct *mm)
 	 * Could keep a freelist or slab cache of those because the kernel
 	 * part never changes.
 	 */
-	boundary = pgd_index(__PAGE_OFFSET);
-	memset(pgd, 0, boundary * sizeof(pgd_t));
+	boundary = pgd_index(__PAGE_OFFSET); /*XXX:Boundary btwn user & kernel space */
+	memset(pgd, 0, boundary * sizeof(pgd_t)); /* XXX: Userspace mapping */
 	memcpy(pgd + boundary,
 	       init_level4_pgt + boundary,
-	       (PTRS_PER_PGD - boundary) * sizeof(pgd_t));
+	       (PTRS_PER_PGD - boundary) * sizeof(pgd_t)); /*XXX:kernel space mapping*/
+    /*
+     * XXX:
+        New PGD:
+        +-----------------------+-----------------------+
+        |  PGD[0..767]          |  PGD[768..1023]       |
+        |  ZEROED (user space)  |  COPIED from init PGD |
+        +-----------------------+-----------------------+
+     */
+
 	return pgd;
 }
 

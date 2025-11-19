@@ -594,6 +594,10 @@ asmlinkage void __init start_kernel(void)
 	if (efi_enabled)
 		efi_enter_virtual_mode();
 #endif
+    /* XXX:
+     *  init the fork library (module)
+     *  it happens in start_kernel()
+     */
 	fork_init(num_physpages);
 	proc_caches_init();
 	buffer_init();

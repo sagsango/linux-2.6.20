@@ -407,6 +407,8 @@ void prepare_to_copy(struct task_struct *tsk)
 	unlazy_fpu(tsk);
 }
 
+/*
+ * XXX: called by the sys_fork → do_fork → copy_process */
 int copy_thread(int nr, unsigned long clone_flags, unsigned long esp,
 	unsigned long unused,
 	struct task_struct * p, struct pt_regs * regs)
@@ -417,7 +419,7 @@ int copy_thread(int nr, unsigned long clone_flags, unsigned long esp,
 
 	childregs = task_pt_regs(p);
 	*childregs = *regs;
-	childregs->eax = 0;
+	childregs->eax = 0;   /* XXX: child return value 0 */
 	childregs->esp = esp;
 
 	p->thread.esp = (unsigned long) childregs;

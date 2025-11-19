@@ -1,3 +1,4 @@
+/* XXX: ptrace */
 /*
  * linux/kernel/ptrace.c
  *
@@ -22,6 +23,7 @@
 #include <asm/pgtable.h>
 #include <asm/uaccess.h>
 
+/* XXX: called by fork() */
 /*
  * ptrace a task: make the debugger its new parent and
  * move it to the ptrace list.

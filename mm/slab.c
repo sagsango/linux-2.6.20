@@ -643,6 +643,10 @@ static inline unsigned int obj_to_index(const struct kmem_cache *cache,
 }
 
 /*
+ * XXX: bins of the preallocated blocks
+ *      this is a array
+ */
+/*
  * These are the default caches for kmalloc. Custom caches can have other sizes.
  */
 struct cache_sizes malloc_sizes[] = {
@@ -3674,6 +3678,10 @@ EXPORT_SYMBOL(__kmalloc_node);
 #endif /* CONFIG_DEBUG_SLAB */
 #endif /* CONFIG_NUMA */
 
+/*
+ * XXX:
+ *  slab allocator has cache based on size
+ */
 /**
  * __do_kmalloc - allocate memory
  * @size: how many bytes of memory are required.

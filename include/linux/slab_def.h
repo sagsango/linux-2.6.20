@@ -21,6 +21,9 @@ struct cache_sizes {
 	struct kmem_cache	*cs_cachep;
 	struct kmem_cache	*cs_dmacachep;
 };
+/*
+ * XXX: preallocated bins 
+ */
 extern struct cache_sizes malloc_sizes[];
 
 static inline void *kmalloc(size_t size, gfp_t flags)

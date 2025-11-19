@@ -28,6 +28,7 @@ struct embedded_fd_set {
 
 struct fdtable {
 	unsigned int max_fds;
+    /* XXX: FD array */
 	struct file ** fd;      /* current fd array */
 	fd_set *close_on_exec;
 	fd_set *open_fds;
@@ -35,6 +36,13 @@ struct fdtable {
 	struct fdtable *next;
 };
 
+/*
+ * XXX: This is the FD table wapper which is
+ *      the member of the task struct, 
+ *      it has struct fdtable *fdt;
+ *      which is being used in kerel/fork.c:dup_fd()
+ *      TODO: What is the use of other members?
+ */
 /*
  * Open file table structure
  */
@@ -52,6 +60,11 @@ struct files_struct {
 	int next_fd;
 	struct embedded_fd_set close_on_exec_init;
 	struct embedded_fd_set open_fds_init;
+    /* XXX: TODO: What is the use of this, 
+     *            I think they had fixed size array first
+     *            then they wanted to move away from fixed
+     *            size array to variable/configurable array
+     */
 	struct file * fd_array[NR_OPEN_DEFAULT];
 };
 

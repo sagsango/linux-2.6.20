@@ -377,6 +377,7 @@ struct mm_struct {
 
 struct sighand_struct {
 	atomic_t		count;
+    /* XXX: Signal handlers */
 	struct k_sigaction	action[_NSIG];
 	spinlock_t		siglock;
 };
@@ -929,6 +930,14 @@ struct task_struct {
 	struct thread_struct thread;
 /* filesystem information */
 	struct fs_struct *fs;
+    /* XXX: fd table is an object 
+     *      which helps during fork()
+     *      we just incr the refcount of this
+     *      object that's it, because there 
+     *      can be large number of open files
+     *
+     *      see copy_files() in fork.c
+     */
 /* open file information */
 	struct files_struct *files;
 /* namespaces */
@@ -1498,6 +1507,7 @@ static inline void unlock_task_sighand(struct task_struct *tsk,
 #define task_thread_info(task) (task)->thread_info
 #define task_stack_page(task) ((void*)((task)->thread_info))
 
+/* XXX: Its bad name, it just copy the arch spesific thread metadata */
 static inline void setup_thread_stack(struct task_struct *p, struct task_struct *org)
 {
 	*task_thread_info(p) = *task_thread_info(org);

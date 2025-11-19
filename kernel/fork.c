@@ -80,6 +80,8 @@ int nr_processes(void)
 	return total;
 }
 
+/*
+ * XXX: we have many preallocted bins for diff objects */
 #ifndef __HAVE_ARCH_TASK_STRUCT_ALLOCATOR
 # define alloc_task_struct()	kmem_cache_alloc(task_struct_cachep, GFP_KERNEL)
 # define free_task_struct(tsk)	kmem_cache_free(task_struct_cachep, (tsk))
@@ -165,6 +167,22 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 
 	prepare_to_copy(orig);
 
+    /* XXX: slab allocator
+     *      slab.h has already been included
+     *      slab allocator can allocate variable 
+     *      size memory which is a cache + allocator
+     *
+     *      pages comes from the buddy system which
+     *      allocates the pages in the power of 2
+     *
+     *
+     *      instead of calling the slab allocator we have created
+     *      one more layer of caching only for the task_struct
+     *      which is task_struct_cachep
+     *
+     *      TODO: seems one page is being allocated?
+     *
+     */
 	tsk = alloc_task_struct();
 	if (!tsk)
 		return NULL;
@@ -193,6 +211,23 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 	return tsk;
 }
 
+/*
+ * XXX: How copy pages works in fork() 
+ *      in case of !VM_CLONE
+fork()
+ └─ copy_process()
+     └─ copy_mm()
+         ├─ if CLONE_VM: share mm (threads)
+         └─ else:
+             └─ dup_mm()
+                 └─ dup_mmap()
+                     └─ for each VMA in parent:
+                         ├─ allocate VMA copy
+                         ├─ add VMA to child's mm
+                         └─ copy_page_range(child_mm, parent_mm, vma)
+ *
+ *
+ */
 #ifdef CONFIG_MMU
 static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 {
@@ -221,6 +256,7 @@ static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 	rb_parent = NULL;
 	pprev = &mm->mmap;
 
+    /* XXX: all vm_area_struct */
 	for (mpnt = oldmm->mmap; mpnt; mpnt = mpnt->vm_next) {
 		struct file *file;
 
@@ -238,10 +274,18 @@ static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 				goto fail_nomem;
 			charge = len;
 		}
+        /*
+         * XXX: its slab allocator
+         *      (generally memory less than page size are handeled by
+         *      the slab, slob and slob allocator)
+         *
+         *      pages are directly allocated by buddy with order 0
+         */
 		tmp = kmem_cache_alloc(vm_area_cachep, GFP_KERNEL);
 		if (!tmp)
 			goto fail_nomem;
 		*tmp = *mpnt;
+        /*XXX: NUMA memory policy */
 		pol = mpol_copy(vma_policy(mpnt));
 		retval = PTR_ERR(pol);
 		if (IS_ERR(pol))
@@ -251,6 +295,7 @@ static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 		tmp->vm_mm = mm;
 		tmp->vm_next = NULL;
 		anon_vma_link(tmp);
+        /* XXX: File  mappings */
 		file = tmp->vm_file;
 		if (file) {
 			struct inode *inode = file->f_path.dentry->d_inode;
@@ -278,6 +323,34 @@ static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 		rb_parent = &tmp->vm_rb;
 
 		mm->map_count++;
+
+        /*
+         * XXX: Copy the pages inside this vma 
+         *      TODO:so stack is also part of vma?  YES
+         *
+74c6a76cb000-74c6a76ce000 r--p 00000000 103:02 1584300                   /usr/lib/x86_64-linux-gnu/libaudit.so.1.0.0
+74c6a76ce000-74c6a76d6000 r-xp 00003000 103:02 1584300                   /usr/lib/x86_64-linux-gnu/libaudit.so.1.0.0
+74c6a76d6000-74c6a76eb000 r--p 0000b000 103:02 1584300                   /usr/lib/x86_64-linux-gnu/libaudit.so.1.0.0
+74c6a76eb000-74c6a76ec000 r--p 0001f000 103:02 1584300                   /usr/lib/x86_64-linux-gnu/libaudit.so.1.0.0
+74c6a76ec000-74c6a76ed000 rw-p 00020000 103:02 1584300                   /usr/lib/x86_64-linux-gnu/libaudit.so.1.0.0
+74c6a76ed000-74c6a76f9000 rw-p 00000000 00:00 0
+74c6a76f9000-74c6a76fc000 r--p 00000000 103:02 1572981                   /usr/lib/x86_64-linux-gnu/libapparmor.so.1.17.1
+74c6a76fc000-74c6a7705000 r-xp 00003000 103:02 1572981                   /usr/lib/x86_64-linux-gnu/libapparmor.so.1.17.1
+74c6a7705000-74c6a770b000 r--p 0000c000 103:02 1572981                   /usr/lib/x86_64-linux-gnu/libapparmor.so.1.17.1
+74c6a770b000-74c6a770c000 r--p 00012000 103:02 1572981                   /usr/lib/x86_64-linux-gnu/libapparmor.so.1.17.1
+74c6a770c000-74c6a770d000 rw-p 00013000 103:02 1572981                   /usr/lib/x86_64-linux-gnu/libapparmor.so.1.17.1
+74c6a7728000-74c6a772a000 rw-p 00000000 00:00 0
+74c6a772a000-74c6a772c000 r--p 00000000 00:00 0                          [vvar]
+74c6a772c000-74c6a772e000 r--p 00000000 00:00 0                          [vvar_vclock]
+74c6a772e000-74c6a7730000 r-xp 00000000 00:00 0                          [vdso]
+74c6a7730000-74c6a7731000 r--p 00000000 103:02 1595656                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+74c6a7731000-74c6a775c000 r-xp 00001000 103:02 1595656                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+74c6a775c000-74c6a7766000 r--p 0002c000 103:02 1595656                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+74c6a7766000-74c6a7768000 r--p 00036000 103:02 1595656                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+74c6a7768000-74c6a776a000 rw-p 00038000 103:02 1595656                   /usr/lib/x86_64-linux-gnu/ld-linux-x86-64.so.2
+7ffc03438000-7ffc03459000 rw-p 00000000 00:00 0                          [stack]
+ffffffffff600000-ffffffffff601000 --xp 00000000 00:00 0                  [vsyscall]
+         */
 		retval = copy_page_range(mm, oldmm, mpnt);
 
 		if (tmp->vm_ops && tmp->vm_ops->open)
@@ -493,6 +566,9 @@ static struct mm_struct *dup_mm(struct task_struct *tsk)
 	mm->token_priority = 0;
 	mm->last_interval = 0;
 
+    /* XXX: it also alloc page-table
+     *      with maped kernel space
+     */
 	if (!mm_init(mm))
 		goto fail_nomem;
 
@@ -535,6 +611,12 @@ static int copy_mm(unsigned long clone_flags, struct task_struct * tsk)
 	tsk->mm = NULL;
 	tsk->active_mm = NULL;
 
+    /*
+     * XXX: See the cmnt about the kernel thread 
+     *      and one more thing to notice is when the current 
+     *      will be valid mean it should not be interrupted 
+     *      context
+     */
 	/*
 	 * Are we cloning a kernel thread?
 	 *
@@ -544,6 +626,9 @@ static int copy_mm(unsigned long clone_flags, struct task_struct * tsk)
 	if (!oldmm)
 		return 0;
 
+    /* XXX: seems the mm_struct is just an object which redfcount will
+     *      get incremented in case of the clone vm flag
+     */
 	if (clone_flags & CLONE_VM) {
 		atomic_inc(&oldmm->mm_users);
 		mm = oldmm;
@@ -703,6 +788,7 @@ static struct files_struct *dup_fd(struct files_struct *oldf, int *errorp)
 	memcpy(new_fdt->close_on_exec->fds_bits,
 		old_fdt->close_on_exec->fds_bits, open_files/8);
 
+    /* XXX: open files */
 	for (i = open_files; i != 0; i--) {
 		struct file *f = *old_fds++;
 		if (f) {
@@ -754,6 +840,9 @@ static int copy_files(unsigned long clone_flags, struct task_struct * tsk)
 	if (!oldf)
 		goto out;
 
+    /*
+     * XXX: whole fd table have refcount 
+     *      this is very cool optimization*/
 	if (clone_flags & CLONE_FILES) {
 		atomic_inc(&oldf->count);
 		goto out;
@@ -811,11 +900,13 @@ static inline int copy_sighand(unsigned long clone_flags, struct task_struct * t
 		atomic_inc(&current->sighand->count);
 		return 0;
 	}
+    /* XXX: slab cache */
 	sig = kmem_cache_alloc(sighand_cachep, GFP_KERNEL);
 	rcu_assign_pointer(tsk->sighand, sig);
 	if (!sig)
 		return -ENOMEM;
 	atomic_set(&sig->count, 1);
+    /* XXX: all the signal handler */
 	memcpy(sig->action, current->sighand->action, sizeof(sig->action));
 	return 0;
 }
@@ -836,6 +927,7 @@ static inline int copy_signal(unsigned long clone_flags, struct task_struct * ts
 		atomic_inc(&current->signal->live);
 		return 0;
 	}
+    /* XXX: slab cache */
 	sig = kmem_cache_alloc(signal_cachep, GFP_KERNEL);
 	tsk->signal = sig;
 	if (!sig)
@@ -1035,6 +1127,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	clear_tsk_thread_flag(p, TIF_SIGPENDING);
 	init_sigpending(&p->pending);
 
+    /* XXX: process stats */
 	p->utime = cputime_zero;
 	p->stime = cputime_zero;
  	p->sched_time = 0;
@@ -1106,8 +1199,10 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	if ((retval = audit_alloc(p)))
 		goto bad_fork_cleanup_security;
 	/* copy all the process information */
+    /* XXX: TODO: semundo? */
 	if ((retval = copy_semundo(clone_flags, p)))
 		goto bad_fork_cleanup_audit;
+    /* XXX: copy files */
 	if ((retval = copy_files(clone_flags, p)))
 		goto bad_fork_cleanup_semundo;
 	if ((retval = copy_fs(clone_flags, p)))
@@ -1116,12 +1211,15 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 		goto bad_fork_cleanup_fs;
 	if ((retval = copy_signal(clone_flags, p)))
 		goto bad_fork_cleanup_sighand;
+    /* XXX: copy mm */
 	if ((retval = copy_mm(clone_flags, p)))
 		goto bad_fork_cleanup_signal;
 	if ((retval = copy_keys(clone_flags, p)))
 		goto bad_fork_cleanup_mm;
 	if ((retval = copy_namespaces(clone_flags, p)))
 		goto bad_fork_cleanup_keys;
+    /* XXX: here we make the return value of child to 0
+     */
 	retval = copy_thread(0, clone_flags, stack_start, stack_size, p, regs);
 	if (retval)
 		goto bad_fork_cleanup_namespaces;
@@ -1219,6 +1317,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 		goto bad_fork_cleanup_namespaces;
 	}
 
+    /* XXX: Same thread group*/
 	if (clone_flags & CLONE_THREAD) {
 		p->group_leader = current->group_leader;
 		list_add_tail_rcu(&p->thread_group, &p->group_leader->thread_group);
@@ -1241,6 +1340,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 
 	if (likely(p->pid)) {
 		add_parent(p);
+        /* XXX: ptrace */
 		if (unlikely(p->ptrace & PT_PTRACED))
 			__ptrace_link(p, current->parent);
 
@@ -1261,6 +1361,19 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	total_forks++;
 	spin_unlock(&current->sighand->siglock);
 	write_unlock_irq(&tasklist_lock);
+    /*
+     * XXX: This is event generation 
+     *      to notify the userspace that
+     *      fork happens, some lagacy tools
+     *      were listing these events.
+     *
+     *      This is notification also present 
+     *      in modern kernel but nobody uses 
+     *      those.
+     *
+     *      modern user programs/tools relay
+     *      on eBPF, perf, strace etc.
+     */
 	proc_fork_connector(p);
 	return p;
 
