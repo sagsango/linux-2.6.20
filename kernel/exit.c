@@ -149,6 +149,13 @@ repeat:
 	BUG_ON(!list_empty(&p->ptrace_list) || !list_empty(&p->ptrace_children));
 	__exit_signal(p);
 
+    /* XXX: TODO: I dont understand this 
+     *      In a thread group, thread-group-leader will be the owner of
+     *      all the resources like, ffd table and mm_struct etc
+     *      and other thread will share those resource, so only the
+     *      thread-group leader will be able to reap those resource 
+     *      and leader has to wait untill all the threads have exited
+     */
 	/*
 	 * If we are the last non-leader member of the thread
 	 * group, and the leader is zombie, then notify the
@@ -1110,6 +1117,9 @@ static int wait_task_zombie(struct task_struct *p, int noreap,
 	int retval;
 	int status;
 
+    /* XXX: If system call dont wait to wait then we will not reap
+     *      the child, right now
+     */
 	if (unlikely(noreap)) {
 		pid_t pid = p->pid;
 		uid_t uid = p->uid;
@@ -1133,6 +1143,7 @@ static int wait_task_zombie(struct task_struct *p, int noreap,
 					   status, infop, ru);
 	}
 
+    /* XXX: Now we will mark it DEAD and reap it */
 	/*
 	 * Try to move the task's state to DEAD
 	 * only one thread is allowed to do this:
@@ -1232,6 +1243,7 @@ static int wait_task_zombie(struct task_struct *p, int noreap,
 		return retval;
 	}
 	retval = p->pid;
+    /* XXX: TODO: When does this happen? */
 	if (p->real_parent != p->parent) {
 		write_lock_irq(&tasklist_lock);
 		/* Double-check with lock held.  */
@@ -1252,6 +1264,9 @@ static int wait_task_zombie(struct task_struct *p, int noreap,
 		}
 		write_unlock_irq(&tasklist_lock);
 	}
+    /* XXX: free the child 
+     *      release vs put
+     */
 	if (p != NULL)
 		release_task(p);
 	BUG_ON(!retval);
@@ -1456,7 +1471,7 @@ repeat:
 	 * match our criteria, even if we are not able to reap it yet.
 	 */
 	flag = 0;
-	current->state = TASK_INTERRUPTIBLE;
+current->state = TASK_INTERRUPTIBLE;
 	read_lock(&tasklist_lock);
 	tsk = current;
 	do {
@@ -1467,6 +1482,9 @@ repeat:
 		list_for_each(_p,&tsk->children) {
 			p = list_entry(_p, struct task_struct, sibling);
 
+            /* XXX: based on system call args check if we want
+             *      to pick this child
+             */
 			ret = eligible_child(pid, options, p);
 			if (!ret)
 				continue;
@@ -1494,6 +1512,9 @@ repeat:
 				if (!(options & WUNTRACED) &&
 				    !my_ptrace_child(p))
 					continue;
+                /* XXX: task is stopped but it will continue 
+                 *      later so we wont free here
+                 */
 				retval = wait_task_stopped(p, ret == 2,
 							   (options & WNOWAIT),
 							   infop,
@@ -1517,6 +1538,10 @@ repeat:
 						goto check_continued;
 					if (!likely(options & WEXITED))
 						continue;
+                    /* XXX: so this task has already exited
+                     *      and we should free it, togather
+                     *      with getting the stats about it
+                     */
 					retval = wait_task_zombie(
 						p, (options & WNOWAIT),
 						infop, stat_addr, ru);
@@ -1633,6 +1658,81 @@ asmlinkage long sys_waitid(int which, pid_t pid,
 	return ret;
 }
 
+/* XXX: starts here 
+ *
+ * waits for a child process to change state (exit, stop, continue)
+ * reaps the child, removing it from the kernel’s process table
+ * receives resource usage statistics (struct rusage)
+ * receives child exit code, signal info, etc.
+ *
+ *
+#arg 1:
+pid argument (WHO to wait for?)
+---------------------------------------------------------------
+ pid > 0     → wait for the specific child with PID = pid
+
+ pid = 0     → wait for ANY child in the SAME process group
+                (same PGID as caller)
+
+ pid = -1    → wait for ANY child (most common case)
+
+ pid < -1    → wait for any child in process group = abs(pid)
+
+
+#arg 2:
+status pointer (return child state)
+---------------------------------------------------------------
+ Kernel fills *status with encoded information:
+
+  Bits:  [ 15:8 ]   exit status  (exit(x))
+         [  7:0 ]   signal that caused termination
+         if signal, bit 7 also indicates core dump
+
+ How to decode:
+   WIFEXITED(status)    → child ended normally
+   WEXITSTATUS(status)  → returns exit(x)
+   WIFSIGNALED(status)  → child ended by a signal
+   WTERMSIG(status)     → returns signal number
+   WCOREDUMP(status)    → core dumped?
+---------------------------------------------------------------
+
+
+
+#arg 3:
+options (how wait4 should behave)
+---------------------------------------------------------------
+ WNOHANG      → do NOT block; return immediately if no child exit
+                 (used in servers, polling loops)
+
+ WUNTRACED    → report stopped children (SIGSTOP, SIGTSTP, SIGTTIN)
+                 without being traced by ptrace
+
+ WCONTINUED   → report when a stopped child has resumed (SIGCONT)
+
+ 0            → default: block until a child exits (zombie)
+---------------------------------------------------------------
+
+
+#arg 4:
+rusage (child’s CPU/memory/I/O stats)
+---------------------------------------------------------------
+ If rusage != NULL:
+     kernel fills struct rusage with:
+
+         ru_utime   → user mode CPU time
+         ru_stime   → kernel mode CPU time
+         ru_maxrss  → max resident set size
+         ru_minflt  → minor page faults
+         ru_majflt  → major page faults
+         ru_nswap   → swaps
+         ru_inblock → block input ops
+         ru_oublock → block output ops
+         ... many more fields
+
+ If rusage == NULL:
+     parent ignores usage statistics
+---------------------------------------------------------------
+*/
 asmlinkage long sys_wait4(pid_t pid, int __user *stat_addr,
 			  int options, struct rusage __user *ru)
 {
