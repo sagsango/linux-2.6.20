@@ -491,6 +491,7 @@ struct file *open_exec(const char *name)
 			if (!err) {
 				file = nameidata_to_filp(&nd, O_RDONLY);
 				if (!IS_ERR(file)) {
+                    /* XXX: RD_ONLY */
 					err = deny_write_access(file);
 					if (err) {
 						fput(file);
@@ -534,6 +535,12 @@ static int exec_mmap(struct mm_struct *mm)
 	/* Notify parent that we're no longer interested in the old VM */
 	tsk = current;
 	old_mm = current->mm;
+    /* XXX:
+     *  mm is destroyed then how this task is running
+     *  on which page table?
+     *
+     *  We use active_mm in kerner space
+     */
 	mm_release(tsk, old_mm);
 
 	if (old_mm) {
@@ -555,8 +562,12 @@ static int exec_mmap(struct mm_struct *mm)
 	active_mm = tsk->active_mm;
 	tsk->mm = mm;
 	tsk->active_mm = mm;
+    /* XXX: here we update the cr3 */
 	activate_mm(active_mm, mm);
 	task_unlock(tsk);
+    /* XXX: mmap_base is inited 
+     *      with randomization
+     */
 	arch_pick_mmap_layout(mm);
 	if (old_mm) {
 		up_read(&old_mm->mmap_sem);
@@ -840,6 +851,8 @@ int flush_old_exec(struct linux_binprm * bprm)
 	retval = unshare_files();
 	if (retval)
 		goto out;
+
+    /* XXX: reales the old mmap and update new and update cr3 */
 	/*
 	 * Release all of the old mmap stuff
 	 */
@@ -873,6 +886,7 @@ int flush_old_exec(struct linux_binprm * bprm)
 	set_task_comm(current, tcomm);
 
 	current->flags &= ~PF_RANDOMIZE;
+    /* XXX: thred info memset to 0 */
 	flush_thread();
 
 	/* Set the new mm task size. We have to do that late because it may
@@ -948,6 +962,7 @@ int prepare_binprm(struct linux_binprm *bprm)
 		return retval;
 
 	memset(bprm->buf,0,BINPRM_BUF_SIZE);
+    /* XXX: read the binary */
 	return kernel_read(bprm->file,0,bprm->buf,BINPRM_BUF_SIZE);
 }
 
@@ -1014,6 +1029,9 @@ inside:
 EXPORT_SYMBOL(remove_arg_zero);
 
 /*
+ * XXX: detect the executable type and the loader
+ */
+/*
  * cycle the list of binary formats handler, until one recognizes the image
  */
 int search_binary_handler(struct linux_binprm *bprm,struct pt_regs *regs)
@@ -1077,6 +1095,9 @@ int search_binary_handler(struct linux_binprm *bprm,struct pt_regs *regs)
 			if (!try_module_get(fmt->module))
 				continue;
 			read_unlock(&binfmt_lock);
+            /* XXX: calles load binary
+             *      for elf: load_elf_binary()
+             */
 			retval = fn(bprm, regs);
 			if (retval >= 0) {
 				put_binfmt(fmt);
@@ -1118,51 +1139,226 @@ int search_binary_handler(struct linux_binprm *bprm,struct pt_regs *regs)
 EXPORT_SYMBOL(search_binary_handler);
 
 /*
- sys_execve()/do_execve()
-          │
-          ▼
-   Allocate linux_binprm (bprm)
-          │
-          ▼
-       open_exec()
-          │
-          ▼
-    Allocate new mm_struct
-          │
-          ▼
-     Count argv/envp strings
-          │
-          ▼
-   prepare_binprm() → read file header
-          │
-          ▼
-   copy_strings() → copy args/env to kernel pages
-          │
-          ▼
- search_binary_handler() ──> iterate linux_binfmt
-          │                     │
-          │                     ▼
-          │               load_binary() (handler)
-          │                     │
-          │           success? ──► yes → continue
-          │                     │
-          ▼                     no
- flush_old_exec()  ←─────────────┘
-          │
-          ▼
-    de_thread() → ensure private sighand
-          │
-          ▼
-   exec_mmap() → switch old mm to new mm
-          │
-          ▼
-  setup_arg_pages() → map arg/env pages on stack
-          │
-          ▼
-  finalize (free bprm, update credentials, task name)
-          │
-          ▼
-       Program starts
+ * XXX:
+
+# Master diagram
+sys_execve()
+  ↓
+do_execve()
+  ↓
+prepare_binprm()
+  ↓
+copy_strings()                ← copies argv/env into arg pages
+  ↓
+search_binary_handler()
+  ↓
+load_elf_binary()
+     ↓
+     ├─ validate ELF
+     ├─ read program headers
+     ├─ handle PT_INTERP (ld.so)
+     ├─ unshare_files(), set exec fd
+     ├─ flush_old_exec()       ← old address space destroyed
+     ├─ setup_arg_pages()      ← create stack VMA + map argv/env
+     ├─ map PT_LOAD segments
+     ├─ allocate BSS and brk
+     ├─ load ELF interpreter
+     ├─ populate auxv, argv, envp
+     ├─ compute_creds()
+     └─ start_thread()         ← sets eip/rip & esp for new binary
+  ↓
+► New ELF program runs in userspace
+
+
+
+# Detailed diagram
+sys_execve(filename, argv, envp)
+    ↓
+    ├─ copy user pointers (filename, argv, envp)
+    ├─ verify user pointers
+    └─ call do_execve()
+
+do_execve():
+    ↓
+    ├─ open_exec(filename)
+    │     ↓
+    │     ├─ do_open() → returns struct file *
+    │     └─ verifies execute permissions (MAY_EXEC)
+    │
+    ├─ alloc_bprm()
+    │     ↓
+    │     ├─ allocate linux_binprm (bprm)
+    │     ├─ allocate 32 argument pages (bprm->page[])
+    │     └─ init bprm fields
+    │
+    ├─ prepare_binprm(bprm)
+    │     ↓
+    │     ├─ read first 128 bytes into bprm->buf
+    │     ├─ check file size limits
+    │     └─ calculate initial bprm->cred and security flags
+    │
+    ├─ copy_strings(argc, argv, bprm)
+    │     ↓
+    │     ├─ reserve pages at bprm->p
+    │     ├─ copy each argument string into bprm->page[]
+    │     └─ same for envp
+    │
+    └─ search_binary_handler(bprm)
+
+search_binary_handler():
+    ↓
+    ├─ for each registered binfmt (ELF, a.out, script handlers...)
+    │       ↓
+    │       └─ try handler.load_binary(bprm)
+    │
+    └─ ELF matches → call load_elf_binary(bprm, regs)
+
+
+load_elf_binary():
+    ↓
+    ├─ check ELF magic (ELFMAG)
+    ├─ check e_type {ET_EXEC, ET_DYN}
+    ├─ check architecture (elf_check_arch)
+    ├─ ensure file->f_op->mmap exists
+    └─ read program headers:
+            elf_phdata = kmalloc(sizeof(phdr) * e_phnum)
+            kernel_read(file, e_phoff)
+
+    ├─ files = current->files
+    ├─ unshare_files() → ensures private fd table
+    ├─ get_unused_fd()
+    ├─ fd_install(execfd, bprm->file)
+    └─ keep reference for interpreter use
+
+    for each phdr:
+        if PT_INTERP:
+            ├─ allocate buffer for path
+            ├─ read interpreter path (usually /lib/ld-linux.so.2)
+            ├─ SET_PERSONALITY(elf_ex)
+            ├─ interpreter = open_exec(path)
+            ├─ kernel_read(interpreter, 0, bprm->buf)
+            └─ parse interpreter ELF header into loc->interp_elf_ex
+
+    interpreter_type = NONE / AOUT / ELF
+    verify arch of interpreter
+
+    flush_old_exec(bprm):
+    ↓
+    ├─ de_thread()                → detach other threads
+    ├─ mm_release()               → clear old mm-related userland state
+    ├─ current->mm->map_count = 0
+    ├─ remove all VMAs
+    ├─ exit_mmap()                → free page tables
+    ├─ install new mm (exec_mm)
+    ├─ reset signal handlers
+    ├─ reset task flags
+    ├─ clear fs info if needed
+    └─ set dumpability / personality
+
+    mm->start_data = 0
+    mm->end_data   = 0
+    mm->end_code   = 0
+    mm->mmap       = NULL
+    mm->def_flags  = flags
+
+    if PF_RANDOMIZE:
+       randomize_va_space
+       set PF_RANDOMIZE flag
+
+    arch_pick_mmap_layout(mm)      // choose top-down or bottom-up layout
+                                   //
+    setup_arg_pages(bprm, stack_top):
+    ↓
+    ├─ compute actual stack_top (randomized)
+    ├─ mmap stack region (MAX_ARG_PAGES)
+    ├─ map all bprm->page[] into the new stack
+    ├─ enforce VM_GROWSDOWN
+    ├─ set mm->start_stack = bprm->p
+    └─ set vm_flags according to PT_GNU_STACK
+
+    stack is mapped
+    argv/envp already placed in it
+
+    for each PT_LOAD:
+    {
+        compute elf_prot  = (PF_R,PW_W,PF_X → PROT_*)
+        compute elf_flags = MAP_PRIVATE | MAP_DENYWRITE | MAP_EXECUTABLE
+        if ET_EXEC or load_addr_set:
+            add MAP_FIXED
+        else if ET_DYN:
+            compute load_bias = ELF_ET_DYN_BASE - p_vaddr
+
+        vaddr = load_bias + p_vaddr
+
+        mapped = elf_map(file, vaddr, phdr, prot, flags)
+    }
+
+    update:
+        start_code
+        end_code
+        start_data
+        end_data
+        elf_bss = vaddr + p_filesz
+        elf_brk = vaddr + p_memsz
+
+    padzero(elf_bss)         → zero-pad partial last page
+    set_brk(elf_bss, elf_brk)
+
+    [BSS region vm_area_struct]
+    [brk region vm_area_struct]
+
+    If has PT_INTERP:
+        elf_entry = load_elf_interp(&interp_elf_ex, interpreter)
+
+    interp_load_addr recorded
+    reloc_func_desc = interp_load_addr
+
+
+    mm->end_code  = end_code
+    mm->start_code = start_code
+    mm->start_data = start_data
+    mm->end_data   = end_data
+    mm->start_stack = bprm->p
+
+
+    create_elf_tables(bprm, elf_hdr, interp_aout?, load_addr, interp_load_addr):
+    ↓
+    ├─ push AT_* entries into stack
+    ├─ push argv pointers
+    ├─ push envp pointers
+    ├─ push platform string (AT_PLATFORM)
+    ├─ push PAGE_SIZE etc.
+    ├─ randomization values
+    ├─ pointer to PHDR table
+    └─ writes all into user stack via __put_user()
+
+    compute_creds:
+    ↓
+    ├─ update uid/gid if setuid binary
+    ├─ apply security labels
+    ├─ clear dangerous capabilities
+    └─ ensure correct dumpability
+
+    start_thread(regs, entry_point, stack_pointer):
+    ↓
+    ├─ regs->ip = elf_entry
+    ├─ regs->sp = bprm->p
+    ├─ setup segment registers (CS, SS)
+    ├─ clear debug registers
+    └─ prepare IRET frame to enter userspace
+
+
+    if ptraced:
+        send SIGTRAP or PTRACE_EXEC event
+
+    iret → usermode → starts at ELF entry point
+
+
+
+
+
+
+
 */
 /*
  * sys_execve() executes a new program.
@@ -1182,11 +1378,17 @@ int do_execve(char * filename,
 	if (!bprm)
 		goto out_ret;
 
+    /* XXX: open and deny write */
 	file = open_exec(filename);
 	retval = PTR_ERR(file);
 	if (IS_ERR(file))
 		goto out_kfree;
 
+    /* XXX: on which cpu you want to exec 
+     *      or run this process, because
+     *      this point you are just haveing
+     *      bslancing oppurtunity
+     */
 	sched_exec();
 
 	bprm->p = PAGE_SIZE*MAX_ARG_PAGES-sizeof(void *);
@@ -1194,11 +1396,13 @@ int do_execve(char * filename,
 	bprm->file = file;
 	bprm->filename = filename;
 	bprm->interp = filename;
+    /* XXX: allocate mm struct from the slab cache allocator */
 	bprm->mm = mm_alloc();
 	retval = -ENOMEM;
 	if (!bprm->mm)
 		goto out_file;
 
+    /* XXX: copy LDT */
 	retval = init_new_context(current, bprm->mm);
 	if (retval < 0)
 		goto out_mm;
@@ -1215,6 +1419,7 @@ int do_execve(char * filename,
 	if (retval)
 		goto out;
 
+    /* XXX init permissions and read binary */
 	retval = prepare_binprm(bprm);
 	if (retval < 0)
 		goto out;
@@ -1232,6 +1437,12 @@ int do_execve(char * filename,
 	if (retval < 0)
 		goto out;
 
+    /*
+     * XXX: load the binary, interpeter 
+     *      mae new mm, and switch to new page table
+     *      overwite the trapframe with the new start
+     *      and stack etc
+     */
 	retval = search_binary_handler(bprm,regs);
 	if (retval >= 0) {
 		free_arg_pages(bprm);

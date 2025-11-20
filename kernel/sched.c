@@ -2058,6 +2058,7 @@ out:
 void sched_exec(void)
 {
 	int new_cpu, this_cpu = get_cpu();
+    /* XXX: returns the cpu where execed process should be scheduled */
 	new_cpu = sched_balance_self(this_cpu, SD_BALANCE_EXEC);
 	put_cpu();
 	if (new_cpu != this_cpu)

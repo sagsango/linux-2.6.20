@@ -18,6 +18,9 @@ struct pt_regs;
 #ifdef __KERNEL__
 
 /*
+ * XXX: exec binary memtadata
+ */
+/*
  * This structure is used to hold the arguments that are used when loading binaries.
  */
 struct linux_binprm{

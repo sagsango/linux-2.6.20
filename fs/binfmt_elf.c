@@ -585,6 +585,7 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 	if (!elf_phdata)
 		goto out;
 
+    /* XXX: read the headers */
 	retval = kernel_read(bprm->file, loc->elf_ex.e_phoff,
 			     (char *)elf_phdata, size);
 	if (retval != size) {
@@ -594,6 +595,10 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 	}
 
 	files = current->files;	/* Refcounted so ok */
+    /* XXX: why copy fd table 
+     *      Because we want to add more files in it
+     *      while current may not want it
+     */
 	retval = unshare_files();
 	if (retval < 0)
 		goto out_free_ph;
@@ -608,6 +613,7 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 	if (retval < 0)
 		goto out_free_fh;
 	get_file(bprm->file);
+    /* XXX: add exec bin fd  */
 	fd_install(elf_exec_fileno = retval, bprm->file);
 
 	elf_ppnt = elf_phdata;
@@ -619,8 +625,10 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 	start_data = 0;
 	end_data = 0;
 
+    /* XXX: go to all physical headers */
 	for (i = 0; i < loc->elf_ex.e_phnum; i++) {
 		if (elf_ppnt->p_type == PT_INTERP) {
+            /* XXX: If interpreter */
 			/* This is the program interpreter used for
 			 * shared libraries - for now assume that this
 			 * is an a.out format binary
@@ -631,11 +639,13 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 				goto out_free_file;
 
 			retval = -ENOMEM;
+            /* XXX: alloc interpreter */
 			elf_interpreter = kmalloc(elf_ppnt->p_filesz,
 						  GFP_KERNEL);
 			if (!elf_interpreter)
 				goto out_free_file;
 
+            /* XXX: read interpreter file name */
 			retval = kernel_read(bprm->file, elf_ppnt->p_offset,
 					     elf_interpreter,
 					     elf_ppnt->p_filesz);
@@ -678,6 +688,7 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 			 */
 			SET_PERSONALITY(loc->elf_ex, ibcs2_interpreter);
 
+            /* XXX: open interperter */
 			interpreter = open_exec(elf_interpreter);
 			retval = PTR_ERR(interpreter);
 			if (IS_ERR(interpreter))
@@ -691,6 +702,7 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 			if (file_permission(interpreter, MAY_READ) < 0)
 				bprm->interp_flags |= BINPRM_FLAGS_ENFORCE_NONDUMP;
 
+            /* XXX: read the interpreter */
 			retval = kernel_read(interpreter, 0, bprm->buf,
 					     BINPRM_BUF_SIZE);
 			if (retval != BINPRM_BUF_SIZE) {
@@ -764,6 +776,13 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 		}
 	}
 
+    /* XXX: compelty destroy the curret task_struct all the data
+     *      and load the new data to exec the binary
+     *
+     *      page-table, mmaps, fds etc
+     *      whatever info is present on the bprm, will be loaded
+     *      and old one be destroyed
+     */
 	/* Flush all traces of the currently running executable */
 	retval = flush_old_exec(bprm);
 	if (retval)
@@ -775,6 +794,7 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 		files = NULL;
 	}
 
+    /* XXX: section info zeroed */
 	/* OK, This is the point of no return */
 	current->mm->start_data = 0;
 	current->mm->end_data = 0;
@@ -803,9 +823,11 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 		send_sig(SIGKILL, current, 0);
 		goto out_free_dentry;
 	}
-	
+
+    /* XXX: start of the stack */
 	current->mm->start_stack = bprm->p;
 
+    /* XXX: TODO: why 2 times? */
 	/* Now we do a little grungy work by mmaping the ELF image into
 	   the correct location in memory.  At this point, we assume that
 	   the image should be loaded at fixed address, not at a variable
@@ -866,6 +888,7 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 			load_bias = ELF_PAGESTART(ELF_ET_DYN_BASE - vaddr);
 		}
 
+        /* XXX: mmap the binary */
 		error = elf_map(bprm->file, load_bias + vaddr, elf_ppnt,
 				elf_prot, elf_flags);
 		if (BAD_ADDR(error)) {
@@ -939,6 +962,7 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 		goto out_free_dentry;
 	}
 
+    /* XXX: load the interpret */
 	if (elf_interpreter) {
 		if (interpreter_type == INTERPRETER_AOUT)
 			elf_entry = load_aout_interp(&loc->interp_ex,
@@ -987,6 +1011,7 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 	create_elf_tables(bprm, &loc->elf_ex,
 			  (interpreter_type == INTERPRETER_AOUT),
 			  load_addr, interp_load_addr);
+    /* XXX: update the headers/section ranges */
 	/* N.B. passed_fileno might not be initialized? */
 	if (interpreter_type == INTERPRETER_AOUT)
 		current->mm->arg_start += strlen(passed_fileno) + 1;
@@ -1021,6 +1046,9 @@ static int load_elf_binary(struct linux_binprm *bprm, struct pt_regs *regs)
 	ELF_PLAT_INIT(regs, reloc_func_desc);
 #endif
 
+    /* XXX:
+     *  update the trapframe (register for the userspace 
+     */
 	start_thread(regs, elf_entry, bprm->p);
 	if (unlikely(current->ptrace & PT_PTRACED)) {
 		if (current->ptrace & PT_TRACE_EXEC)

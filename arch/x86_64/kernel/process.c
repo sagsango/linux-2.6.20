@@ -379,6 +379,7 @@ void exit_thread(void)
 	}
 }
 
+/* XXX: zero out the thread info */
 void flush_thread(void)
 {
 	struct task_struct *tsk = current;
