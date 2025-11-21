@@ -55,3 +55,63 @@ delayed_put_task_struct()
       - task_struct
 ───────────────────────────────────────────
 
+
+# exit & wait
+All this gets freed inside do_exit():
+    mm_struct (via exit_mm → mmput → exit_mmap)
+    page tables
+    mapping structures
+    files_struct (fd table)
+    fs_struct
+    semaphores
+    cpusets
+    namespaces
+    timers
+    robust lists
+    tty
+    ptrace
+BUT NOT:
+    task_struct
+    thread_info
+    kernel stack
+    These remain until the final RCU callback.
+
+
+# all resources freeing
+     do_exit()
+         |
+         |  frees:
+         |     mm
+         |     vmas
+         |     pagetables
+         |     files
+         |     fs
+         |     semaphores
+         |     timers
+         |     namespaces
+         |
+         v
+   task->state = TASK_DEAD
+         |
+         v
+     schedule()
+         |
+         v
+  finish_task_switch()
+         |
+         | drop final ref
+         v
+  release_task()   (if parent waited)
+         |
+         v
+  call_rcu(delayed_put_task_struct)
+         |
+         | RCU GRACE PERIOD
+         |
+         v
+  delayed_put_task_struct()
+         |
+         v
+  free kernel stack + task_struct     <-- (THIS IS POINT 7)
+
+

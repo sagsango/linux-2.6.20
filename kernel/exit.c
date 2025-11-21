@@ -181,6 +181,11 @@ repeat:
 	write_unlock_irq(&tasklist_lock);
 	proc_flush_task(p);
 	release_thread(p);
+
+    /*
+     *
+     * XXX: here we free the task struct
+     */
 	call_rcu(&p->rcu, delayed_put_task_struct);
 
 	p = leader;

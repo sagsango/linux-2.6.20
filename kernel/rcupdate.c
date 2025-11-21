@@ -133,6 +133,9 @@ void fastcall call_rcu(struct rcu_head *head,
 	local_irq_restore(flags);
 }
 
+/*
+ * XXX: RCU call which frees the task_struct
+ */
 /**
  * call_rcu_bh - Queue an RCU for invocation after a quicker grace period.
  * @head: structure to be used for queueing the RCU updates.
