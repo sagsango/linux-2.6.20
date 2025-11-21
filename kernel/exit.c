@@ -1161,6 +1161,8 @@ static int wait_task_zombie(struct task_struct *p, int noreap,
 		return 0;
 	}
 
+    /* XXX: see the comments in task_struct for real parent
+     *      so this task is not being debugged */
 	if (likely(p->real_parent == p->parent) && likely(p->signal)) {
 		struct signal_struct *psig;
 		struct signal_struct *sig;
@@ -1243,7 +1245,8 @@ static int wait_task_zombie(struct task_struct *p, int noreap,
 		return retval;
 	}
 	retval = p->pid;
-    /* XXX: TODO: When does this happen? */
+    /* XXX: TODO: When does this happen? - see cmnt in task_struct
+     *      so this task is being debugged*/
 	if (p->real_parent != p->parent) {
 		write_lock_irq(&tasklist_lock);
 		/* Double-check with lock held.  */
