@@ -1,3 +1,10 @@
+/* XXX:
+ *  the process keyring is a special, per-process
+ *  keyring used to store and manage cryptographic
+ *  keys, authentication tokens, or other security
+ *  data privately within a process and its immediate 
+ *  child processes.
+ */
 /* process_keys.c: management of a process's keyrings
  *
  * Copyright (C) 2004-5 Red Hat, Inc. All Rights Reserved.

@@ -855,14 +855,22 @@ fastcall NORET_TYPE void do_exit(long code)
 	struct task_struct *tsk = current;
 	int group_dead;
 
+    /* XXX: Kernel profiling hook: lets the profiler (if enabled) record that tsk is exiting.*/
 	profile_task_exit(tsk);
 
 	WARN_ON(atomic_read(&tsk->fs_excl));
 
+    /* XXX: must not “exit” while running in interrupt context. If it happens, the kernel panics. */
 	if (unlikely(in_interrupt()))
 		panic("Aiee, killing interrupt handler!");
+    /* XXX: PID 0 (swapper/idle) must never exit. Guard and panic if attempted.
+     *      TODO: Lets learn more about it
+     */
 	if (unlikely(!tsk->pid))
 		panic("Attempted to kill the idle task!");
+    /* XXX: returns the task that acts like “init” for this task’s PID namespace (reaps orphans)
+     *      TODO:
+     */
 	if (unlikely(tsk == child_reaper(tsk))) {
 		if (tsk->nsproxy->pid_ns != &init_pid_ns)
 			tsk->nsproxy->pid_ns->child_reaper = init_pid_ns.child_reaper;
@@ -871,11 +879,13 @@ fastcall NORET_TYPE void do_exit(long code)
 	}
 
 
+    /* XXX: This how gdb get notified */
 	if (unlikely(current->ptrace & PT_TRACE_EXIT)) {
 		current->ptrace_message = code;
 		ptrace_notify((PTRACE_EVENT_EXIT << 8) | SIGTRAP);
 	}
 
+    /* XXX: reentered the do_exit */
 	/*
 	 * We're taking recursive faults here in do_exit. Safest is to just
 	 * leave this task alone and wait for reboot.
@@ -896,17 +906,30 @@ fastcall NORET_TYPE void do_exit(long code)
 				current->comm, current->pid,
 				preempt_count());
 
+    /* XXX: Update process accounting integrals (CPU time, mm, etc.) prior to teardown. */
 	acct_update_integrals(tsk);
 	if (tsk->mm) {
+        /*XXX: RSS (Resident Set Size) = the number of physical pages of 
+         *     memory currently mapped into a process’s address space.
+         */
 		update_hiwater_rss(tsk->mm);
 		update_hiwater_vm(tsk->mm);
 	}
+    /*
+     * XXX: task_struct->signal_struct.live = #thread is this thread-group
+     */
 	group_dead = atomic_dec_and_test(&tsk->signal->live);
 	if (group_dead) {
  		hrtimer_cancel(&tsk->signal->real_timer);
 		exit_itimers(tsk->signal);
 	}
+    /* XXX: thread group related more accounting */
 	acct_collect(code, group_dead);
+
+    /* XXX: If the thread exits while holding a futex, the kernel walks
+     *      the per-thread robust list to mark those futexes OWNER_DIED,
+     *      waking waiters so they can recover
+     */
 	if (unlikely(tsk->robust_list))
 		exit_robust_list(tsk);
 #if defined(CONFIG_FUTEX) && defined(CONFIG_COMPAT)
@@ -916,34 +939,73 @@ fastcall NORET_TYPE void do_exit(long code)
 	if (unlikely(tsk->audit_context))
 		audit_free(tsk);
 
+    /* XXX: Emit taskstats (netlink to userspace listeners) with final resource usage etc.
+     */
 	taskstats_exit(tsk, group_dead);
 
+    /* XXX: The beast of the resources; mm is getting free
+     */
 	exit_mm(tsk);
 
+    /* XXX:
+     *  Write an accounting entry for an exiting process
+     */
 	if (group_dead)
 		acct_process();
+    /* XXX: other core resources */
 	exit_sem(tsk);
-	__exit_files(tsk);
-	__exit_fs(tsk);
-	exit_thread();
-	cpuset_exit(tsk);
-	exit_keys(tsk);
+	__exit_files(tsk); /* XXX: Drop the task’s file descriptor table 
+                        *   (close files, put dentry/inode refs).
+                        */
+	__exit_fs(tsk);    /* XXX: fs-related state: cwd, root, namespace
+                        *  references, umask, etc.
+                        */
+	exit_thread();     /* XXX: Architecture-specific thread teardown (FPU state,
+                        *   TLS, debug regs, kernel stacks as needed).
+                        */
+	cpuset_exit(tsk);  /* XXX: Detach from cpusets (cpuset/cgroup membership). */
+	exit_keys(tsk);    /* XXX: Release kernel keyrings referenced by the task. */
 
+    
+    /* XXX: If the exiting task is the thread-group leader and the group is dead, 
+     * drop the controlling TTY, SIGHUP/cleanup for job control semantics.
+     */
 	if (group_dead && tsk->signal->leader)
 		disassociate_ctty(1);
 
+    /* XXX:
+     *  Decrement module reference counts from:
+     *    1. The legacy exec_domain (personality/ABI emulation, e.g., Linux, SVr4),
+     *    2. The binary format handler (e.g., binfmt_elf)
+     */
 	module_put(task_thread_info(tsk)->exec_domain->module);
 	if (tsk->binfmt)
 		module_put(tsk->binfmt->module);
 
 	tsk->exit_code = code;
+    /* XXX:
+     *  broadcast a proc connector event to userspace listeners (e.g., process monitoring).
+     */
 	proc_exit_connector(tsk);
+    /* XXX:
+     *  drop references to namespaces.
+     */
 	exit_task_namespaces(tsk);
+    /* XXX: 
+     *  the big one—turn ourselves into a zombie, notify parent (or reaper), deliver 
+     *      SIGCHLD/CLD_*, reparent children if needed, and take care of job control & 
+     *      reaping rule
+     */
 	exit_notify(tsk);
 #ifdef CONFIG_NUMA
+    /* XXX: Free per-task NUMA memory policy, if any (interleave/preferred/bind).
+     */
 	mpol_free(tsk->mempolicy);
 	tsk->mempolicy = NULL;
 #endif
+    /* XXX: PI (priority inheritance) states linked to this task (rtmutex waiters/owners), 
+     *      clean them up deterministically. Free any per-task PI cache.
+    */
 	/*
 	 * This must happen late, after the PID is not
 	 * hashed anymore:
@@ -952,14 +1014,24 @@ fastcall NORET_TYPE void do_exit(long code)
 		exit_pi_state_list(tsk);
 	if (unlikely(current->pi_state_cache))
 		kfree(current->pi_state_cache);
+
+    /* XXX:
+     *  Debug assertion: no spinlocks/mutexes should be held at exit.
+     */
 	/*
 	 * Make sure we are holding no locks:
 	 */
 	debug_check_no_locks_held(tsk);
 
+    /* XXX:
+     *  block-I/O context (CFQ/IO scheduler per-task state), dropping references and waking waiters.
+     */
 	if (tsk->io_context)
 		exit_io_context();
 
+    /* XXX:
+     * If the task holds a splice(2) pipe buffer table, free it.
+     */
 	if (tsk->splice_pipe)
 		__free_pipe_info(tsk->splice_pipe);
 
@@ -967,7 +1039,12 @@ fastcall NORET_TYPE void do_exit(long code)
 	/* causes final put_task_struct in finish_task_switch(). */
 	tsk->state = TASK_DEAD;
 
+    /* XXX: jump to scheduler */
 	schedule();
+    /* XXX: task should nerver neturn here 
+     *      because its dead, so never be
+     *      scheduled
+     */
 	BUG();
 	/* Avoid "noreturn function does return".  */
 	for (;;)

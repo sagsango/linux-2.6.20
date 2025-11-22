@@ -2179,6 +2179,7 @@ void cpuset_fork(struct task_struct *child)
 	task_unlock(current);
 }
 
+/* XXX: on task exit it detached itself from the cpuset/cgroups */
 /**
  * cpuset_exit - detach cpuset from exiting task
  * @tsk: pointer to task_struct of exiting process

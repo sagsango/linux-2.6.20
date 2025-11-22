@@ -389,6 +389,7 @@ struct pacct_struct {
 	unsigned long		ac_minflt, ac_majflt;
 };
 
+/* XXX: shared by thread group */
 /*
  * NOTE! "signal_struct" does not have it's own
  * locking, because a shared signal_struct always

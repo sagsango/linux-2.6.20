@@ -1714,6 +1714,7 @@ static inline int fetch_robust_entry(struct robust_list __user **entry,
 	return 0;
 }
 
+/* XXX: This is getting called by do_exit() */
 /*
  * Walk curr->robust_list (very carefully, it's a userspace list!)
  * and mark any locks found there dead, and notify any waiters.
