@@ -779,6 +779,7 @@ static int init(void * unused)
 				ramdisk_execute_command);
 	}
 
+    /* XXX: Running init process (pid = 1) */
 	/*
 	 * We try each of these until one succeeds.
 	 *
