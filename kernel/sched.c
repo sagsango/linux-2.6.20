@@ -3406,6 +3406,14 @@ static inline int interactive_sleep(enum sleep_type sleep_type)
 		sleep_type == SLEEP_INTERRUPTED);
 }
 
+/* XXX:
+ *  main scheduler function 
+ *
+ *  +----------+      +---------------+      +----------------+      +------------------+
+ *  | current  | ---> | deactivate if | ---> | pick next task | ---> | context_switch() |
+ *  | task     |      | not runnable  |      | from runqueue  |      | rq->curr = next  |
+ *  +----------+      +---------------+      +----------------+      +------------------+
+ */
 /*
  * schedule() is the main scheduler function.
  */
@@ -3553,6 +3561,7 @@ switch_tasks:
 		++*switch_count;
 
 		prepare_task_switch(rq, next);
+        /* XXX: context switch */
 		prev = context_switch(rq, prev, next);
 		barrier();
 		/*

@@ -425,6 +425,7 @@ static void noinline rest_init(void)
 	 * at least one to get things moving:
 	 */
 	preempt_enable_no_resched();
+    /* XXX: kernel calls scheduler */
 	schedule();
 	preempt_disable();
 
