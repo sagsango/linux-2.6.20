@@ -2327,6 +2327,7 @@ sys_rt_sigqueueinfo(int pid, int sig, siginfo_t __user *uinfo)
 	return kill_proc_info(sig, &info, pid);
 }
 
+/* XXX: install signal handler */
 int do_sigaction(int sig, struct k_sigaction *act, struct k_sigaction *oact)
 {
 	struct k_sigaction *k;
@@ -2370,7 +2371,16 @@ int do_sigaction(int sig, struct k_sigaction *act, struct k_sigaction *oact)
 			struct task_struct *t = current;
 			sigemptyset(&mask);
 			sigaddset(&mask, sig);
+            /* XXX: Removes the signal from the process’s shared pending
+             * queue (sent to process group). */
 			rm_from_queue_full(&mask, &t->signal->shared_pending);
+            /* XXX: Iterates over all threads in the same thread group
+             *  (next_thread() loops the circular list of threads).
+             *  For each thread:
+             *  1. Remove that signal from its per-thread pending queue.
+             *  2. Recalculate t->pending.signal bitmap so the scheduler
+             *    knows whether there are any signals left to deliver.
+             */
 			do {
 				rm_from_queue_full(&mask, &t->pending);
 				recalc_sigpending_tsk(t);
@@ -2586,6 +2596,7 @@ sys_signal(int sig, __sighandler_t handler)
 
 	ret = do_sigaction(sig, &new_sa, &old_sa);
 
+    /* XXX: returns the old signal handler */
 	return ret ? ret : (unsigned long)old_sa.sa.sa_handler;
 }
 #endif /* __ARCH_WANT_SYS_SIGNAL */
