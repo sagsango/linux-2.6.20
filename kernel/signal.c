@@ -972,6 +972,8 @@ __group_send_sig_info(int sig, struct siginfo *info, struct task_struct *p)
 	if (sig_ignored(p, sig))
 		return ret;
 
+    /* XXX: p->signal->shared_pending is shared between whole thread group;
+     *      see task_struct comments and NOTES for more details */
 	if (LEGACY_QUEUE(&p->signal->shared_pending, sig))
 		/* This is a non-RT signal and we already have one queued.  */
 		return ret;
@@ -1065,6 +1067,7 @@ int group_send_sig_info(int sig, struct siginfo *info, struct task_struct *p)
 	return ret;
 }
 
+/* XXX: send signal to process group */
 /*
  * kill_pgrp_info() sends a signal to a process group: this is what the tty
  * control characters do (^C, ^Z etc)
@@ -1077,6 +1080,7 @@ int __kill_pgrp_info(int sig, struct siginfo *info, struct pid *pgrp)
 
 	success = 0;
 	retval = -ESRCH;
+    /* XXX: for each process (thread-group) in the process-group */
 	do_each_pid_task(pgrp, PIDTYPE_PGID, p) {
 		int err = group_send_sig_info(sig, info, p);
 		success |= !err;
@@ -1193,11 +1197,16 @@ EXPORT_SYMBOL_GPL(kill_pid_info_as_uid);
 static int kill_something_info(int sig, struct siginfo *info, int pid)
 {
 	if (!pid) {
+        /* XXX: pid = 0; sig goes to the current process’s process group
+         *      please dont get confused with the thread-group
+         */
 		return kill_pg_info(sig, info, process_group(current));
 	} else if (pid == -1) {
+        /* XXX: pid = -1; sig to each process */
 		int retval = 0, count = 0;
 		struct task_struct * p;
 
+        /* XXX: for each process (thread-group) */
 		read_lock(&tasklist_lock);
 		for_each_process(p) {
 			if (p->pid > 1 && p->tgid != current->tgid) {
@@ -1210,8 +1219,10 @@ static int kill_something_info(int sig, struct siginfo *info, int pid)
 		read_unlock(&tasklist_lock);
 		return count ? retval : -ESRCH;
 	} else if (pid < 0) {
+        /* XXX: pid < 0; send to process group = pid */
 		return kill_pg_info(sig, info, -pid);
 	} else {
+        /* XXX: send to process (thread-group)*/
 		return kill_proc_info(sig, info, pid);
 	}
 }
@@ -2230,6 +2241,7 @@ sys_rt_sigtimedwait(const sigset_t __user *uthese,
 	return ret;
 }
 
+/* XXX: starts here */
 asmlinkage long
 sys_kill(int pid, int sig)
 {

@@ -389,6 +389,7 @@ struct pacct_struct {
 	unsigned long		ac_minflt, ac_majflt;
 };
 
+/* XXX: This is shared in thread group (not process group) */
 /*
  * NOTE! "signal_struct" does not have it's own
  * locking, because a shared signal_struct always
@@ -934,12 +935,12 @@ struct task_struct {
 /* namespaces */
 	struct nsproxy *nsproxy;
 /* signal handlers */
-	struct signal_struct *signal;
-	struct sighand_struct *sighand;
+	struct signal_struct *signal;    /* XXX: shared in thread group */
+	struct sighand_struct *sighand;  /* XXX: shared in thread group */
 
 	sigset_t blocked, real_blocked;
 	sigset_t saved_sigmask;		/* To be restored with TIF_RESTORE_SIGMASK */
-	struct sigpending pending;
+	struct sigpending pending;       /* XXX: per task struct */
 
 	unsigned long sas_ss_sp;
 	size_t sas_ss_size;
