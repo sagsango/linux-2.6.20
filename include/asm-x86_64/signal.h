@@ -33,6 +33,7 @@ typedef unsigned long sigset_t;
 #endif /* __KERNEL__ */
 #endif
 
+/* XXX: possible signals for the x86 arch */
 #define SIGHUP		 1
 #define SIGINT		 2
 #define SIGQUIT		 3
