@@ -29,6 +29,7 @@ typedef struct __wait_queue wait_queue_t;
 typedef int (*wait_queue_func_t)(wait_queue_t *wait, unsigned mode, int sync, void *key);
 int default_wake_function(wait_queue_t *wait, unsigned mode, int sync, void *key);
 
+/* XXX:wait object | node */
 struct __wait_queue {
 	unsigned int flags;
 #define WQ_FLAG_EXCLUSIVE	0x01
@@ -47,6 +48,7 @@ struct wait_bit_queue {
 	wait_queue_t wait;
 };
 
+/* XXX: wait queue */
 struct __wait_queue_head {
 	spinlock_t lock;
 	struct list_head task_list;
@@ -152,11 +154,17 @@ int FASTCALL(out_of_line_wait_on_bit(void *, int, int (*)(void *), unsigned));
 int FASTCALL(out_of_line_wait_on_bit_lock(void *, int, int (*)(void *), unsigned));
 wait_queue_head_t *FASTCALL(bit_waitqueue(void *, int));
 
+/* XXX: wakeup : see sched.c */
 #define wake_up(x)			__wake_up(x, TASK_UNINTERRUPTIBLE | TASK_INTERRUPTIBLE, 1, NULL)
+/* XXX: waeup n */
 #define wake_up_nr(x, nr)		__wake_up(x, TASK_UNINTERRUPTIBLE | TASK_INTERRUPTIBLE, nr, NULL)
+/* XXX: wakeup all */
 #define wake_up_all(x)			__wake_up(x, TASK_UNINTERRUPTIBLE | TASK_INTERRUPTIBLE, 0, NULL)
+/* XXX: wae up interruptable */
 #define wake_up_interruptible(x)	__wake_up(x, TASK_INTERRUPTIBLE, 1, NULL)
+/* XXX: wake up n interrupable */
 #define wake_up_interruptible_nr(x, nr)	__wake_up(x, TASK_INTERRUPTIBLE, nr, NULL)
+/* XXX: wae up all interrupatbles */
 #define wake_up_interruptible_all(x)	__wake_up(x, TASK_INTERRUPTIBLE, 0, NULL)
 #define	wake_up_locked(x)		__wake_up_locked((x), TASK_UNINTERRUPTIBLE | TASK_INTERRUPTIBLE)
 #define wake_up_interruptible_sync(x)   __wake_up_sync((x),TASK_INTERRUPTIBLE, 1)
@@ -174,6 +182,7 @@ do {									\
 	finish_wait(&wq, &__wait);					\
 } while (0)
 
+/* XXX: sleep function  with no timeout*/
 /**
  * wait_event - sleep until a condition gets true
  * @wq: the waitqueue to wait on
@@ -208,6 +217,7 @@ do {									\
 	finish_wait(&wq, &__wait);					\
 } while (0)
 
+/* XXX: sleep function with timeout */
 /**
  * wait_event_timeout - sleep until a condition gets true or a timeout elapses
  * @wq: the waitqueue to wait on
@@ -250,6 +260,7 @@ do {									\
 	finish_wait(&wq, &__wait);					\
 } while (0)
 
+/* XXX: sleep but interruptable */
 /**
  * wait_event_interruptible - sleep until a condition gets true
  * @wq: the waitqueue to wait on
@@ -293,6 +304,7 @@ do {									\
 	finish_wait(&wq, &__wait);					\
 } while (0)
 
+/* XXX: sleep but interruptable with timeout */
 /**
  * wait_event_interruptible_timeout - sleep until a condition gets true or a timeout elapses
  * @wq: the waitqueue to wait on

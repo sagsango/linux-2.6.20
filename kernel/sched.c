@@ -3709,6 +3709,7 @@ void fastcall __wake_up(wait_queue_head_t *q, unsigned int mode,
 }
 EXPORT_SYMBOL(__wake_up);
 
+/* XXX: wake up or notify */
 /*
  * Same as __wake_up but called with the spinlock in wait_queue_head_t held.
  */
