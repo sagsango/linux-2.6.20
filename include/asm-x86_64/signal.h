@@ -33,6 +33,7 @@ typedef unsigned long sigset_t;
 #endif /* __KERNEL__ */
 #endif
 
+/*XXX: all the signales delevered to the userspace */
 #define SIGHUP		 1
 #define SIGINT		 2
 #define SIGQUIT		 3
@@ -44,7 +45,8 @@ typedef unsigned long sigset_t;
 #define SIGFPE		 8
 #define SIGKILL		 9
 #define SIGUSR1		10
-#define SIGSEGV		11
+#define SIGSEGV		11  /* XXX: we will see on which hardware irq
+                           we have to send this (if cant handle) */
 #define SIGUSR2		12
 #define SIGPIPE		13
 #define SIGALRM		14

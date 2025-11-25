@@ -1070,6 +1070,7 @@ asmlinkage void math_state_restore(void)
 
 void __init trap_init(void)
 {
+    /* XXX: x86_64 traps from 0 to 19 */
 	set_intr_gate(0,&divide_error);
 	set_intr_gate_ist(1,&debug,DEBUG_STACK);
 	set_intr_gate_ist(2,&nmi,NMI_STACK);
@@ -1078,13 +1079,13 @@ void __init trap_init(void)
 	set_intr_gate(5,&bounds);
 	set_intr_gate(6,&invalid_op);
 	set_intr_gate(7,&device_not_available);
-	set_intr_gate_ist(8,&double_fault, DOUBLEFAULT_STACK);
+	set_intr_gate_ist(8,&double_fault, DOUBLEFAULT_STACK); /* XXX: double page fault */
 	set_intr_gate(9,&coprocessor_segment_overrun);
 	set_intr_gate(10,&invalid_TSS);
 	set_intr_gate(11,&segment_not_present);
 	set_intr_gate_ist(12,&stack_segment,STACKFAULT_STACK);
 	set_intr_gate(13,&general_protection);
-	set_intr_gate(14,&page_fault);
+	set_intr_gate(14,&page_fault); /* XXX: normal page fault */
 	set_intr_gate(15,&spurious_interrupt_bug);
 	set_intr_gate(16,&coprocessor_error);
 	set_intr_gate(17,&alignment_check);
