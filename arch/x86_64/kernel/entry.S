@@ -37,6 +37,8 @@
  * - errorentry/paranoidentry/zeroentry - Define exception entry points.
  */
 
+/*
+ * XXX: TODO: why we need these headers */
 #include <linux/linkage.h>
 #include <asm/segment.h>
 #include <asm/cache.h>
@@ -210,6 +212,10 @@ END(ret_from_fork)
  * with them due to bugs in both AMD and Intel CPUs.
  */ 			 		
 
+/* XXX: first thing we do is saveing the userspace
+ *      state when entering into kernel
+ *      on system call
+ */
 ENTRY(system_call)
 	CFI_STARTPROC	simple
 	CFI_SIGNAL_FRAME
@@ -234,8 +240,14 @@ ENTRY(system_call)
 	cmpq $__NR_syscall_max,%rax
 	ja badsys
 	movq %r10,%rcx
+    /* XXX: And call the system call handler 
+     *      with the help of system call table
+     */
 	call *sys_call_table(,%rax,8)  # XXX:	 rip relative
+    /* XXX: next line after the system call handler returns */
 	movq %rax,RAX-ARGOFFSET(%rsp)
+
+    /* XXX: here we prepare to return to userspace */
 /*
  * Syscall return path ending with SYSRET (fast path)
  * Has incomplete stack frame and undefined top of stack. 
@@ -285,6 +297,7 @@ sysret_signal:
 	testl $(_TIF_SIGPENDING|_TIF_NOTIFY_RESUME|_TIF_SINGLESTEP),%edx
 	jz    1f
 
+    /* XXX: Signal handling before ret from syscall */
 	/* Really a signal */
 	/* edx:	work flags (arg3) */
 	leaq do_notify_resume(%rip),%rax
@@ -375,10 +388,12 @@ int_very_careful:
 	jmp int_restore_rest
 	
 int_signal:
+    /* XXX: check if signal is pending */
 	testl $(_TIF_NOTIFY_RESUME|_TIF_SIGPENDING|_TIF_SINGLESTEP),%edx
 	jz 1f
 	movq %rsp,%rdi		# &ptregs -> arg1
 	xorl %esi,%esi		# oldset -> arg2
+    /* XXX: execute the signal handler */
 	call do_notify_resume
 1:	movl $_TIF_NEED_RESCHED,%edi	
 int_restore_rest:
@@ -387,6 +402,7 @@ int_restore_rest:
 	TRACE_IRQS_OFF
 	jmp int_with_check
 	CFI_ENDPROC
+/* XXX: system call logic ends here */
 END(system_call)
 		
 /* 
@@ -411,6 +427,10 @@ END(\label)
 	PTREGSCALL stub_sigaltstack, sys_sigaltstack, %rdx
 	PTREGSCALL stub_iopl, sys_iopl, %rsi
 
+/* XXX: calling the c function like do_notify_resume
+        goes from here 
+        function which expects: struct pt_regs *
+*/
 ENTRY(ptregscall_common)
 	popq %r11
 	CFI_ADJUST_CFA_OFFSET -8
@@ -445,7 +465,8 @@ ENTRY(stub_execve)
 	jmp int_ret_from_sys_call
 	CFI_ENDPROC
 END(stub_execve)
-	
+
+/* XXX: sig return system call enters here */
 /*
  * sigreturn is special because it needs to restore all registers on return.
  * This cannot be done with SYSRET, so use the IRET return path instead.
@@ -520,6 +541,7 @@ END(stub_rt_sigreturn)
 	call \func
 	.endm
 
+/* XXX: interupted user program goes here */
 ENTRY(common_interrupt)
 	XCPT_FRAME
 	interrupt do_IRQ
@@ -607,6 +629,7 @@ retint_signal:
 	movq $-1,ORIG_RAX(%rsp) 			
 	xorl %esi,%esi		# oldset
 	movq %rsp,%rdi		# &pt_regs
+    /* XXX: here also we check the signal delevry */
 	call do_notify_resume
 	RESTORE_REST
 	cli
@@ -630,6 +653,7 @@ ENTRY(retint_kernel)
 #endif	
 
 	CFI_ENDPROC
+/* XXX: interrupted programs logic ends here */
 END(common_interrupt)
 	
 /*
@@ -788,6 +812,7 @@ paranoid_userspace\trace:
 	sti
 	xorl %esi,%esi 			/* arg2: oldset */
 	movq %rsp,%rdi 			/* arg1: &pt_regs */
+    /* XXX: we check the signal here too */
 	call do_notify_resume
 	cli
 	.if \trace
@@ -808,6 +833,7 @@ paranoid_schedule\trace:
 	CFI_ENDPROC
 	.endm
 
+/* XXX: exception entry point */
 /*
  * Exception entry point. This expects an error code/orig_rax on the stack
  * and the exception handler in %rax.	
