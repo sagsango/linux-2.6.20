@@ -28,6 +28,9 @@
 #define CLONE_NEWIPC		0x08000000	/* New ipcs */
 
 /*
+ * XXX: scheduling policies
+ */
+/*
  * Scheduling policies
  */
 #define SCHED_NORMAL		0
@@ -37,6 +40,7 @@
 
 #ifdef __KERNEL__
 
+/* XXX: priority */
 struct sched_param {
 	int sched_priority;
 };
@@ -130,6 +134,7 @@ extern unsigned long nr_iowait(void);
 extern unsigned long weighted_cpuload(const int cpu);
 
 
+/* XXX: TASK state */
 /*
  * Task state bitmask. NOTE! These bits are also
  * encoded in fs/proc/array.c: get_task_state().
