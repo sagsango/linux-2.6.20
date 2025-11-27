@@ -4927,6 +4927,7 @@ void show_state_filter(unsigned long state_filter)
 		debug_show_all_locks();
 }
 
+/* XXX: setup an ideal thread form the given cpu */
 /**
  * init_idle - set up an idle thread for a given CPU
  * @idle: task in question
@@ -6892,10 +6893,23 @@ int in_sched_functions(unsigned long addr)
 		&& addr < (unsigned long)__sched_text_end);
 }
 
+/* XXX: init the schduler during the boot
+ *      called from: x86_64_start_kernel() -> start_kernel() ->
+ */
 void __init sched_init(void)
 {
 	int i, j, k;
 
+    /* XXX:
+     *  every cpu has rq
+     *  rq has 2 levels :
+     *      rq->array[2]
+     *      active & expierd
+     *      active: which yet to be shcheduled
+     *      expired: which arary been schduled and they wait to become active
+     *      Every addary has array of queue[MAX_PRIORITY]
+     *          where tasks are enqued by the prioority_number as index (roughly)
+     */
 	for_each_possible_cpu(i) {
 		struct prio_array *array;
 		struct rq *rq;
@@ -6931,6 +6945,15 @@ void __init sched_init(void)
 		}
 	}
 
+    /* XXX: init the weight  of the (ideal_task = current) 
+     *      see : arch/x86_64/kernel/init_task.c
+     *      every cpu has its own ideal_task
+     *
+     *      right now kernel is botting on one cpu
+     *      and second cpu has not been inited yet
+     *      other cpu's will be inited by calling rest_init() -> smp_init()
+     *
+     */
 	set_load_weight(&init_task);
 
 #ifdef CONFIG_SMP
@@ -6947,6 +6970,9 @@ void __init sched_init(void)
 	atomic_inc(&init_mm.mm_count);
 	enter_lazy_tlb(&init_mm, current);
 
+
+
+    /* XXX: insert/setup an ideal thread form the given cpu */
 	/*
 	 * Make us the idle thread. Technically, schedule() should not be
 	 * called from this thread, however somewhere below it might be,

@@ -1068,6 +1068,17 @@ asmlinkage void math_state_restore(void)
 	me->fpu_counter++;
 }
 
+/* XXX: inited during the boot process
+ *      called from the init/main.c: start_kernel()
+ *
+ *
+ *      inits these:
+ *          interrupt handler for this cpu
+ *          init the cpu states
+ *              disripter table
+ *              msrs : fs & gs register
+ *              set the syscall table for this cpu, by initing the MSRs
+ */
 void __init trap_init(void)
 {
 	set_intr_gate(0,&divide_error);
@@ -1096,7 +1107,8 @@ void __init trap_init(void)
 #ifdef CONFIG_IA32_EMULATION
 	set_system_gate(IA32_SYSCALL_VECTOR, ia32_syscall);
 #endif
-       
+  
+    /* XXX: init the cpu state */
 	/*
 	 * Should be a barrier for any external CPU state.
 	 */

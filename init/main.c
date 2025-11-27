@@ -480,11 +480,16 @@ void __init __attribute__((weak)) smp_setup_processor_id(void)
 {
 }
 
+/* XXX: only one cpu enters here
+ *      
+ *      called from : x86_64_start_kernel
+ */
 asmlinkage void __init start_kernel(void)
 {
 	char * command_line;
 	extern struct kernel_param __start___param[], __stop___param[];
 
+    /* XXX: setup cpu ids */
 	smp_setup_processor_id();
 
 	/*
@@ -503,7 +508,15 @@ asmlinkage void __init start_kernel(void)
  * enable them
  */
 	lock_kernel();
+    /* XXX: again cpu related inits */
 	boot_cpu_init();
+    /* XXX:
+     *  In Linux 2.6.x, the kernel supports highmem pages — pages
+     *  of physical memory that are not permanently mapped into 
+     *  kernel virtual address space (on 32-bit systems, memory 
+     *  above ~896 MB). The kernel needs a way to temporarily 
+     *  map those pages and remember the virtual address it used.
+     */
 	page_address_init();
 	printk(KERN_NOTICE);
 	printk(linux_banner);
@@ -512,6 +525,7 @@ asmlinkage void __init start_kernel(void)
 	setup_per_cpu_areas();
 	smp_prepare_boot_cpu();	/* arch-specific boot-cpu hooks */
 
+    /* XXX: init the schduler */
 	/*
 	 * Set up the scheduler prior starting any interrupts (such as the
 	 * timer interrupt). Full topology setup happens at smp_init()
@@ -526,6 +540,7 @@ asmlinkage void __init start_kernel(void)
 	build_all_zonelists();
 	page_alloc_init();
 	printk(KERN_NOTICE "Kernel command line: %s\n", saved_command_line);
+    /* XXX: cmdline */
 	parse_early_param();
 	parse_args("Booting kernel", command_line, __start___param,
 		   __stop___param - __start___param,
@@ -535,9 +550,51 @@ asmlinkage void __init start_kernel(void)
 				"enabled *very* early, fixing it\n");
 		local_irq_disable();
 	}
+    /* XXX:
+     *  Sort the kernel's built-in exception table
+     *  TODO: Which table is it?
+     */
 	sort_main_extable();
+
+    /* XXX: trap vs IRQ
+     *  +-----------------------------------------------------------+
+     *  |                     CPU core                              |
+     *  |-----------------------------------------------------------|
+     *  |     0–31  : exceptions (faults, traps) → trap_init()      |
+     *  |    32–255 : hardware IRQs and software vectors → init_IRQ()|
+     *  +-----------------------------------------------------------+
+     *
+     */
+
+     /* XXX:
+        | Type                          | Origin                                                 | Triggered by                          | Example                                            | Handler setup by  |
+        | ----------------------------- | ------------------------------------------------------ | ------------------------------------- | -------------------------------------------------- | ----------------- |
+        | **Traps / Exceptions**        | CPU **internally**                                     | Instruction faults or CPU conditions  | divide error, page fault, general protection fault | **`trap_init()`** |
+        | **IRQs (Interrupt Requests)** | **External hardware devices** via interrupt controller | Timer tick, keyboard, disk, NIC, etc. | hardware IRQ0–IRQ23 (PIC/APIC)                     | **`init_IRQ()`**  |
+      */
+
+    /* XXX:
+     * 0-255: Interrupt Descriptor Table (IDT) vector space
+     * IDT (256 entries)
+     *  ┌──────────────────────────────────────────────┐
+        │         IDT Vector Space (0–255)             │
+        ├────────────┬─────────────────────────────────┤
+        │ 0–19       │ CPU exceptions  → trap_init()   │
+        │ 20–31      │ Reserved / internal             │
+        │ 32–47      │ Hardware IRQs   → init_IRQ()    │
+        │ 48–127     │ Local APIC / IPI / perf / MCE   │
+        │ 128 (0x80) │ Software interrupt (syscall)    │
+        │ 129–255    │ Other system or driver vectors  │
+        └────────────┴─────────────────────────────────┘
+     */
+
+    /* XXX: init the trap handlers and
+     *      many cpu states, see the cmnt on the function please */
 	trap_init();
+    /* XXX: Initializes rcu mechanism */
 	rcu_init();
+    /* XXX: see comments on the trap_init()
+     */
 	init_IRQ();
 	pidhash_init();
 	init_timers();

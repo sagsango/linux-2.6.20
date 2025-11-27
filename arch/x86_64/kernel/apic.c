@@ -981,6 +981,7 @@ void smp_local_timer_interrupt(void)
 #ifdef CONFIG_SMP
 	update_process_times(user_mode(get_irq_regs()));
 #endif
+    /* XXX: run main_timer_handler only if its the boot cpu */
 	if (apic_runs_main_timer > 1 && smp_processor_id() == boot_cpu_id)
 		main_timer_handler();
 	/*
@@ -1016,6 +1017,12 @@ void smp_apic_timer_interrupt(struct pt_regs *regs)
 	 * NOTE! We'd better ACK the irq immediately,
 	 * because timer handling can be slow.
 	 */
+    /* XXX: ACK it first 
+     *      how to ack an interrupt
+     *      you always wondered
+     *
+     *
+     */
 	ack_APIC_irq();
 	/*
 	 * update_process_times() expects us to have done irq_enter().

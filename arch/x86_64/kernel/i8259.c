@@ -501,6 +501,22 @@ static int __init init_timer_sysfs(void)
 
 device_initcall(init_timer_sysfs);
 
+/*
+        IDT (256 entries)
+        ┌──────────────────────────────────────────────┐
+        │         IDT Vector Space (0–255)             │
+        ├────────────┬─────────────────────────────────┤
+        │ 0–19       │ CPU exceptions  → trap_init()   │
+        │ 20–31      │ Reserved / internal             │
+        │ 32–47      │ Hardware IRQs   → init_IRQ()    │
+        │ 48–127     │ Local APIC / IPI / perf / MCE   │
+        │ 128 (0x80) │ Software interrupt (syscall)    │
+        │ 129–255    │ Other system or driver vectors  │
+        └────────────┴─────────────────────────────────┘
+
+        most of these handler are defined in the entry.S
+            like: thermal_interrupt
+*/
 void __init init_IRQ(void)
 {
 	int i;
@@ -546,6 +562,11 @@ void __init init_IRQ(void)
 	set_intr_gate(THERMAL_APIC_VECTOR, thermal_interrupt);
 	set_intr_gate(THRESHOLD_APIC_VECTOR, threshold_interrupt);
 
+    /* XXX: timer interrup 
+     *      cpu jiffies time updated
+     *      process wall time updated
+     *      cpu load
+     *      */
 	/* self generated IPI for local APIC timer */
 	set_intr_gate(LOCAL_TIMER_VECTOR, apic_timer_interrupt);
 

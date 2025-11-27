@@ -53,6 +53,10 @@ static void __init copy_bootdata(char *real_mode_data)
 	memcpy(saved_command_line, command_line, COMMAND_LINE_SIZE);
 }
 
+/* XXX: commpin from; arch/x86_64/kernel/head.S: startup_64
+ *      
+ *      it goes to: init/main.c: start_kernel()
+ */
 void __init x86_64_start_kernel(char * real_mode_data)
 {
 	int i;

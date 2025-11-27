@@ -1976,6 +1976,7 @@ smp_cpus_done(unsigned int max_cpus)
 	zap_low_mappings();
 }
 
+/* XXX: init the process ids */
 void __init
 smp_setup_processor_id(void)
 {

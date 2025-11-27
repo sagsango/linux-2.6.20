@@ -215,6 +215,7 @@ void __cpuinit cpu_init (void)
 
 	clear_in_cr4(X86_CR4_VME|X86_CR4_PVI|X86_CR4_TSD|X86_CR4_DE);
 
+    /* XXX:: init the distripter table for the cpu */
 	/*
 	 * Initialize the per-CPU GDT with the boot GDT,
 	 * and set up the GDT descriptor:
@@ -227,6 +228,7 @@ void __cpuinit cpu_init (void)
 	asm volatile("lidt %0" :: "m" (idt_descr));
 
 	memset(me->thread.tls_array, 0, GDT_ENTRY_TLS_ENTRIES * 8);
+    /* XXX: load the syscall_table in MSRs */
 	syscall_init();
 
 	wrmsrl(MSR_FS_BASE, 0);

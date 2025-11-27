@@ -27,6 +27,12 @@
 	.section .bootstrap.text
 	.code32
 	.globl startup_32
+
+/* XXX: jump to 32 bit mode 
+ *      TODO: where we are comming from?
+ *      
+ *      we go to: startup_64 - 64 bit mode
+ */
 /* %bx:	 1 if coming from smp trampoline on secondary cpu */ 
 startup_32:
 	
@@ -99,6 +105,7 @@ startup_32:
 	.code64
 	.org 0x100	
 	.globl startup_64
+/* XXX: enter into 64 bit mode */
 startup_64:
 	/* We come here either from startup_32
 	 * or directly from a 64bit bootloader.
@@ -182,7 +189,11 @@ startup_64:
 	/* esi is pointer to real mode structure with interesting info.
 	   pass it to C */
 	movl	%esi, %edi
-	
+
+    /* XXX: here we jump to the c code first time;
+            and initial_code = x86_64_start_kernel, init_rsp 
+            so hoping it will go to x86_64_start_kernel
+    */
 	/* Finally jump to run C code and to be on real kernel address
 	 * Since we are running on identity-mapped space we have to jump
 	 * to the full 64bit address, this is only possible as indirect

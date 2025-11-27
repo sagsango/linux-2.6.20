@@ -1,3 +1,8 @@
+/* XXX:
+ * Provide the first task_struct, thread_info, and stack for the 
+ * boot CPU (PID 0) — the process that starts the whole system 
+ * before init (PID 1) or kthreadd are ever spawned.
+ */
 #include <linux/mm.h>
 #include <linux/module.h>
 #include <linux/sched.h>
