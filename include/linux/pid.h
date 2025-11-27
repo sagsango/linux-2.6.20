@@ -2,7 +2,7 @@
 #define _LINUX_PID_H
 
 #include <linux/rcupdate.h>
-
+/* XXX: here we deal with pid, pgid, sid */
 enum pid_type
 {
 	PIDTYPE_PID,
@@ -47,10 +47,11 @@ struct pid
 	int nr;
 	struct hlist_node pid_chain;
 	/* lists of tasks that use this pid */
-	struct hlist_head tasks[PIDTYPE_MAX];
+	struct hlist_head tasks[PIDTYPE_MAX]; /* XXX: bac link */
 	struct rcu_head rcu;
 };
 
+/* XXX: pid & link-bac */
 struct pid_link
 {
 	struct hlist_node node;

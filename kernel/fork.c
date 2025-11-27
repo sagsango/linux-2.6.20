@@ -1244,6 +1244,11 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 		if (unlikely(p->ptrace & PT_PTRACED))
 			__ptrace_link(p, current->parent);
 
+        /* XXX: make the link only in case of thread group leader
+         *      and also eveyone follows the leader in thread group
+         *      so not necessary (pgid and sid will be same within a
+         *      thread group)
+         */
 		if (thread_group_leader(p)) {
 			p->signal->tty = current->signal->tty;
 			p->signal->pgrp = process_group(current);

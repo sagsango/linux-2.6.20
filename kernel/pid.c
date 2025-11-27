@@ -247,6 +247,37 @@ struct pid * fastcall find_pid(int nr)
 }
 EXPORT_SYMBOL_GPL(find_pid);
 
+/*
+ * XXX: this is a very good function to cover all the pid theory
+ *      a. see the caller 
+ *      b. see what is getting called
+ *
+ *      1.pid_hash[] is a cache which stores the pid structs
+ *          bucket index is decided based on  the pid.nr hash.
+ *          evey bucket have many pids linked by the pid.pid_chain
+ *      2.every pid has unique number
+ *        a. task_struct.pid.tasks[PIDTYPE_PID]: will point to pid_link 
+ *          i. pid_link will have actual struct pid
+ *          ii. pid_link will get linked inside the  struct pid itself,
+ *              based on type
+ *          iii. similarily:
+ *            pid.tasks[PIDTYPE_PGID]
+ *            pid.tasks[PIDTYPE_SID]
+ *      3.  task_struct has
+ *          a. pid, pgid, sid
+ *          b. and struct pid_link pids[PIDTYPE_MAX]; to get to the struct pid
+ *          c. and the pid itself contains the back links to task_struct by -
+ *           creating the struct hlist_head tasks[PIDTYPE_MAX] (link list of
+ *           thoese corrsponding tasks)
+ *      4. important thing to notice is struct pid can be PID, PGID & SID at
+ *          the same time, and back link will be present from the struct pid
+ *          to those tasks)
+ *          This becomes very easy to find all the tasks with give pgid or sid
+ *
+ *      5. One thing left is thread group, that link is present in the 
+ *          task_struct itself, struct list_head thread_group; where each of
+ *          the group member will get linked in a circular fashion
+ */
 int fastcall attach_pid(struct task_struct *task, enum pid_type type, int nr)
 {
 	struct pid_link *link;
@@ -398,6 +429,7 @@ void __init pidhash_init(void)
 		pidhash_size, pidhash_shift,
 		pidhash_size * sizeof(struct hlist_head));
 
+    /* XXX pid hash buckets (where struct pid are present in link list */
 	pid_hash = alloc_bootmem(pidhash_size *	sizeof(*(pid_hash)));
 	if (!pid_hash)
 		panic("Could not alloc pidhash!\n");
