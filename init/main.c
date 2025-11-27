@@ -594,6 +594,7 @@ asmlinkage void __init start_kernel(void)
     /* XXX: Initializes rcu mechanism */
 	rcu_init();
     /* XXX: see comments on the trap_init()
+     *      & arch/x86_64/kernel/i8259.c: init_IRQ()
      */
 	init_IRQ();
 	pidhash_init();
