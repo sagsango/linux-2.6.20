@@ -3,6 +3,18 @@
 
 #include <linux/rcupdate.h>
 
+/* XXX:
+Session SID = 1000
+└── Process Group PGRP = 1000
+    ├── Thread Group TGID = 1000
+    │    ├── Thread PID = 1000  (main)
+    │    ├── Thread PID = 1001  (worker)
+    │    └── Thread PID = 1002  (worker)
+    │
+    └── Another Process Group TGID = 1100
+         ├── PID = 1100 (its main thread)
+         └── PID = 1101 (its helper)
+*/
 enum pid_type
 {
 	PIDTYPE_PID,
