@@ -42,6 +42,21 @@ irq_cpustat_t irq_stat[NR_CPUS] ____cacheline_aligned;
 EXPORT_SYMBOL(irq_stat);
 #endif
 
+/*
+ * XXX: there are 32 index in softirq_vec
+ *      but we use only these for now
+enum
+{
+    HI_SOFTIRQ=0,
+    TIMER_SOFTIRQ,
+    NET_TX_SOFTIRQ,
+    NET_RX_SOFTIRQ,
+    BLOCK_SOFTIRQ,
+    TASKLET_SOFTIRQ,
+    SCHED_SOFTIRQ,
+};
+*/
+
 static struct softirq_action softirq_vec[32] __cacheline_aligned_in_smp;
 
 static DEFINE_PER_CPU(struct task_struct *, ksoftirqd);
@@ -335,6 +350,10 @@ struct tasklet_head
 	struct tasklet_struct *list;
 };
 
+/* XXX: for the 2 generaic softirqs we have per cpu list of these 
+ *      tasklets, (for other softirqs hoping that thier subsystem
+ *      will declrare thoese)
+ */
 /* Some compilers disobey section attribute on statics when not
    initialized -- RR */
 static DEFINE_PER_CPU(struct tasklet_head, tasklet_vec) = { NULL };
@@ -366,6 +385,9 @@ void fastcall __tasklet_hi_schedule(struct tasklet_struct *t)
 
 EXPORT_SYMBOL(__tasklet_hi_schedule);
 
+/* XXX:
+ *  TASKLET_SOFTIRQ handler
+ */
 static void tasklet_action(struct softirq_action *a)
 {
 	struct tasklet_struct *list;
@@ -399,6 +421,9 @@ static void tasklet_action(struct softirq_action *a)
 	}
 }
 
+/* XXX:
+ *  HI_SOFTIRQ handler
+ */
 static void tasklet_hi_action(struct softirq_action *a)
 {
 	struct tasklet_struct *list;
@@ -461,6 +486,15 @@ void tasklet_kill(struct tasklet_struct *t)
 
 EXPORT_SYMBOL(tasklet_kill);
 
+/* XXX:
+ *  There are 7 softirqs, and we only init 2 of them here. Why?
+ *   - These two are generic “bottom-half” softirqs that must exist 
+ *      for all kernels (with or without networking, block I/O, timers, etc.).
+ *   - The others are subsystem-specific and are registered later by their 
+ *      own subsystem initializers — not in softirq_init().
+ *
+ *   See NOTES-01.md for more info
+ */
 void __init softirq_init(void)
 {
 	open_softirq(TASKLET_SOFTIRQ, tasklet_action, NULL);

@@ -542,6 +542,7 @@ asmlinkage void __init start_kernel(void)
 	pidhash_init();
 	init_timers();
 	hrtimers_init();
+    /* XXX: here we init the 2 generic irq handlers only */
 	softirq_init();
 	timekeeping_init();
 	time_init();
