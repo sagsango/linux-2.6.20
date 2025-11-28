@@ -68,6 +68,11 @@ unsigned long blk_max_low_pfn, blk_max_pfn;
 EXPORT_SYMBOL(blk_max_low_pfn);
 EXPORT_SYMBOL(blk_max_pfn);
 
+/* XXX: per cpu BLOCK_SOFTIRQ softirq list 
+ *      this list will contains the callbacks
+ *      to notify the block-io request has been
+ *      completed
+ */
 static DEFINE_PER_CPU(struct list_head, blk_cpu_done);
 
 /* Amount of time in which a process may batch requests */
@@ -3477,6 +3482,7 @@ int end_that_request_chunk(struct request *req, int uptodate, int nr_bytes)
 
 EXPORT_SYMBOL(end_that_request_chunk);
 
+/* XXX: BLOCK_SOFTIRQ handler */
 /*
  * splice the completion data to a local structure and hand off to
  * process_completion_queue() to complete the requests
@@ -3498,6 +3504,7 @@ static void blk_done_softirq(struct softirq_action *h)
 	}
 }
 
+/* XXX: 1st place where we generate the BLOCK_SOFTIRQ */
 static int blk_cpu_notify(struct notifier_block *self, unsigned long action,
 			  void *hcpu)
 {
@@ -3523,6 +3530,8 @@ static struct notifier_block __devinitdata blk_cpu_notifier = {
 	.notifier_call	= blk_cpu_notify,
 };
 
+
+/* XXX: 2st place where we generate the BLOCK_SOFTIRQ */
 /**
  * blk_complete_request - end I/O on a request
  * @req:      the request being processed
@@ -3635,6 +3644,7 @@ void kblockd_flush(void)
 }
 EXPORT_SYMBOL(kblockd_flush);
 
+/* XXX: Registering the block device */
 int __init blk_dev_init(void)
 {
 	int i;
@@ -3655,6 +3665,7 @@ int __init blk_dev_init(void)
 	for_each_possible_cpu(i)
 		INIT_LIST_HEAD(&per_cpu(blk_cpu_done, i));
 
+    /* XXX: registering the BLOCK_SOFTIRQ handler */
 	open_softirq(BLOCK_SOFTIRQ, blk_done_softirq, NULL);
 	register_hotcpu_notifier(&blk_cpu_notifier);
 
