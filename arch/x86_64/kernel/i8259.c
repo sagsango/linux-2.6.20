@@ -502,6 +502,7 @@ static int __init init_timer_sysfs(void)
 device_initcall(init_timer_sysfs);
 
 /*
+ * XXX:
         IDT (256 entries)
         ┌──────────────────────────────────────────────┐
         │         IDT Vector Space (0–255)             │

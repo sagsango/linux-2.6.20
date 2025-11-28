@@ -597,8 +597,13 @@ asmlinkage void __init start_kernel(void)
      *      & arch/x86_64/kernel/i8259.c: init_IRQ()
      */
 	init_IRQ();
+    /* XXX: init the pid hash which is just bucket of [0,max_hash_value+1]
+     *      on each buckets there is a list of pids which index = hash(pid)
+     */
 	pidhash_init();
+    /* XXX: TODO */
 	init_timers();
+    /* XXX: TODO */
 	hrtimers_init();
 	softirq_init();
 	timekeeping_init();

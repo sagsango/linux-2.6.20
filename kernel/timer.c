@@ -710,6 +710,7 @@ EXPORT_SYMBOL(xtime);
 
 /* XXX - all of this timekeeping code should be later moved to time.c */
 #include <linux/clocksource.h>
+/* XXX: clock which get updated up the timer interrupt */
 static struct clocksource *clock; /* pointer to current clocksource */
 
 #ifdef CONFIG_GENERIC_TIME
@@ -1152,7 +1153,6 @@ static inline void calc_load(unsigned long ticks)
 		do {
 			CALC_LOAD(avenrun[0], EXP_1, active_tasks);
 			CALC_LOAD(avenrun[1], EXP_5, active_tasks);
-			CALC_LOAD(avenrun[2], EXP_15, active_tasks);
 			count += LOAD_FREQ;
 		} while (count < 0);
 	}
@@ -1193,6 +1193,7 @@ void run_local_timers(void)
  * Called by the timer interrupt. xtime_lock must already be taken
  * by the timer IRQ!
  */
+q!
 static inline void update_times(unsigned long ticks)
 {
 	update_wall_time();
@@ -1307,6 +1308,7 @@ static void process_timeout(unsigned long __data)
  * pass before the routine returns. The routine will return 0
  *
  * %TASK_INTERRUPTIBLE - the routine may return early if a signal is
+ * delivered to the current task. In this case the remaining time
  * delivered to the current task. In this case the remaining time
  * in jiffies will be returned, or 0 if the timer expired in time
  *
@@ -1716,7 +1718,6 @@ void time_interpolator_update(long delta_nsec)
 	 * that.
 	 */
 
-	counter = time_interpolator_get_counter(1);
 	offset = time_interpolator->offset +
 			GET_TI_NSECS(counter, time_interpolator);
 
