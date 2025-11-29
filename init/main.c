@@ -606,6 +606,24 @@ asmlinkage void __init start_kernel(void)
     /* XXX: TODO */
 	hrtimers_init();
 	softirq_init();
+    /*
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     *
+     * XXX: Start from TODO-02.md
+     * 
+     *
+     *
+     *
+     *
+     *
+     *
+     */
 	timekeeping_init();
 	time_init();
 	profile_init();
