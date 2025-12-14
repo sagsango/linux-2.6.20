@@ -35,6 +35,24 @@ handle_bad_irq(unsigned int irq, struct irq_desc *desc)
 }
 
 /*
+ * XXX: irq_desc table default initialization
+ *      this is second level of jump
+ *      interrupt -> idt_table -> irq_table -> interrup handling
+ *      TODO: see idt_table
+ *
+ 
+ CPU receives IRQ17 →
+   IDT[vector_for_IRQ17] points to common_interrupt stub →
+      do_IRQ(17)
+          ↓
+      irq_desc[17].handle_irq(&irq_desc[17])
+          ↓
+      irq_chip->ack() / end() / mask() etc.
+          ↓
+      call registered device ISR (e1000_intr(), etc.)
+
+ */
+/*
  * Linux has a controller-independent interrupt architecture.
  * Every controller has a 'controller-template', that is used
  * by the main code to do the right thing. Each driver-visible
@@ -152,6 +170,7 @@ irqreturn_t handle_IRQ_event(unsigned int irq, struct irqaction *action)
 	return retval;
 }
 
+/* XXX: common  irq handler path */
 #ifndef CONFIG_GENERIC_HARDIRQS_NO__DO_IRQ
 /**
  * __do_IRQ - original all in one highlevel IRQ handler
