@@ -26,7 +26,8 @@ extern struct desc_struct cpu_gdt_table[GDT_ENTRIES];
  */
 extern struct desc_struct default_ldt[];
 /* XXX: This is hardware interrups managemnet table (jump from hardware)
- *      TODO: see irq_desc*/
+ *      TODO: see irq_desc
+ */
 extern struct gate_struct idt_table[]; 
 extern struct desc_ptr cpu_gdt_descr[];
 
