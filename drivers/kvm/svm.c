@@ -1234,6 +1234,7 @@ static int interrupt_window_interception(struct kvm_vcpu *vcpu,
 	return 1;
 }
 
+/* XXX: SVM_EXIT handlers */
 static int (*svm_exit_handlers[])(struct kvm_vcpu *vcpu,
 				      struct kvm_run *kvm_run) = {
 	[SVM_EXIT_READ_CR0]           		= emulate_on_interception,
@@ -1418,6 +1419,9 @@ static void load_db_regs(unsigned long *db_regs)
 	asm volatile ("mov %0, %%dr3" : : "r"(db_regs[3]));
 }
 
+/* XXX:
+ *  kvm_dev_ioctl() -> kvm_dev_ioctl_run() -> svm_vcpu_run() 
+ */
 static int svm_vcpu_run(struct kvm_vcpu *vcpu, struct kvm_run *kvm_run)
 {
 	u16 fs_selector;
@@ -1599,6 +1603,7 @@ again:
 		return 0;
 	}
 
+    /* XXX: SVM_EXIT handlers */
 	r = handle_exit(vcpu, kvm_run);
 	if (r > 0) {
 		if (signal_pending(current)) {
