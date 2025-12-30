@@ -63,6 +63,10 @@
 #ifndef CONFIG_NEED_MULTIPLE_NODES
 /* use the per-pgdat data instead for discontigmem - mbligh */
 unsigned long max_mapnr;
+/* XXX:
+ *  struct page; - metadata about the physical frame
+ *  struct page *mem_map; - array of metadata of all frames
+ */
 struct page *mem_map;
 
 EXPORT_SYMBOL(max_mapnr);
