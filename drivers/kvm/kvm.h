@@ -72,6 +72,7 @@
 
 #define IOPL_SHIFT 12
 
+/* XXX: Address types */
 /*
  * Address types:
  *
