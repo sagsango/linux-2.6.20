@@ -29,6 +29,10 @@
 #if defined(CONFIG_FLATMEM)
 
 #define __pfn_to_page(pfn)	(mem_map + ((pfn) - ARCH_PFN_OFFSET))
+/* XXX:
+ *  struct page; - metadata about the physical frame
+ *  struct page *mem_map; - array of metadata of all frames 
+ */
 #define __page_to_pfn(page)	((unsigned long)((page) - mem_map) + \
 				 ARCH_PFN_OFFSET)
 #elif defined(CONFIG_DISCONTIGMEM)
