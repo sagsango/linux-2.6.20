@@ -53,6 +53,32 @@ void copy_page(void *, void *);
 
 #define alloc_zeroed_user_highpage(vma, vaddr) alloc_page_vma(GFP_HIGHUSER | __GFP_ZERO, vma, vaddr)
 #define __HAVE_ARCH_ALLOC_ZEROED_USER_HIGHPAGE
+
+/*
+ * XXX:
+Normal 4 KB page mapping (baseline)
+PGD (4 KB)
+ └── PUD (4 KB)
+      └── PMD (4 KB)
+           └── PTE (4 KB)
+                └── 4 KB physical page
+
+
+HugeTLB (2 MB) page mapping — your code path
+PGD (4 KB)
+ └── PUD (4 KB)
+      └── PMD (4 KB)
+           └── [ PMD ENTRY WITH PS=1 ]
+                └── 2 MB physical page
+
+
+HugeTLB (1 GB) page mapping (for completeness)
+PGD (4 KB)
+ └── PUD (4 KB)
+      └── [ PUD ENTRY WITH PS=1 ]
+           └── 1 GB physical page
+*/
+
 /*
  * These are used to make use of C type-checking..
  */

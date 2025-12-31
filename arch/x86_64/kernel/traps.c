@@ -1084,6 +1084,7 @@ void __init trap_init(void)
 	set_intr_gate(11,&segment_not_present);
 	set_intr_gate_ist(12,&stack_segment,STACKFAULT_STACK);
 	set_intr_gate(13,&general_protection);
+    /* XXX: Page fault handler registration */
 	set_intr_gate(14,&page_fault);
 	set_intr_gate(15,&spurious_interrupt_bug);
 	set_intr_gate(16,&coprocessor_error);

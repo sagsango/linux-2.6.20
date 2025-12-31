@@ -56,6 +56,8 @@ static void huge_pagevec_release(struct pagevec *pvec)
 	pagevec_reinit(pvec);
 }
 
+/* XXX: huge pages map works like this 
+ *      and whole vma is dediacted to 1 size pages*/
 static int hugetlbfs_file_mmap(struct file *file, struct vm_area_struct *vma)
 {
 	struct inode *inode = file->f_path.dentry->d_inode;

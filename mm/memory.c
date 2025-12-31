@@ -369,6 +369,7 @@ static inline int is_cow_mapping(unsigned int flags)
 	return (flags & (VM_SHARED | VM_MAYWRITE)) == VM_MAYWRITE;
 }
 
+/* XXX: gets the "struct page" associated with a pte */
 /*
  * This function gets the "struct page" associated with a pte.
  *
@@ -1473,6 +1474,9 @@ static inline void cow_user_page(struct page *dst, struct page *src, unsigned lo
 	copy_user_highpage(dst, src, va, vma);
 }
 
+/* XXX:
+ * core “write-protect fault” (COW) handler for normal 4KB pages
+ */
 /*
  * This routine handles present pages, when users try to write
  * to a shared page. It is done by copying the page to a new address
@@ -2395,6 +2399,7 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 	spinlock_t *ptl;
 
 	old_entry = entry = *pte;
+    /* XXX: pf not present */
 	if (!pte_present(entry)) {
 		if (pte_none(entry)) {
 			if (vma->vm_ops) {
@@ -2416,12 +2421,14 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 					pte, pmd, write_access, entry);
 	}
 
+    /* XXX: pf present but may have access issues */
 	ptl = pte_lockptr(mm, pmd);
 	spin_lock(ptl);
 	if (unlikely(!pte_same(*pte, entry)))
 		goto unlock;
 	if (write_access) {
 		if (!pte_write(entry))
+            /* XXX: COW thing */
 			return do_wp_page(mm, vma, address,
 					pte, pmd, ptl, entry);
 		entry = pte_mkdirty(entry);
@@ -2446,6 +2453,7 @@ unlock:
 	return VM_FAULT_MINOR;
 }
 
+/*XXX: This is a valid page fault in the given vma */
 /*
  * By the time we get here, we already hold the mm semaphore
  */
@@ -2461,6 +2469,8 @@ int __handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 
 	count_vm_event(PGFAULT);
 
+    /* XXX: If this vma is for huge pages then 
+     *      hanlde that */
 	if (unlikely(is_vm_hugetlb_page(vma)))
 		return hugetlb_fault(mm, vma, address, write_access);
 
@@ -2475,6 +2485,7 @@ int __handle_mm_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 	if (!pte)
 		return VM_FAULT_OOM;
 
+    /* XXX: Handle normal page size 4kb fault */
 	return handle_pte_fault(mm, vma, address, pte, pmd, write_access);
 }
 

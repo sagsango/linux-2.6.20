@@ -15,6 +15,8 @@ extern pud_t level3_kernel_pgt[512];
 extern pud_t level3_physmem_pgt[512];
 extern pud_t level3_ident_pgt[512];
 extern pmd_t level2_kernel_pgt[512];
+/* XXX: kernel page table will be accessed through it
+ *      NOTE: this is a va*/
 extern pgd_t init_level4_pgt[];
 extern pgd_t boot_level4_pgt[];
 extern unsigned long __supported_pte_mask;
@@ -130,6 +132,7 @@ static inline pte_t ptep_get_and_clear_full(struct mm_struct *mm, unsigned long 
 
 #ifndef __ASSEMBLY__
 #define MAXMEM		 0x3fffffffffffUL
+/* XXX: This is kernel va range */
 #define VMALLOC_START    0xffffc20000000000UL
 #define VMALLOC_END      0xffffe1ffffffffffUL
 #define MODULES_VADDR    0xffffffff88000000UL

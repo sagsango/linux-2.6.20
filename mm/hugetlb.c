@@ -546,6 +546,7 @@ int hugetlb_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 	int ret;
 	static DEFINE_MUTEX(hugetlb_instantiation_mutex);
 
+    /* XXX: Only tree is getting populated till pte pointer */
 	ptep = huge_pte_alloc(mm, address);
 	if (!ptep)
 		return VM_FAULT_OOM;
@@ -558,6 +559,7 @@ int hugetlb_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 	mutex_lock(&hugetlb_instantiation_mutex);
 	entry = *ptep;
 	if (pte_none(entry)) {
+        /* XXX: Actual frmame allocation happe here */
 		ret = hugetlb_no_page(mm, vma, address, ptep, write_access);
 		mutex_unlock(&hugetlb_instantiation_mutex);
 		return ret;

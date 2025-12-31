@@ -270,6 +270,9 @@ static noinline void pgtable_bad(unsigned long address, struct pt_regs *regs,
 	do_exit(SIGKILL);
 }
 
+/* XXX: handle the page fault in vmalloc area
+ *      or within the kernel va range
+ */
 /*
  * Handle a fault on the vmalloc area
  *
@@ -286,6 +289,8 @@ static int vmalloc_fault(unsigned long address)
 	   happen within a race in page table update. In the later
 	   case just flush. */
 
+    /* XXX: In kernel mode mm will be NULL? 
+     *      and active mm will be non NULL?*/
 	pgd = pgd_offset(current->mm ?: &init_mm, address);
 	pgd_ref = pgd_offset_k(address);
 	if (pgd_none(*pgd_ref))
@@ -325,6 +330,29 @@ static int vmalloc_fault(unsigned long address)
 int page_fault_trace = 0;
 int exception_trace = 1;
 
+/* XXX: page fault handler;
+ *      from entry.S:page_fault
+ *
+ *
+ *      Have you ever though that lets say process p1 had the
+ *      page fault on address A, then context switch happened
+ *      and the process p2 started executing but unfortunetly
+ *      it acknowledges the page fault of p1?
+ *      short answer NO.
+ *
+ *      When the CPU detects a page fault during instruction execution:
+ *      1. External maskable interrupts (IRQ via PIC/APIC) are disabled
+ *      2. The critical invariant: the faulting instruction never completes
+ *      When a page fault occurs:
+ *          The CPU detects the fault during instruction execution
+ *          The instruction is aborted
+ *          Architectural state is not committed
+ *          The CPU immediately vectors to #PF
+ *          This is not optional. The CPU cannot continue execution -
+ *          until the fault is handled.
+ *      NOTE: same logic appies to all the traps present in trap_init()
+ *
+ */
 /*
  * This routine handles page faults.  It determines the address,
  * and the problem, and then passes it off to one of the appropriate
@@ -346,12 +374,15 @@ asmlinkage void __kprobes do_page_fault(struct pt_regs *regs,
 	mm = tsk->mm;
 	prefetchw(&mm->mmap_sem);
 
+    /* XXX: 
 	/* get the address */
 	__asm__("movq %%cr2,%0":"=r" (address));
 
 	info.si_code = SEGV_MAPERR;
 
 
+    /* XXX: kernel space page mappings are in init_mm.pgd 
+     *      and also we can get page fault in kernel space*/
 	/*
 	 * We fault-in kernel-space virtual memory on-demand. The
 	 * 'reference' page table is init_mm.pgd.
@@ -373,6 +404,10 @@ asmlinkage void __kprobes do_page_fault(struct pt_regs *regs,
 		 */
 		if (!(error_code & (PF_RSVD|PF_USER|PF_PROT)) &&
 		      ((address >= VMALLOC_START && address < VMALLOC_END))) {
+            /* XXX: page fault address is within the kernel va
+             *  #define VMALLOC_START    0xffffc20000000000UL
+             *  #define VMALLOC_END      0xffffe1ffffffffffUL
+             */
 			if (vmalloc_fault(address) >= 0)
 				return;
 		}
@@ -430,12 +465,22 @@ asmlinkage void __kprobes do_page_fault(struct pt_regs *regs,
 		down_read(&mm->mmap_sem);
 	}
 
+    /* XXX: search for the vm area struct where this address belongs */
 	vma = find_vma(mm, address);
 	if (!vma)
 		goto bad_area;
-	if (likely(vma->vm_start <= address))
+    /* XXX: see the find_vma traversal, vma can be
+     *  1. null
+     *  2. non null and having addr
+     *  3. non null and addr < vma->vm_start
+     *
+     *  for condition 2nd:
+     *      vma->vm_start <= address
+     *      this will be true
+     */
+	if (likely(vma->vm_start <= address)) /*XXX: 2nd cond */ 
 		goto good_area;
-	if (!(vma->vm_flags & VM_GROWSDOWN))
+	if (!(vma->vm_flags & VM_GROWSDOWN)) /*XXX: 3rd cond */
 		goto bad_area;
 	if (error_code & 4) {
 		/* Allow userspace just enough access below the stack pointer
@@ -444,8 +489,12 @@ asmlinkage void __kprobes do_page_fault(struct pt_regs *regs,
 		if (address + 65536 + 32 * sizeof(unsigned long) < regs->rsp)
 			goto bad_area;
 	}
+    /* XXX: TODO ? */
 	if (expand_stack(vma, address))
 		goto bad_area;
+
+
+/* XXX: here we are where addr is within the vma */
 /*
  * Ok, we have a good vm_area for this memory access, so
  * we can handle it..
@@ -468,6 +517,7 @@ good_area:
 				goto bad_area;
 	}
 
+    /* XXX: Now its a valid fault */
 	/*
 	 * If for any reason at all we couldn't handle the fault,
 	 * make sure we exit gracefully rather than endlessly redo

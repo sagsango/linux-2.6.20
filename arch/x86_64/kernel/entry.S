@@ -1016,6 +1016,7 @@ ENTRY(kernel_execve)
 	CFI_ENDPROC
 ENDPROC(kernel_execve)
 
+/* XXX: Page fault entry */
 KPROBE_ENTRY(page_fault)
 	errorentry do_page_fault
 KPROBE_END(page_fault)

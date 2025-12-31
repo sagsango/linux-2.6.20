@@ -66,6 +66,7 @@ void __init x86_64_start_kernel(char * real_mode_data)
 
 	early_printk("Kernel alive\n");
 
+    /* XXX: kernel va mapping are present in init_level4_pgt(va)*/
 	/*
 	 * switch to init_level4_pgt from boot_level4_pgt
 	 */

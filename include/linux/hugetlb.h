@@ -8,6 +8,9 @@
 
 struct ctl_table;
 
+/* XXX: The whole vma is dedicated for huge pages
+ *      or one type of pages (4KB, 2MB, 1GB)
+ */
 static inline int is_vm_hugetlb_page(struct vm_area_struct *vma)
 {
 	return vma->vm_flags & VM_HUGETLB;

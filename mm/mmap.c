@@ -1395,6 +1395,7 @@ get_unmapped_area(struct file *file, unsigned long addr, unsigned long len,
 
 EXPORT_SYMBOL(get_unmapped_area);
 
+/* XXX: search the vma for given address */
 /* Look up the first VMA which satisfies  addr < vm_end,  NULL if none. */
 struct vm_area_struct * find_vma(struct mm_struct * mm, unsigned long addr)
 {
@@ -1405,6 +1406,11 @@ struct vm_area_struct * find_vma(struct mm_struct * mm, unsigned long addr)
 		/* (Cache hit rate is typically around 35%.) */
 		vma = mm->mmap_cache;
 		if (!(vma && vma->vm_end > addr && vma->vm_start <= addr)) {
+            /* XXX: If we are here means our cached vma
+             *      dont have addr
+             *
+             *      so we travered the rb tree from the root!
+             */
 			struct rb_node * rb_node;
 
 			rb_node = mm->mm_rb.rb_node;
@@ -1424,7 +1430,7 @@ struct vm_area_struct * find_vma(struct mm_struct * mm, unsigned long addr)
 				} else
 					rb_node = rb_node->rb_right;
 			}
-			if (vma)
+			if (vma) /* XXX: remember this vma for future */
 				mm->mmap_cache = vma;
 		}
 	}
