@@ -797,6 +797,7 @@ out:
 	return ret;
 }
 
+/* XXX: We call during page fault handling, if necessary */
 /*
  * Force a signal that the process can't ignore: if necessary
  * we unblock the signal and change any SIG_IGN to SIG_DFL.
@@ -825,6 +826,7 @@ force_sig_info(int sig, struct siginfo *info, struct task_struct *t)
 			recalc_sigpending_tsk(t);
 		}
 	}
+    /* XXX: set pending signal */
 	ret = specific_send_sig_info(sig, info, t);
 	spin_unlock_irqrestore(&t->sighand->siglock, flags);
 

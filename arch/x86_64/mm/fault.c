@@ -42,6 +42,7 @@
 
 static ATOMIC_NOTIFIER_HEAD(notify_page_fault_chain);
 
+/*XXX: page fault notification */
 /* Hook to register for page fault notifications */
 int register_page_fault_notifier(struct notifier_block *nb)
 {
@@ -173,6 +174,7 @@ static int bad_address(void *p)
 	return probe_kernel_address((unsigned long *)p, dummy);
 } 
 
+/* XXX: dump page table */
 void dump_pagetable(unsigned long address)
 {
 	pgd_t *pgd;
@@ -252,6 +254,9 @@ int unhandled_signal(struct task_struct *tsk, int sig)
 		(tsk->sighand->action[sig-1].sa.sa_handler == SIG_DFL);
 }
 
+/* XXX: architecture standard was not followd in the pte bits, dump page table
+ *      and kill the current process
+ */
 static noinline void pgtable_bad(unsigned long address, struct pt_regs *regs,
 				 unsigned long error_code)
 {
@@ -432,8 +437,12 @@ asmlinkage void __kprobes do_page_fault(struct pt_regs *regs,
 		printk("pagefault rip:%lx rsp:%lx cs:%lu ss:%lu address %lx error %lx\n",
 		       regs->rip,regs->rsp,regs->cs,regs->ss,address,error_code); 
 
+    /* XXX: The CPU detected that one or more reserved bits were set to 1 in a paging 
+     * structure entry during the page walk.
+     * Reserved bits are architecturally defined bits that must be zero in page-table entries.
+     */
 	if (unlikely(error_code & PF_RSVD))
-		pgtable_bad(address, regs, error_code);
+		pgtable_bad(address, regs, error_code); /* XXX: kill the process */
 
 	/*
 	 * If we're in an interrupt or have no user
@@ -546,9 +555,11 @@ good_area:
 bad_area:
 	up_read(&mm->mmap_sem);
 
+    /* XXX: cause a seg fault, cpu previlage level = user */
 bad_area_nosemaphore:
 	/* User mode accesses just cause a SIGSEGV */
 	if (error_code & PF_USER) {
+        /* XXX: check if invlid fault and return */
 		if (is_prefetch(regs, address, error_code))
 			return;
 
@@ -562,6 +573,7 @@ bad_area_nosemaphore:
 		    (address >> 32))
 			return;
 
+        /* XXX: User has ingored the SIGSEGV or its init process*/
 		if (exception_trace && unhandled_signal(tsk, SIGSEGV)) {
 			printk(
 		       "%s%s[%d]: segfault at %016lx rip %016lx rsp %016lx error %lx\n",
@@ -578,6 +590,7 @@ bad_area_nosemaphore:
 		info.si_errno = 0;
 		/* info.si_code has been set above */
 		info.si_addr = (void __user *)address;
+        /* XXX: Forces signal that process can't ignore */
 		force_sig_info(SIGSEGV, &info, tsk);
 		return;
 	}
@@ -660,6 +673,12 @@ do_sigbus:
 DEFINE_SPINLOCK(pgd_lock);
 struct page *pgd_list;
 
+
+/* XXX:
+ *  tracking all the kernel va, with the init_level4_pgt
+ *  I dont know why? TODO
+ */
+
 void vmalloc_sync_all(void)
 {
 	/* Note that races in the updates of insync and start aren't 
@@ -672,7 +691,9 @@ void vmalloc_sync_all(void)
 
 	for (address = start; address <= VMALLOC_END; address += PGDIR_SIZE) {
 		if (!test_bit(pgd_index(address), insync)) {
-			const pgd_t *pgd_ref = pgd_offset_k(address);
+			const pgd_t *pgd_ref = pgd_offset_k(address);/*XXX: based on the 
+                                                          *  init_level4_pgt
+                                                          */
 			struct page *page;
 
 			if (pgd_none(*pgd_ref))

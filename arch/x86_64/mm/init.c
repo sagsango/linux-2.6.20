@@ -1,3 +1,29 @@
+/* XXX: What is here:
+    Firmware → head.S → temporary page tables
+                     |
+                     v
+              init_memory_mapping()
+                     |
+                     v
+      Create kernel direct mapping (phys → PAGE_OFFSET)
+                     |
+                     v
+           Tear down bootmem
+                     |
+                     v
+        Switch to normal page allocator
+                     |
+                     v
+     Support later memory hotplug / iorema
+
+
+
+    This file does NOT handle:
+        User page faults
+        Demand paging
+        VMAs for processes
+    It ONLY handles kernel address space setup.
+*/
 /*
  *  linux/arch/x86_64/mm/init.c
  *
@@ -46,6 +72,14 @@
 #define Dprintk(x...)
 #endif
 
+/* XXX:
+Variable	        Meaning
+after_bootmem	    0 = bootmem allocator active
+                    1 = buddy allocator active
+
+dma_ops	            Architecture-specific DMA ops (IOMMU hooks later)
+mmu_gathers	        Used during TLB shootdown
+*/
 struct dma_mapping_ops* dma_ops;
 EXPORT_SYMBOL(dma_ops);
 
@@ -53,6 +87,7 @@ static unsigned long dma_reserve __initdata;
 
 DEFINE_PER_CPU(struct mmu_gather, mmu_gathers);
 
+/* XXX: get the memory metadat from struct pglist_data */
 /*
  * NOTE: pagetable_init alloc all the fixmap pagetables contiguous on the
  * physical space so we can cache the place of the first one and move
@@ -90,10 +125,14 @@ void show_mem(void)
 
 int after_bootmem;
 
+/* XXX:
+ *  allocate one clean, page-aligned page for page-table–related data,
+ *  and it does so correctly both before and after bootmem is torn down.
+ */
 static __init void *spp_getpage(void)
 { 
 	void *ptr;
-	if (after_bootmem)
+	if (after_bootmem) /*XXX: get from buddy allocator*/
 		ptr = (void *) get_zeroed_page(GFP_ATOMIC); 
 	else
 		ptr = alloc_bootmem_pages(PAGE_SIZE);
@@ -104,6 +143,7 @@ static __init void *spp_getpage(void)
 	return ptr;
 } 
 
+/* XXX: pf for given va */
 static __init void set_pte_phys(unsigned long vaddr,
 			 unsigned long phys, pgprot_t prot)
 {
@@ -145,6 +185,7 @@ static __init void set_pte_phys(unsigned long vaddr,
 		pte_ERROR(*pte);
 	set_pte(pte, new_pte);
 
+    /* XXX: only one tlb mapping is flushed */
 	/*
 	 * It's enough to flush this one mapping.
 	 * (PGE mappings get flushed as well)
@@ -169,6 +210,11 @@ unsigned long __initdata table_start, table_end;
 
 extern pmd_t temp_boot_pmds[]; 
 
+/* XXX:
+ * You need to create page tables
+ * But those page tables live in physical memory
+ * And you don’t yet have mappings for them
+*/
 static  struct temp_map { 
 	pmd_t *pmd;
 	void  *address; 
@@ -179,6 +225,12 @@ static  struct temp_map {
 	{}
 }; 
 
+/* XXX: This is before the page table
+ * 1. Take next PFN from table_end
+ * 2. Temporarily map its 2MB region via PMD
+ * 3. Return a virtual pointer into that region
+ * 4. Zero the page
+*/
 static __meminit void *alloc_low_page(int *index, unsigned long *phys)
 { 
 	struct temp_map *ti;

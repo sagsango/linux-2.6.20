@@ -1,3 +1,30 @@
+/* XXX:
+    You just pasted Linux bootmem allocator core (mm/bootmem.c from the classic “bootmem” era).
+    This is the thing the kernel uses very early in boot (before the normal buddy allocator + 
+    full struct page world is fully usable everywhere) to:
+
+    1. Track which PFNs are usable vs reserved using a bitmap.
+    2. Hand out physically-backed memory for early allocations (page tables, 
+        memmap structures, initrd unpacking buffers, etc.).
+    3. Later, free all remaining “bootmem-free” pages into the buddy allocator once the real page 
+        allocator is ready.
+
+
+    Core data structure and invariants
+    Each NUMA node has a bootmem_data_t (pgdat->bdata) with:
+        node_boot_start : physical address of the node’s first managed PFN (as bytes)
+        node_low_pfn : end PFN (exclusive) for this node’s bootmem range
+    node_bootmem_map : bitmap (in normal kernel virtual memory) where:
+        bit = 1 ⇒ PFN is reserved/unallocatable
+        bit = 0 ⇒ PFN is free/allocatable
+        plus some alloc-state optimization:
+            last_success, last_pos, last_offset (merge small allocations)
+    Important invariant:
+        At init, bootmem marks everything reserved (1).
+        Then arch code (setup_arch, e820 parsing, etc.) explicitly clears (frees) usable RAM 
+            ranges to 0.
+        That’s why init_bootmem_core() does memset(..., 0xff, mapsize).
+*/
 /*
  *  linux/mm/bootmem.c
  *
@@ -27,6 +54,7 @@ unsigned long max_low_pfn;
 unsigned long min_low_pfn;
 unsigned long max_pfn;
 
+/* XXX: List of all numa node metadata (kept sorted)*/
 static LIST_HEAD(bdata_list);
 #ifdef CONFIG_CRASH_DUMP
 /*
@@ -48,6 +76,7 @@ unsigned long __init bootmem_bootmap_pages(unsigned long pages)
 	return mapsize;
 }
 
+/* XXX: add numa node in the sorted list  */
 /*
  * link bdata in order
  */
@@ -69,6 +98,7 @@ static void __init link_bootmem(bootmem_data_t *bdata)
 	list_add_tail(&bdata->list, &bdata_list);
 }
 
+/* XXX: */
 /*
  * Given an initialised bdata, it returns the size of the boot bitmap
  */
@@ -82,6 +112,7 @@ static unsigned long __init get_mapsize(bootmem_data_t *bdata)
 	return ALIGN(mapsize, sizeof(long));
 }
 
+/* XXX: Numa node (bootmem_data)  metadata setup */
 /*
  * Called once to set up the allocator itself.
  */
@@ -106,6 +137,7 @@ static unsigned long __init init_bootmem_core(pg_data_t *pgdat,
 	return mapsize;
 }
 
+/* XXX: */
 /*
  * Marks a particular physical memory range as unallocatable. Usable RAM
  * might be used for boot-time allocations - or it might get added
@@ -136,6 +168,7 @@ static void __init reserve_bootmem_core(bootmem_data_t *bdata, unsigned long add
 		}
 }
 
+/* XXX: free the memory range from addr to addr + size */
 static void __init free_bootmem_core(bootmem_data_t *bdata, unsigned long addr,
 				     unsigned long size)
 {
@@ -164,6 +197,12 @@ static void __init free_bootmem_core(bootmem_data_t *bdata, unsigned long addr,
 	}
 }
 
+
+/* XXX:
+ * __alloc_bootmem_core() scans a bitmap of PFNs and finds a contiguous run 
+ * of zero bits (free pages), respecting alignment, goal, and limit, then 
+ * marks them reserved and returns a kernel virtual address.
+ */
 /*
  * We 'merge' subsequent allocations to save space. We might 'lose'
  * some fraction of a page if allocations cannot be satisfied due to
@@ -300,6 +339,11 @@ found:
 	return ret;
 }
 
+/* XXX:
+ * It walks the bootmem bitmap, finds every page that is free (bit = 0), 
+ * converts those PFNs into struct page *, and returns them to the buddy 
+ * allocator, then finally frees the bitmap itself.
+ */
 static unsigned long __init free_all_bootmem_core(pg_data_t *pgdat)
 {
 	struct page *page;

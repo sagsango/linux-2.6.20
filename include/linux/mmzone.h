@@ -617,6 +617,7 @@ alloc_pages(GFP_KERNEL, order)
 */
 
 
+/* XXX: Hold all the memory metadata */
 /*
  * The pg_data_t structure is used in machines with CONFIG_DISCONTIGMEM
  * (mostly NUMA machines?) to denote a higher-level memory zone than the

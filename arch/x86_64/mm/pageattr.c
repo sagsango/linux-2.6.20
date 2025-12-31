@@ -13,6 +13,7 @@
 #include <asm/tlbflush.h>
 #include <asm/io.h>
 
+/* XXX: get the va -> pte */
 static inline pte_t *lookup_address(unsigned long address) 
 { 
 	pgd_t *pgd = pgd_offset_k(address);
