@@ -1,4 +1,4 @@
-# ~ ❱❱❱ sudo cpuid
+# ~ ❱❱❱ sudo cpuid #(msr vs cpuid)
 CPU 0:
    vendor_id = "GenuineIntel"
    version information (1/eax):

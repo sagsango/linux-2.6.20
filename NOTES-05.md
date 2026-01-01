@@ -1,4 +1,4 @@
-# 1. overview
+# 1. overview (msr only)
 ================================================================================
                     X86 MODEL SPECIFIC REGISTERS (MSR)
                      COMPLETE FEATURE CLASSIFICATION
