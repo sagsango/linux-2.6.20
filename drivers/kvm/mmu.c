@@ -223,6 +223,7 @@ static int is_rmap_pte(u64 pte)
 		== (PT_WRITABLE_MASK | PT_PRESENT_MASK);
 }
 
+/* XXX: fill the memory cache till max capacity*/
 static int mmu_topup_memory_cache(struct kvm_mmu_memory_cache *cache,
 				  size_t objsize, int min)
 {
@@ -239,12 +240,14 @@ static int mmu_topup_memory_cache(struct kvm_mmu_memory_cache *cache,
 	return 0;
 }
 
+/* XXX: empty all the cache */
 static void mmu_free_memory_cache(struct kvm_mmu_memory_cache *mc)
 {
 	while (mc->nobjs)
 		kfree(mc->objects[--mc->nobjs]);
 }
 
+/* XXX: fill the mmu_pte_chain_cache & mmu_rmap_desc_cache */
 static int mmu_topup_memory_caches(struct kvm_vcpu *vcpu)
 {
 	int r;
@@ -259,12 +262,14 @@ out:
 	return r;
 }
 
+/* XXX: free mmu_pte_chain_cache & mmu_rmap_desc_cache */
 static void mmu_free_memory_caches(struct kvm_vcpu *vcpu)
 {
 	mmu_free_memory_cache(&vcpu->mmu_pte_chain_cache);
 	mmu_free_memory_cache(&vcpu->mmu_rmap_desc_cache);
 }
 
+/* XXX: alloc one object from the cache */
 static void *mmu_memory_cache_alloc(struct kvm_mmu_memory_cache *mc,
 				    size_t size)
 {
@@ -276,6 +281,7 @@ static void *mmu_memory_cache_alloc(struct kvm_mmu_memory_cache *mc,
 	return p;
 }
 
+/* XXX: free one chache allocated object */
 static void mmu_memory_cache_free(struct kvm_mmu_memory_cache *mc, void *obj)
 {
 	if (mc->nobjs < KVM_NR_MEM_OBJS)
@@ -284,30 +290,37 @@ static void mmu_memory_cache_free(struct kvm_mmu_memory_cache *mc, void *obj)
 		kfree(obj);
 }
 
+/* XXX: alloc */
 static struct kvm_pte_chain *mmu_alloc_pte_chain(struct kvm_vcpu *vcpu)
 {
 	return mmu_memory_cache_alloc(&vcpu->mmu_pte_chain_cache,
 				      sizeof(struct kvm_pte_chain));
 }
 
+/* XXX: free */
 static void mmu_free_pte_chain(struct kvm_vcpu *vcpu,
 			       struct kvm_pte_chain *pc)
 {
 	mmu_memory_cache_free(&vcpu->mmu_pte_chain_cache, pc);
 }
 
+/* XXX: alloc */
 static struct kvm_rmap_desc *mmu_alloc_rmap_desc(struct kvm_vcpu *vcpu)
 {
 	return mmu_memory_cache_alloc(&vcpu->mmu_rmap_desc_cache,
 				      sizeof(struct kvm_rmap_desc));
 }
 
+/* XXX: free */
 static void mmu_free_rmap_desc(struct kvm_vcpu *vcpu,
 			       struct kvm_rmap_desc *rd)
 {
 	mmu_memory_cache_free(&vcpu->mmu_rmap_desc_cache, rd);
 }
 
+/* XXX: add host frame (struct page) back mapping to shadow 
+ *      page table. 
+ *      TODO: see how pointers unused bits are used here*/
 /*
  * Reverse mapping data structures:
  *
@@ -326,16 +339,18 @@ static void rmap_add(struct kvm_vcpu *vcpu, u64 *spte)
 	if (!is_rmap_pte(*spte))
 		return;
 	page = pfn_to_page((*spte & PT64_BASE_ADDR_MASK) >> PAGE_SHIFT);
-	if (!page->private) {
+	if (!page->private) { /* XXX: page did not have any mappig before */
 		rmap_printk("rmap_add: %p %llx 0->1\n", spte, *spte);
 		page->private = (unsigned long)spte;
-	} else if (!(page->private & 1)) {
+	} else if (!(page->private & 1)) { /* XXX: page already had 1 mapping
+                                          but no rmap was allocted before*/
 		rmap_printk("rmap_add: %p %llx 1->many\n", spte, *spte);
 		desc = mmu_alloc_rmap_desc(vcpu);
 		desc->shadow_ptes[0] = (u64 *)page->private;
 		desc->shadow_ptes[1] = spte;
 		page->private = (unsigned long)desc | 1;
-	} else {
+	} else { /* XXX: page already had atleast 2 mappings and the 
+                     rmap was already allocated for it */
 		rmap_printk("rmap_add: %p %llx many->many\n", spte, *spte);
 		desc = (struct kvm_rmap_desc *)(page->private & ~1ul);
 		while (desc->shadow_ptes[RMAP_EXT-1] && desc->more)
@@ -350,6 +365,7 @@ static void rmap_add(struct kvm_vcpu *vcpu, u64 *spte)
 	}
 }
 
+/* XXX: helper to the rmap_remove */
 static void rmap_desc_remove_entry(struct kvm_vcpu *vcpu,
 				   struct page *page,
 				   struct kvm_rmap_desc *desc,
@@ -374,6 +390,8 @@ static void rmap_desc_remove_entry(struct kvm_vcpu *vcpu,
 	mmu_free_rmap_desc(vcpu, desc);
 }
 
+/* XXX: remove a shadow page table entry 
+ *      update the rmap accordingly*/
 static void rmap_remove(struct kvm_vcpu *vcpu, u64 *spte)
 {
 	struct page *page;
@@ -387,7 +405,8 @@ static void rmap_remove(struct kvm_vcpu *vcpu, u64 *spte)
 	if (!page->private) {
 		printk(KERN_ERR "rmap_remove: %p %llx 0->BUG\n", spte, *spte);
 		BUG();
-	} else if (!(page->private & 1)) {
+	} else if (!(page->private & 1)) { /* XXX: has no kvm_rmap_desc
+                                          because has only one mapping */
 		rmap_printk("rmap_remove:  %p %llx 1->0\n", spte, *spte);
 		if ((u64 *)page->private != spte) {
 			printk(KERN_ERR "rmap_remove:  %p %llx 1->BUG\n",
@@ -402,6 +421,8 @@ static void rmap_remove(struct kvm_vcpu *vcpu, u64 *spte)
 		while (desc) {
 			for (i = 0; i < RMAP_EXT && desc->shadow_ptes[i]; ++i)
 				if (desc->shadow_ptes[i] == spte) {
+                    /* XXX: call the helper 
+                     *      we dont want any holes after removal*/
 					rmap_desc_remove_entry(vcpu, page,
 							       desc, i,
 							       prev_desc);
@@ -414,6 +435,15 @@ static void rmap_remove(struct kvm_vcpu *vcpu, u64 *spte)
 	}
 }
 
+/* XXX: write protect the given gfn 
+ *      we get all the rmap mappings of the page
+ *      and mark them write protected
+ *
+ *      cache: one the spte is write protected we dont
+ *      need to maintain the rmapping.
+ *
+ *      TODO: So rmapping is just to make the spte of the pages
+ *      write protected*/
 static void rmap_write_protect(struct kvm_vcpu *vcpu, u64 gfn)
 {
 	struct kvm *kvm = vcpu->kvm;
@@ -445,6 +475,7 @@ static void rmap_write_protect(struct kvm_vcpu *vcpu, u64 gfn)
 	}
 }
 
+/* XXX: checks whole frame is filled will 0s */
 static int is_empty_shadow_page(hpa_t page_hpa)
 {
 	u64 *pos;
@@ -460,6 +491,7 @@ static int is_empty_shadow_page(hpa_t page_hpa)
 	return 1;
 }
 
+/* XXX: free hpa */
 static void kvm_mmu_free_page(struct kvm_vcpu *vcpu, hpa_t page_hpa)
 {
 	struct kvm_mmu_page *page_head = page_header(page_hpa);
@@ -476,6 +508,7 @@ static unsigned kvm_page_table_hashfn(gfn_t gfn)
 	return gfn;
 }
 
+/* XXX: allocate  page from the cache */
 static struct kvm_mmu_page *kvm_mmu_alloc_page(struct kvm_vcpu *vcpu,
 					       u64 *parent_pte)
 {
@@ -496,6 +529,7 @@ static struct kvm_mmu_page *kvm_mmu_alloc_page(struct kvm_vcpu *vcpu,
 	return page;
 }
 
+/* XXX: TODO: Continue from here */
 static void mmu_page_add_parent_pte(struct kvm_vcpu *vcpu,
 				    struct kvm_mmu_page *page, u64 *parent_pte)
 {
