@@ -2000,27 +2000,78 @@ out_free_guest_msrs:
 }
 
 static struct kvm_arch_ops vmx_arch_ops = {
+    /*XXX:check if cpu has kvm support */
 	.cpu_has_kvm_support = cpu_has_kvm_support,
+    /*XXX:check if vmx is disabled by bios; we read msr*/ 
 	.disabled_by_bios = vmx_disabled_by_bios,
+    /*XXX:  One-time global setup/teardown
+     * Allocate VMXON region
+     * Set global MSRs
+     * Initialize host-wide structures */
 	.hardware_setup = hardware_setup,
 	.hardware_unsetup = hardware_unsetup,
+    /*XXX:Enable / disable virtualization per physical CPU
+     *    VMX: vmxon; SVM: set EFER.SVME */
 	.hardware_enable = hardware_enable,
 	.hardware_disable = hardware_disable,
 
+    /* XXX: Allocate architecture-specific vCPU state
+     * Generic struct kvm_vcpu is not enough
+     * VMX:Allocate VMCS, Initialize MSR lists, -
+     *     Setup host/guest fields
+     * SVM:Allocate VMCB,Initialize intercepts
+     */
 	.vcpu_create = vmx_create_vcpu,
 	.vcpu_free = vmx_free_vcpu,
 
+    /* XXX: Context-switch virtualization state onto current CPU
+     *  Before and after every KVM_RUN
+     *      kvm_run()
+     *      ├─ vcpu_load()
+     *      ├─ run()
+     *      └─ vcpu_put()
+     * VMX: vmptrld, load host MSRs
+     * SVM: load VMCB pointer */
 	.vcpu_load = vmx_vcpu_load,
 	.vcpu_put = vmx_vcpu_put,
 
+    /* XXX: Enable guest debugging (single-step, breakpoints)
+     * KVM_SET_GUEST_DEBUG ioctl
+     * Hardware effects
+     * Set trap flags
+     * Enable debug intercepts
+     */
 	.set_guest_debug = set_guest_debug,
+    /* XXX: Read/write guest MSRs
+     * Guest MSRs live in:
+     *  VMCS MSR area (VMX)
+     *  VMCB MSR intercepts (SVM)
+     */
 	.get_msr = vmx_get_msr,
 	.set_msr = vmx_set_msr,
+    /* XXX: Access guest segment registers (CS, DS, etc.)
+     * Segmentation state stored in VMCS/VMCB fields
+     */
 	.get_segment_base = vmx_get_segment_base,
 	.get_segment = vmx_get_segment,
 	.set_segment = vmx_set_segment,
+
+    /* XXX: DB = default operand size
+     *  L = long mode
+     *  Used for Instruction emulation & mode decisions
+     */
 	.get_cs_db_l_bits = vmx_get_cs_db_l_bits,
+    
+    /* XXX: Force re-evaluation of cached control bits
+     * KVM caches derived execution mode bits
+     */
 	.decache_cr0_cr4_guest_bits = vmx_decache_cr0_cr4_guest_bits,
+    /* XXX: Update guest control registers
+     * set_cr3 triggers:
+     *  → MMU context switch
+     *  → shadow page table rebuild
+     *  → TLB invalidation
+     */
 	.set_cr0 = vmx_set_cr0,
 	.set_cr0_no_modeswitch = vmx_set_cr0_no_modeswitch,
 	.set_cr3 = vmx_set_cr3,
@@ -2028,22 +2079,73 @@ static struct kvm_arch_ops vmx_arch_ops = {
 #ifdef CONFIG_X86_64
 	.set_efer = vmx_set_efer,
 #endif
+    /* XXX: Read/write guest IDT/GDT base + limit
+     *  called during:
+     *  Task switches
+     *  Interrupt injection
+     *  Emulation
+     */
 	.get_idt = vmx_get_idt,
 	.set_idt = vmx_set_idt,
 	.get_gdt = vmx_get_gdt,
 	.set_gdt = vmx_set_gdt,
+    /* XXX: Move registers between:
+     * kvm_vcpu->regs[] <-> VMCS/VMCB
+     * Performance — avoid frequent VMREAD/VMWRITE
+     */
 	.cache_regs = vcpu_load_rsp_rip,
 	.decache_regs = vcpu_put_rsp_rip,
+    /* XXX: Guest EFLAGS/RFLAGS access 
+     * abstract VMX-specific handling of the guest’s RFLAGS
+     * so KVM can correctly read and write a virtualized, 
+     * fragmented, and restricted flags register while preserving
+     * the architectural illusion for the guest.
+     */
 	.get_rflags = vmx_get_rflags,
 	.set_rflags = vmx_set_rflags,
 
+    /* XXX: Invalidate guest TLB entries. Used when:
+     *  Guest executes INVLPG
+     *  Shadow page table changes
+     */
 	.tlb_flush = vmx_flush_tlb,
+
+    /* XXX: Inject #PF into guest
+     * Shadow page fault ≠ real guest page fault
+     * KVM must synthesize it
+     */
 	.inject_page_fault = vmx_inject_page_fault,
 
+    /* XXX: general protection fault
+     * Inject #GP into guest
+     * Invalid control register writes
+     * Privileged instruction emulation failures
+     */
 	.inject_gp = vmx_inject_gp,
 
+    /* XXX:
+     * Enters guest mode
+     * VMX :vmlaunch / vmresume
+     * SVM :vmrun
+     * Returns when:
+     *  VMEXIT occurs
+     *  Interrupt
+     *  I/O
+     *  MMIO
+     *  Fault
+     */
 	.run = vmx_vcpu_run,
+    /* XXX:
+     * Advance RIP after software emulation
+     * Guest instruction was emulated in host, not executed
+     */
 	.skip_emulated_instruction = skip_emulated_instruction,
+    /* XXX:
+     *  nitial architectural state
+     *  Reset CS:RIP
+     *  Set initial CR0/CR4
+     *  Configure intercepts
+     */
 	.vcpu_setup = vmx_vcpu_setup,
 };
 

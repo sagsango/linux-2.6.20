@@ -134,7 +134,10 @@ union kvm_mmu_page_role {
  */
 struct kvm_mmu_page {
 	struct list_head link; /*XXX:links to free_pages/active_mmu_pages list*/
-	struct hlist_node hash_link;/*XXX:Links into mmu_page_hash[]*/
+	struct hlist_node hash_link;/*XXX:Links into mmu_page_hash[]
+             * Fast lookup of existing shadow pages by (gfn, role).
+             * Avoids rebuilding identical shadow PT pages.
+             */
 
 	/*
 	 * The following two entries are used to key the shadow page in the
@@ -143,6 +146,7 @@ struct kvm_mmu_page {
 	gfn_t gfn; /*XXX: which guest frame number */
 	union kvm_mmu_page_role role;
 
+    /* XXX: Atleast one kvm_mmu_page will be mapped to one page_hpa */
 	hpa_t page_hpa; /*XXX:Host physical address of the ACTUAL shadow PT memory*/
 	unsigned long slot_bitmap; /* One bit set per slot which has memory
 				    * in this shadow page.
@@ -183,11 +187,36 @@ struct kvm_mmu {
      *     NOTE: Today we have extented page table, where behavior
      *     is different we will learn about it*/
 	void (*new_cr3)(struct kvm_vcpu *vcpu);
+    /* XXX:
+     * - Handles guest page faults
+     *   WHY:
+     *      Central entry for building shadow mappings.
+     *   TODO: Find full flow
+    */
 	int (*page_fault)(struct kvm_vcpu *vcpu, gva_t gva, u32 err);
+    /* XXX:
+     *     - Frees shadow roots
+     *     WHY:
+     *     Used when MMU context is destroyed or reset.
+     */
 	void (*free)(struct kvm_vcpu *vcpu);
+    /* XXX: gva_to_gpa:
+     *  - Software walk of guest page tables
+     *  WHY:
+     *  Hardware walks shadow PTs, not guest PTs.
+     */
 	gpa_t (*gva_to_gpa)(struct kvm_vcpu *vcpu, gva_t gva);
 	hpa_t root_hpa; /* XXX: Shadow page table root */
+    /* XXX: root_level:
+     * - Guest paging depth
+     *   WHY:
+     *   Needed to interpret guest PT hierarchy. */
 	int root_level;
+    /* XXX: shadow_root_level:
+     *      - Shadow paging depth
+     *  WHY:
+     *      Shadow hierarchy may differ (e.g., PAE emulation).
+     */
 	int shadow_root_level;
 
 	u64 *pae_root;
@@ -252,7 +281,18 @@ struct kvm_vcpu {
 	struct mutex mutex;
 	int   cpu;
 	int   launched;
+    /* XXX:
+     * Can the guest currently accept interrupts?
+     * WHY: x86 interrupts are blocked when: IF=0
+     * during certain instructions
+     */
 	int interrupt_window_open;
+    /* XXX: Next 3
+     * Bitmap of pending virtual interrupts.
+     * Guest interrupts are virtualized, not delivered directly.
+     * IRQ injection
+     * VM-exit decision making
+     */
 	unsigned long irq_summary; /* bit vector: 1 per word in irq_pending */
 #define NR_IRQ_WORDS KVM_IRQ_BITMAP_SIZE(unsigned long)
 	unsigned long irq_pending[NR_IRQ_WORDS];
@@ -265,29 +305,51 @@ struct kvm_vcpu {
 	unsigned long cr4;
 	unsigned long cr8;
 	u64 pdptrs[4]; /* pae */
+    /* XXX: Cached EFER MSR (NX, LME, LMA).
+     * Affects:
+     *  paging mode
+     *  instruction decoding
+     *  MMU behavior
+     */
 	u64 shadow_efer;
+    /* XXX: Guest APIC base MSR. Interrupt delivery depends on it. */
 	u64 apic_base;
-	u64 ia32_misc_enable_msr;
+	u64 ia32_misc_enable_msr; /* XXX: Misc CPU features */
 	int nmsrs;
+    /* XXX: Lists of MSRs to load/store on VM-entry/exit. */
 	struct vmx_msr_entry *guest_msrs;
 	struct vmx_msr_entry *host_msrs;
 
+    /* XXX: - Pool of unused shadow pages
+     *   WHY: Avoid allocation during PF handling
+     */
 	struct list_head free_pages;
+    /* XXX: metadata cache for pages */
 	struct kvm_mmu_page page_header_buf[KVM_NUM_MMU_PAGES];
 	struct kvm_mmu mmu;
 
+    /* XXX: Avoid kmalloc() during page faults.
+     * used : reverse mapping, PTE chains
+     */
 	struct kvm_mmu_memory_cache mmu_pte_chain_cache;
 	struct kvm_mmu_memory_cache mmu_rmap_desc_cache;
 
+    /* XXX: Heuristic to detect frequent guest page-table writes. */
 	gfn_t last_pt_write_gfn;
 	int   last_pt_write_count;
 
+    /* XXX: Guest debug settings. */
 	struct kvm_guest_debug guest_debug;
 
 	char fx_buf[FX_BUF_SIZE];
 	char *host_fx_image;
 	char *guest_fx_image;
 
+    /* XXX: Tracks an in-progress MMIO emulation. 
+     * MMIO requires:
+     *  exit to userspace
+     *  device emulation
+     *  resume instruction*/
 	int mmio_needed;
 	int mmio_read_completed;
 	int mmio_is_write;
@@ -295,6 +357,14 @@ struct kvm_vcpu {
 	unsigned char mmio_data[8];
 	gpa_t mmio_phys_addr;
 
+    /* XXX: State needed for real-mode emulation. 
+     * Real mode has:   
+     *  no paging
+     *  weird segmentation
+     *  IOPL quirks
+     * WHERE USED
+     *  BIOS execution
+     *  boot loaders*/
 	struct {
 		int active;
 		u8 save_iopl;
@@ -360,6 +430,8 @@ struct descriptor_table {
 	unsigned long base;
 } __attribute__((packed));
 
+/* XXX: KVM arch ops 
+ *      see drivers/kvm/vmx.c::vmx_arch_ops*/
 struct kvm_arch_ops {
 	int (*cpu_has_kvm_support)(void);          /* __init */
 	int (*disabled_by_bios)(void);             /* __init */
@@ -441,6 +513,7 @@ void kvm_emulator_want_group7_invlpg(void);
 
 extern hpa_t bad_page_address;
 
+/* XXX: gfn to page */
 static inline struct page *gfn_to_page(struct kvm_memory_slot *slot, gfn_t gfn)
 {
 	return slot->phys_mem[gfn - slot->base_gfn];
@@ -530,11 +603,17 @@ static inline int is_long_mode(struct kvm_vcpu *vcpu)
 #endif
 }
 
+/* XXX: PAE-style Paging i
+ * PAE-style paging is a paging mode where the CPU uses a 3-level
+ * page table hierarchy with 64-bit entries to address physical
+ * memory beyond 4 GB while still running in 32-bit mode.
+ */
 static inline int is_pae(struct kvm_vcpu *vcpu)
 {
 	return vcpu->cr4 & CR4_PAE_MASK;
 }
 
+/* XXX: check Large Pages Enabled */
 static inline int is_pse(struct kvm_vcpu *vcpu)
 {
 	return vcpu->cr4 & CR4_PSE_MASK;

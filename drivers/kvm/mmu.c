@@ -154,6 +154,34 @@ static int dbg = 1;
 
 #define RMAP_EXT 4
 
+/* XXX:
+ * WHERE IT LIVES:
+ * ---------------
+ *  Stored indirectly via:
+ *
+ *  host struct page -> page->private
+ *
+ *  WHAT IT REPRESENTS:
+ *  -------------------
+ *  For ONE guest DATA page:
+ *  all SHADOW LEAF PTEs that map it
+ *
+ *  WHY RMAP EXISTS:
+ *  ----------------
+ *  KVM must answer quickly:
+ *      "This guest page changed —
+ *      which shadow PTEs must be updated?"
+ *
+ *  Page tables are forward-only.
+ *  RMAP provides the missing backward edges.
+ *
+ *  WHY STORE IN struct page:
+ *  -------------------------
+ *  - struct page already represents physical memory
+ *  - O(1) lookup from GFN
+ *  - No global hash table needed
+ *  - Lifetime matches guest memory
+ */
 struct kvm_rmap_desc {
 	u64 *shadow_ptes[RMAP_EXT];
 	struct kvm_rmap_desc *more;
