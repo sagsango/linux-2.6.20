@@ -94,11 +94,22 @@ typedef unsigned long  hfn_t;
 
 #define NR_PTE_CHAIN_ENTRIES 5
 
+/* XXX: part of the kvm_mmu_page
+ * A CHUNKED LIST of parent shadow PTE pointers.
+ * Shadow page tables form a DAG, not a simple tree.
+ * Pages can be shared.
+ * When removing a shadow page, KVM must find ALL parents.
+*/
 struct kvm_pte_chain {
 	u64 *parent_ptes[NR_PTE_CHAIN_ENTRIES];
 	struct hlist_node link;
 };
 
+/*XXX:
+ * Shadow page tables are cached and reused.
+ * Two shadow pages mapping the SAME GFN but DIFFERENT CONTEXTS
+ * must NOT be confused.
+ */
 /*
  * kvm_mmu_page_role, below, is defined as:
  *
@@ -118,23 +129,27 @@ union kvm_mmu_page_role {
 	};
 };
 
+/* XXX: ONE SHADOW PAGE TABLE PAGE + ALL METADATA NEEDED TO MANAGE IT.
+ *      Its not the gpf
+ */
 struct kvm_mmu_page {
-	struct list_head link;
-	struct hlist_node hash_link;
+	struct list_head link; /*XXX:links to free_pages/active_mmu_pages list*/
+	struct hlist_node hash_link;/*XXX:Links into mmu_page_hash[]*/
 
 	/*
 	 * The following two entries are used to key the shadow page in the
 	 * hash table.
 	 */
-	gfn_t gfn;
+	gfn_t gfn; /*XXX: which guest frame number */
 	union kvm_mmu_page_role role;
 
-	hpa_t page_hpa;
+	hpa_t page_hpa; /*XXX:Host physical address of the ACTUAL shadow PT memory*/
 	unsigned long slot_bitmap; /* One bit set per slot which has memory
 				    * in this shadow page.
 				    */
 	int global;              /* Set if all ptes in this page are global */
 	int multimapped;         /* More than one parent_pte? */
+    /*XXX: Number of active CR3 roots pointing to this page */
 	int root_count;          /* Currently serving as active root */
 	union {
 		u64 *parent_pte;               /* !multimapped */
@@ -158,11 +173,20 @@ struct kvm_vcpu;
  * mode.
  */
 struct kvm_mmu {
+    /*XXX: called when guest writes CR3
+     *     Guest address space changed → shadow roots invalid. 
+     *
+     *     guest view of cr3 valid only in software,
+     *     cr3 register contains the root of shadow page table
+     *     so hardware only sees the shadow page table
+     *
+     *     NOTE: Today we have extented page table, where behavior
+     *     is different we will learn about it*/
 	void (*new_cr3)(struct kvm_vcpu *vcpu);
 	int (*page_fault)(struct kvm_vcpu *vcpu, gva_t gva, u32 err);
 	void (*free)(struct kvm_vcpu *vcpu);
 	gpa_t (*gva_to_gpa)(struct kvm_vcpu *vcpu, gva_t gva);
-	hpa_t root_hpa;
+	hpa_t root_hpa; /* XXX: Shadow page table root */
 	int root_level;
 	int shadow_root_level;
 
@@ -283,6 +307,11 @@ struct kvm_vcpu {
 	} rmode;
 };
 
+
+/* XXX:
+ * A memslot defines a CONTIGUOUS RANGE of GUEST PHYSICAL FRAMES
+ * and tells KVM where the ACTUAL HOST PAGES for those frames live.
+ */
 struct kvm_memory_slot {
 	gfn_t base_gfn;
 	unsigned long npages;
@@ -300,6 +329,9 @@ struct kvm {
 	 */
 	struct list_head active_mmu_pages;
 	int n_free_mmu_pages;
+    /*XXX: Fast lookup of existing shadow pages by (gfn, role).
+     * Avoids rebuilding identical shadow PT pages.
+     */
 	struct hlist_head mmu_page_hash[KVM_NUM_MMU_PAGES];
 	struct kvm_vcpu vcpus[KVM_MAX_VCPUS];
 	int memory_config_version;
