@@ -718,6 +718,13 @@ struct file {
 #define f_dentry	f_path.dentry
 #define f_vfsmnt	f_path.mnt
 	const struct file_operations	*f_op;
+    /* XXX: How many task_structs are using it.
+     *      on fork this will get incremented
+     *      so parent and child both can see this
+     *      but one task_struct close will only
+     *      decrement the f_count, so other will
+     *      be able to work on it
+     */
 	atomic_t		f_count;
 	unsigned int 		f_flags;
 	mode_t			f_mode;
