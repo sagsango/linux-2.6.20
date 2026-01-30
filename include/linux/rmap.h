@@ -9,6 +9,9 @@
 #include <linux/mm.h>
 #include <linux/spinlock.h>
 
+/* XXX: struct page -> struct address_space *mapping = struct anon_vma 
+ *      In case of anon pages
+ */
 /*
  * The anon_vma heads a list of private "related" vmas, to scan if
  * an anonymous page pointing to this anon_vma needs to be unmapped:
