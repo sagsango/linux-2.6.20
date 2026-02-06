@@ -211,6 +211,18 @@ EXPORT_SYMBOL(iowrite8_rep);
 EXPORT_SYMBOL(iowrite16_rep);
 EXPORT_SYMBOL(iowrite32_rep);
 
+/* XXX: IO port range get mapped to mm-io so driver can use
+ *      memory read/write operation instead of doing port-io
+ *
+ *      For x86 or during that time, port io was also mapped
+ *      to memory so here we just return that address.
+ *
+ *      NOTE: see the lld book, generaly port-io memory and
+ *      normal mm-io physical memory is not mapped to the 
+ *      the page-table so we need to use the macros to read
+ *      write the io memory. (caching disabled and also
+ *      memory barrier should be present etc)
+ */
 /* Create a virtual mapping cookie for an IO port range */
 void __iomem *ioport_map(unsigned long port, unsigned int nr)
 {
