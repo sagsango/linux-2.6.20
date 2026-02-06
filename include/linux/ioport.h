@@ -115,6 +115,10 @@ int adjust_resource(struct resource *res, resource_size_t start,
 extern int find_next_system_ram(struct resource *res);
 
 /* Convenience shorthand with allocation */
+/* XXX: Request region of ports, starting from port number start we want n ports
+ * NOTE: these ports may be comming from the io memory, or actual ports depend
+ *      on the hardware, see, lld:chapter-09
+ */
 #define request_region(start,n,name)	__request_region(&ioport_resource, (start), (n), (name))
 #define request_mem_region(start,n,name) __request_region(&iomem_resource, (start), (n), (name))
 #define rename_region(region, newname) do { (region)->name = (newname); } while (0)
