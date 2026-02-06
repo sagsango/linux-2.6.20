@@ -116,6 +116,7 @@ extern int find_next_system_ram(struct resource *res);
 
 /* Convenience shorthand with allocation */
 #define request_region(start,n,name)	__request_region(&ioport_resource, (start), (n), (name))
+/* XXX: request memory for io, see branch ssing214-portio for above function */
 #define request_mem_region(start,n,name) __request_region(&iomem_resource, (start), (n), (name))
 #define rename_region(region, newname) do { (region)->name = (newname); } while (0)
 
