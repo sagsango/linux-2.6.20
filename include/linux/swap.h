@@ -128,6 +128,7 @@ enum {
 #define SWAP_MAP_MAX	0x7fff
 #define SWAP_MAP_BAD	0x8000
 
+/* XXX: In memory struct to track swap areas */
 /*
  * The in-memory structure used to track swap areas.
  */
