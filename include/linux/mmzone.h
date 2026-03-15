@@ -379,6 +379,37 @@ struct zone {
 	ZONE_PADDING(_pad1_)
 
 	/* Fields commonly accessed by the page reclaim scanner */
+/*
+ * Active and Inactive list
+    new page allocated
+       ↓
+    inactive list
+       ↓
+    if accessed
+       ↓
+    active list
+       ↓
+    if not accessed for long time
+       ↓
+    demoted to inactive
+       ↓
+    reclaimed
+ 
+ *
+ * kswapd; uses this
+ *
+    free memory low
+        ↓
+    kswapd wakes
+        ↓
+    take pages from inactive_list
+        ↓
+    if referenced again -> move back / reactivate
+    else
+        reclaim
+ *
+ *
+ */
 	spinlock_t		lru_lock;	
 	struct list_head	active_list;
 	struct list_head	inactive_list;

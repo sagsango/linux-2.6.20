@@ -743,6 +743,7 @@ static inline int zone_is_near_oom(struct zone *zone)
 	return zone->pages_scanned >= (zone->nr_active + zone->nr_inactive)*3;
 }
 
+/* XXX: kwapd healper, to move the zone active pages list to inactivei list*/
 /*
  * This moves pages from the active list to the inactive list.
  *
@@ -822,6 +823,7 @@ force_reclaim_mapped:
 
 	lru_add_drain();
 	spin_lock_irq(&zone->lru_lock);
+    /* XXX: First remove all the active pages in a list*/
 	pgmoved = isolate_lru_pages(nr_pages, &zone->active_list,
 				    &l_hold, &pgscanned);
 	zone->pages_scanned += pgscanned;
@@ -832,7 +834,18 @@ force_reclaim_mapped:
 		cond_resched();
 		page = lru_to_page(&l_hold);
 		list_del(&page->lru);
-		if (page_mapped(page)) {
+		if (page_mapped(page)) { /*XXX:If page was already mapped
+                                   then put it back to active list
+        NOTE: count & mapcount
+        we are checking the mapcount means page may be referance
+        by the multuiple processes, but they havent maped it yet
+
+        TODO: Why dont we print the count here or do assertion
+        that it can be non zero, while map count is 0
+
+
+        NOTE: This is temporary active list not zone active list
+        */
 			if (!reclaim_mapped ||
 			    (total_swap_pages == 0 && PageAnon(page)) ||
 			    page_referenced(page, 0)) {
@@ -840,6 +853,9 @@ force_reclaim_mapped:
 				continue;
 			}
 		}
+        /* XXX: If no one have mapped it then put it to inactive 
+         * temprary incative list (its not zone inactive list)
+         */
 		list_add(&page->lru, &l_inactive);
 	}
 
@@ -901,6 +917,7 @@ force_reclaim_mapped:
 	pagevec_release(&pvec);
 }
 
+/* XXX: shrink the zone, called by the kswpd in balance_pgdat() */
 /*
  * This is a basic per-zone page freer.  Used by both kswapd and direct reclaim.
  */

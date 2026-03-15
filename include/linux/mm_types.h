@@ -18,6 +18,15 @@ struct address_space;
 struct page {
 	unsigned long flags;		/* Atomic flags, some possibly
 					 * updated asynchronously */
+    /*TODO: XXX:
+     *  count = how many process are using it
+     *  mapcount = how many times it has been mapped
+     *  there is no relation betwwen the 2.
+     *  mapcount can be less or greather than count
+     *  less when has not been mapped
+     *  greather when has been mapped multiple times
+     *  may be few process (can be all also)
+     */
 	atomic_t _count;		/* Usage count, see below. */
 	atomic_t _mapcount;		/* Count of ptes mapped in mms,
 					 * to show when page is mapped
