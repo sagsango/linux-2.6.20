@@ -874,6 +874,9 @@ extern struct zone *next_zone(struct zone *zone);
 #endif
 
 struct page;
+/*XXX: pages first comes under the section 
+ *     or mem_map is actually devided into
+ *     small section*/
 struct mem_section {
 	/*
 	 * This is, logically, a pointer to an array of struct

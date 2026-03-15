@@ -8,6 +8,7 @@ struct task_struct *kthread_create(int (*threadfn)(void *data),
 				   void *data,
 				   const char namefmt[], ...);
 
+/*XXX: kenrel thread creation */
 /**
  * kthread_run - create and wake a thread.
  * @threadfn: the function to run until signal_pending(current).

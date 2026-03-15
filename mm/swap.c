@@ -480,6 +480,8 @@ void vm_acct_memory(long pages)
 
 #ifdef CONFIG_HOTPLUG_CPU
 
+/* XXX: This is hot remove of cpu. where is hot-add
+ *      memory and cpu */
 /* Drop the CPU's cached committed space back into the central pool. */
 static int cpu_swap_callback(struct notifier_block *nfb,
 			     unsigned long action,
@@ -498,6 +500,7 @@ static int cpu_swap_callback(struct notifier_block *nfb,
 #endif /* CONFIG_HOTPLUG_CPU */
 #endif /* CONFIG_SMP */
 
+/*XXX: called by the kswapd_init() module initializer */
 /*
  * Perform any setup for the swap system
  */
@@ -515,6 +518,7 @@ void __init swap_setup(void)
 	 * _really_ don't want to cluster much more
 	 */
 #ifdef CONFIG_HOTPLUG_CPU
+    /* XXX: hotplug notifier */
 	hotcpu_notifier(cpu_swap_callback, 0);
 #endif
 }

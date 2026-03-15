@@ -1097,6 +1097,7 @@ out:
 	return ret;
 }
 
+/* XXX: calld by the kwaspd deamon, for given numa node */
 /*
  * For kswapd, balance_pgdat() will work across all this node's zones until
  * they are all at pages_high.
@@ -1270,6 +1271,31 @@ out:
 	return nr_reclaimed;
 }
 
+/* XXX: 
+System running
+      │
+      │
+free memory drops below watermark
+      │
+      ▼
+kswapd wakes up
+      │
+      ▼
+scan LRU lists
+      │
+      ▼
+identify reclaimable pages
+      │
+      ├── clean page → free immediately
+      │
+      └── dirty page → write to disk
+                         │
+                         ▼
+                       swap
+      │
+      ▼
+page returned to free list
+*/
 /*
  * The background pageout daemon, started as a kernel thread
  * from the init process. 
@@ -1334,6 +1360,7 @@ static int kswapd(void *p)
 		}
 		finish_wait(&pgdat->kswapd_wait, &wait);
 
+        /*XXX: Balance routine */
 		balance_pgdat(pgdat, order);
 	}
 	return 0;
@@ -1512,6 +1539,7 @@ out:
 }
 #endif
 
+/* XXX: CPU Hot add */
 /* It's optimal to keep kswapds on the same CPUs as their memory, but
    not required for correctness.  So if the last cpu in a node goes
    away, we get changed to run anywhere: as the first one comes back,
@@ -1533,12 +1561,14 @@ static int __devinit cpu_callback(struct notifier_block *nfb,
 	return NOTIFY_OK;
 }
 
+/*XXX: kswap deamon kthread is going to be created */
 /*
  * This kswapd start function will be called by init and node-hot-add.
  * On node-hot-add, kswapd will moved to proper cpus if cpus are hot-added.
  */
 int kswapd_run(int nid)
 {
+    /*XXX: get the numa node first */
 	pg_data_t *pgdat = NODE_DATA(nid);
 	int ret = 0;
 
@@ -1555,17 +1585,22 @@ int kswapd_run(int nid)
 	return ret;
 }
 
+/*XXX: init the kswapd deamon */
 static int __init kswapd_init(void)
 {
 	int nid;
 
+    /*XXX: Hot remove */
 	swap_setup();
+    /*XXX: On each numa, run the kswap thread */
 	for_each_online_node(nid)
  		kswapd_run(nid);
+    /*XXX: Hot add */
 	hotcpu_notifier(cpu_callback, 0);
 	return 0;
 }
 
+/* XXX: TODO: check how this init will get called */
 module_init(kswapd_init)
 
 #ifdef CONFIG_NUMA

@@ -10,6 +10,13 @@
 #include <linux/vmalloc.h>
 #include <asm/dma.h>
 
+
+
+/* XXX: mem_map is deviced into sections 
+ *      and one section contains the
+ *      continues physical memory related
+ *      page array
+ */
 /*
  * Permanent SPARSEMEM data:
  *
@@ -229,9 +236,11 @@ static struct page *sparse_early_mem_map_alloc(unsigned long pnum)
 	return NULL;
 }
 
+/*XXX: Section mem_map */
 static struct page *__kmalloc_section_memmap(unsigned long nr_pages)
 {
 	struct page *page, *ret;
+    /*XXX: First figureout total (struct page) needed. */
 	unsigned long memmap_size = sizeof(struct page) * nr_pages;
 
 	page = alloc_pages(GFP_KERNEL|__GFP_NOWARN, get_order(memmap_size));

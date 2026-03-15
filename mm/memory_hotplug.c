@@ -98,6 +98,24 @@ static int __add_section(struct zone *zone, unsigned long phys_start_pfn)
 	return register_new_memory(__pfn_to_section(phys_start_pfn));
 }
 
+/*XXX: adding new physical memory pages to the kernel’s memory 
+ *     management structures.
+ *
+ *     Linux uses SPARSEMEM for memory management.
+ *     Instead of tracking memory as one giant array, it splits
+ *     physical memory into sections.
+ *
+ *     Typical size:
+ *     128 MB per section (x86)
+ *     So memory layout becomes:
+ *           Physical memory
+ *     ────────────────────────────-----------------
+ *     | section0 | section1 | section2 | section3 |
+ *       128MB       128MB      128MB      128MB
+ *     ---------------------------------------------
+ *
+ *     Each section stores metadata for all pages inside it.
+ */
 /*
  * Reasonably generic function for adding memory.  It is
  * expected that archs that support memory hotplug will
@@ -254,7 +272,7 @@ static void rollback_node_hotadd(int nid, pg_data_t *pgdat)
 	return;
 }
 
-
+/* XXX: Memory hotplug */
 int add_memory(int nid, u64 start, u64 size)
 {
 	pg_data_t *pgdat = NULL;
@@ -267,15 +285,18 @@ int add_memory(int nid, u64 start, u64 size)
 		return -EEXIST;
 
 	if (!node_online(nid)) {
+        /*XXX: create new numa node */
 		pgdat = hotadd_new_pgdat(nid, start);
 		if (!pgdat)
 			return -ENOMEM;
 		new_pgdat = 1;
+        /* XXX: We call kswap deamon on new node*/
 		ret = kswapd_run(nid);
 		if (ret)
 			goto error;
 	}
 
+    /* XXX: Arch spesific memory hot add */
 	/* call arch's memory hotadd */
 	ret = arch_add_memory(nid, start, size);
 

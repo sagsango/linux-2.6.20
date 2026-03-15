@@ -394,9 +394,35 @@ static void __init find_early_table_space(unsigned long end)
 		(table_start << PAGE_SHIFT) + tables);
 }
 
+/*
+ * XXX: waht it does
+ * for each physical page in range
+ *      create kernel page table entry
+ *      virt = phys + PAGE_OFFSET
+ *      map virt → phys
+ *
+ void init_memory_mapping(unsigned long start,
+                         unsigned long end)
+{
+    while (start < end) {
+
+        if (can_use_1GB_page(start))
+            map_1GB_page(start);
+
+        else if (can_use_2MB_page(start))
+            map_2MB_page(start);
+
+        else
+            map_4KB_page(start);
+
+        start += mapping_size;
+    }
+}
+*/
 /* Setup the direct mapping of the physical memory at PAGE_OFFSET.
    This runs before bootmem is initialized and gets pages directly from the 
-   physical memory. To access them they are temporarily mapped. */
+   physical memory. To access them they are temporarily mapped. 
+ */
 void __meminit init_memory_mapping(unsigned long start, unsigned long end)
 { 
 	unsigned long next; 
@@ -517,6 +543,8 @@ void online_page(struct page *page)
 }
 
 #ifdef CONFIG_MEMORY_HOTPLUG
+
+/* XXX: Arch spesific logic for memory hot add */
 /*
  * Memory is added always to NORMAL zone. This means you will never get
  * additional DMA/DMA32 memory.
@@ -529,6 +557,10 @@ int arch_add_memory(int nid, u64 start, u64 size)
 	unsigned long nr_pages = size >> PAGE_SHIFT;
 	int ret;
 
+    /* XXX: map the given numa node pfysical memory 
+     *      to the kernel page table;
+     *      then flush the tlb
+     */
 	init_memory_mapping(start, (start + size -1));
 
 	ret = __add_pages(zone, start_pfn, nr_pages);
