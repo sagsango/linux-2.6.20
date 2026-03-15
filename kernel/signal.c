@@ -797,7 +797,9 @@ out:
 	return ret;
 }
 
-/* XXX: We call during page fault handling, if necessary */
+/* XXX: We call during page fault handling, if necessary 
+ *      also do_int3() -> do_trap() -> rais SIGTRAP gets here 
+ */
 /*
  * Force a signal that the process can't ignore: if necessary
  * we unblock the signal and change any SIG_IGN to SIG_DFL.
