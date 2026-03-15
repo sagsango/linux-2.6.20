@@ -680,6 +680,8 @@ void abort(void)
 }
 EXPORT_SYMBOL(abort);
 
+/*XXX:
+ *  trap init for arm arch */
 void __init trap_init(void)
 {
 	unsigned long vectors = CONFIG_VECTORS_BASE;

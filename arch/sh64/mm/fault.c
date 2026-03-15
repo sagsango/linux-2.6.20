@@ -424,6 +424,7 @@ static void __flush_tlb_page(struct vm_area_struct *vma, unsigned long page)
 	}
 }
 
+/* XXX: flush the tlb for give address/page */
 void flush_tlb_page(struct vm_area_struct *vma, unsigned long page)
 {
 	unsigned long flags;

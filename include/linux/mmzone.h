@@ -334,6 +334,7 @@ enum zone_type {
 #endif
 /* XXX: metadata of a zone, sturct zone */
 struct zone {
+    /* XXX: Check the uses of pages by page allocator */
 	/* Fields commonly accessed by the page allocator */
 	unsigned long		free_pages;
 	unsigned long		pages_min, pages_low, pages_high;
@@ -355,7 +356,7 @@ struct zone {
 	 */
 	unsigned long		min_unmapped_pages;
 	unsigned long		min_slab_pages;
-	struct per_cpu_pageset	*pageset[NR_CPUS];
+	struct per_cpu_pageset	*pageset[NR_CPUS]; /* XXX: Per cpu pages */
 #else
 	struct per_cpu_pageset	pageset[NR_CPUS];
 #endif
@@ -617,7 +618,7 @@ alloc_pages(GFP_KERNEL, order)
 */
 
 
-/* XXX: Hold all the memory metadata */
+/* XXX: Hold all the memory metadata (for one numa node) */
 /*
  * The pg_data_t structure is used in machines with CONFIG_DISCONTIGMEM
  * (mostly NUMA machines?) to denote a higher-level memory zone than the
@@ -635,7 +636,8 @@ typedef struct pglist_data {
 	struct zonelist node_zonelists[MAX_NR_ZONES];
 	int nr_zones;
 #ifdef CONFIG_FLAT_NODE_MEM_MAP
-	struct page *node_mem_map;
+	struct page *node_mem_map; /* XXX: all the pages present, also this will
+                                  be added to the global mem_map */
 #endif
 	struct bootmem_data *bdata;
 #ifdef CONFIG_MEMORY_HOTPLUG
@@ -648,11 +650,14 @@ typedef struct pglist_data {
 	 */
 	spinlock_t node_size_lock;
 #endif
+    /* XXX: Start pfn for thsi node */
 	unsigned long node_start_pfn;
+    /* XXX: Total physical frames present */
 	unsigned long node_present_pages; /* total number of physical pages */
+    /* XXX: Total physical frames + holes present */
 	unsigned long node_spanned_pages; /* total size of physical page
 					     range, including holes */
-	int node_id;
+	int node_id; /* XXX: NUMA node id */
 	wait_queue_head_t kswapd_wait;
 	struct task_struct *kswapd;
 	int kswapd_max_order;

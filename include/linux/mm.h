@@ -201,8 +201,19 @@ extern pgprot_t protection_map[16];
 struct vm_operations_struct {
 	void (*open)(struct vm_area_struct * area);
 	void (*close)(struct vm_area_struct * area);
+    /* XXX: nopage
+     *  page fault handler when the frame is mapped but page is not in the memory
+     */
 	struct page * (*nopage)(struct vm_area_struct * area, unsigned long address, int *type);
+    /* XXX: nopfn
+     *  page fault handler when there is a pf for given va, 
+     *  but no struct page is alloced, because those are not real pages
+     *   Some memory does not have struct page objects, for example:
+     *   device memory, PCI BAR memory, framebuffers, MMIO regions, DMA buffers
+     */
 	unsigned long (*nopfn)(struct vm_area_struct * area, unsigned long address);
+    /* XXX: Please create page mappings for this range now, instead
+     *  of lazily when a page fault occurs */
 	int (*populate)(struct vm_area_struct * area, unsigned long address, unsigned long len, pgprot_t prot, unsigned long pgoff, int nonblock);
 
 	/* notification that a previously read-only page is about to become

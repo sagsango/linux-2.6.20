@@ -2257,13 +2257,16 @@ retry:
 		entry = mk_pte(new_page, vma->vm_page_prot);
 		if (write_access)
 			entry = maybe_mkwrite(pte_mkdirty(entry), vma);
+        /* XXX: Set pte at given address, va */
 		set_pte_at(mm, address, page_table, entry);
 		if (anon) {
 			inc_mm_counter(mm, anon_rss);
 			lru_cache_add_active(new_page);
+            /* XXX: Update the rmap */
 			page_add_new_anon_rmap(new_page, vma, address);
 		} else {
 			inc_mm_counter(mm, file_rss);
+            /* XXX: Update the rmap */
 			page_add_file_rmap(new_page);
 			if (write_access) {
 				dirty_page = new_page;
@@ -2403,20 +2406,26 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 	if (!pte_present(entry)) {
 		if (pte_none(entry)) {
 			if (vma->vm_ops) {
+                /* XXX: vma belongs to real pf */
 				if (vma->vm_ops->nopage)
 					return do_no_page(mm, vma, address,
 							  pte, pmd,
 							  write_access);
+                /* XXX: vma belogs to not real pf, these are
+                 *      device address, DMA etc */
 				if (unlikely(vma->vm_ops->nopfn))
 					return do_no_pfn(mm, vma, address, pte,
 							 pmd, write_access);
 			}
+            /* XXX: vma belongs to anon mapping */
 			return do_anonymous_page(mm, vma, address,
 						 pte, pmd, write_access);
 		}
+        /* XXX: vma belongs to file mapping */
 		if (pte_file(entry))
 			return do_file_page(mm, vma, address,
 					pte, pmd, write_access, entry);
+        /* XXX: page has been  swpaded out */
 		return do_swap_page(mm, vma, address,
 					pte, pmd, write_access, entry);
 	}
@@ -2439,6 +2448,7 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 		update_mmu_cache(vma, address, entry);
 		lazy_mmu_prot_update(entry);
 	} else {
+        /* XXX: After done mapping lets invalidate the tlb */
 		/*
 		 * This is needed only for protection faults but the arch code
 		 * is not yet telling us if this is a protection fault or not.

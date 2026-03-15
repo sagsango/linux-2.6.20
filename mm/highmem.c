@@ -225,6 +225,7 @@ struct page_address_map {
 	struct list_head list;
 };
 
+/* XXX: free page pool */
 /*
  * page_address_map freelist, allocated from page_address_maps.
  */
@@ -315,6 +316,7 @@ done:
 	return;
 }
 
+/* XXX: during start_kernel these are getting added into page_address_pool */
 static struct page_address_map page_address_maps[LAST_PKMAP];
 
 void __init page_address_init(void)

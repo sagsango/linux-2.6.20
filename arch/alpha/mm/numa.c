@@ -18,7 +18,8 @@
 #include <asm/hwrpb.h>
 #include <asm/pgalloc.h>
 
-pg_data_t node_data[MAX_NUMNODES];
+pg_data_t node_data[MAX_NUMNODES]; /* XXX: THis is how arch alpth puts
+                                      all numa nodes to track */
 bootmem_data_t node_bdata[MAX_NUMNODES];
 EXPORT_SYMBOL(node_data);
 

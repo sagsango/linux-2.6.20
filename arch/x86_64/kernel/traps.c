@@ -658,6 +658,9 @@ asmlinkage void do_stack_segment(struct pt_regs *regs, long error_code)
 	preempt_conditional_cli(regs);
 }
 
+/* XXX: So double fault handler in this version just
+ *      notifiied and wait untill its kill itself
+ */
 asmlinkage void do_double_fault(struct pt_regs * regs, long error_code)
 {
 	static const char str[] = "double fault";

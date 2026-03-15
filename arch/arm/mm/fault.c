@@ -149,6 +149,7 @@ void do_bad_area(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 #define VM_FAULT_BADMAP		(-20)
 #define VM_FAULT_BADACCESS	(-21)
 
+/*XXX: ARM arch (uses RISC instruction)  page_fault handler. STEP 2*/
 static int
 __do_page_fault(struct mm_struct *mm, unsigned long addr, unsigned int fsr,
 		struct task_struct *tsk)
@@ -177,6 +178,10 @@ good_area:
 	if (!(vma->vm_flags & mask))
 		goto out;
 
+    /* XXX: Seems valid fault so handle it 
+     *      this handler is not arch dependent, its a 
+     *      commoan handler used by x86 arch too
+     */
 	/*
 	 * If for any reason at all we couldn't handle
 	 * the fault, make sure we exit gracefully rather
@@ -216,6 +221,7 @@ out:
 	return fault;
 }
 
+/*XXX: ARM arch (uses RISC instruction)  page_fault handler */
 static int
 do_page_fault(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 {
@@ -244,6 +250,7 @@ do_page_fault(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 		down_read(&mm->mmap_sem);
 	}
 
+    /* XXX: check if a valid fault if it is handle it*/
 	fault = __do_page_fault(mm, addr, fsr, tsk);
 	up_read(&mm->mmap_sem);
 
@@ -291,6 +298,7 @@ do_page_fault(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 		break;
 	}
 
+    /* XXX: User fault */
 	__do_user_fault(tsk, addr, fsr, sig, code, regs);
 	return 0;
 
@@ -375,6 +383,7 @@ do_bad(unsigned long addr, unsigned int fsr, struct pt_regs *regs)
 	return 1;
 }
 
+/* XXX: Default handler */
 static struct fsr_info {
 	int	(*fn)(unsigned long addr, unsigned int fsr, struct pt_regs *regs);
 	int	sig;
@@ -424,6 +433,7 @@ static struct fsr_info {
 	{ do_bad,		SIGBUS,  0,		"unknown 31"			   }
 };
 
+/* XXX: Overwrite the default handler */
 void __init
 hook_fault_code(int nr, int (*fn)(unsigned long, unsigned int, struct pt_regs *),
 		int sig, const char *name)

@@ -1752,6 +1752,7 @@ static void __meminit build_zonelists(pg_data_t *pgdat)
 		zonelist->zones[0] = NULL;
 	}
 
+    /* XXX: physical representation sync with in memory data */
 	/* NUMA-aware ordering of nodes */
 	local_node = pgdat->node_id;
 	load = num_online_nodes();
@@ -1760,6 +1761,11 @@ static void __meminit build_zonelists(pg_data_t *pgdat)
 	while ((node = find_next_best_node(local_node, &used_mask)) >= 0) {
 		int distance = node_distance(local_node, node);
 
+
+        /* XXX: Based on distance memory (zone) is given to  a perticular
+         *      numa node ;
+         *      so they are making in memory representation of the node
+         *      to sync with the hardware layout nothing fnacy*/
 		/*
 		 * If another node is sufficiently far away then it is better
 		 * to reclaim pages in a zone before going off node.
@@ -1781,6 +1787,7 @@ static void __meminit build_zonelists(pg_data_t *pgdat)
 			zonelist = pgdat->node_zonelists + i;
 			for (j = 0; zonelist->zones[j] != NULL; j++);
 
+            /* XXX: args here: other_node, my_first_free_zone_list */
 	 		j = build_zonelists_node(NODE_DATA(node), zonelist, j, i);
 			zonelist->zones[j] = NULL;
 		}
@@ -3020,6 +3027,10 @@ static int page_alloc_cpu_notify(struct notifier_block *self,
 	return NOTIFY_OK;
 }
 
+/*XXX: If cpu goes offline then, it should notify
+ *     the allocator to drain the percpu page cache
+ *     to global page cache (buddy allocator)
+ */
 void __init page_alloc_init(void)
 {
 	hotcpu_notifier(page_alloc_cpu_notify, 0);

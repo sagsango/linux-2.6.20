@@ -308,6 +308,7 @@ static inline int vmalloc_fault(unsigned long address)
 	return 0;
 }
 
+/* XXX: page_fault -> do_page_fault() */
 /*
  * This routine handles page faults.  It determines the address,
  * and the problem, and then passes it off to one of the appropriate
@@ -330,6 +331,7 @@ fastcall void __kprobes do_page_fault(struct pt_regs *regs,
 	unsigned long page;
 	int write, si_code;
 
+    /* XXX: CR2 register in x86 has the fault address */
 	/* get the address */
         address = read_cr2();
 

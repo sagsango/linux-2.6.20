@@ -523,6 +523,33 @@ asmlinkage void __init start_kernel(void)
 	 * fragile until we cpu_idle() for the first time.
 	 */
 	preempt_disable();
+    /* XXX: for all the numa nodes, build thier zonelist 
+     *      It constructs the zone fallback lists for each NUMA node.
+     *      alloc_pages(GFP_KERNEL) :
+     *          alloc_pages()
+                   ↓
+                __alloc_pages()
+                   ↓
+                get_page_from_freelist()
+                   ↓
+                iterate zonelist
+                   ↓
+                try zones one by one
+
+           so it does something like this:
+                Node 0 Zonelist:
+                [0] Node0 ZONE_NORMAL
+                [1] Node0 ZONE_DMA
+                [2] Node1 ZONE_NORMAL
+                [3] Node1 ZONE_DMA
+           
+           So allocation order becomes:
+                local node first
+                then fallback to other nodes
+          
+           totally, trying to minimize the memory access time if current
+           numa node is out of prefered zone pages
+     */
 	build_all_zonelists();
 	page_alloc_init();
 	printk(KERN_NOTICE "Kernel command line: %s\n", saved_command_line);
@@ -536,6 +563,7 @@ asmlinkage void __init start_kernel(void)
 		local_irq_disable();
 	}
 	sort_main_extable();
+    /*XXX: trap: irq by thr cpu during instruction execution */
 	trap_init();
 	rcu_init();
 	init_IRQ();
