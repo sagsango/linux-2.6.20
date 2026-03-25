@@ -27,6 +27,10 @@ bootmem_data_t plat_node_bdata[MAX_NUMNODES];
 
 struct memnode memnode;
 
+/* XXX: cpu_to_node:
+ *      returns which NUMA node a CPU belongs to.
+ *      CPU → which memory node it is closest to
+ */
 unsigned char cpu_to_node[NR_CPUS] __read_mostly = {
 	[0 ... NR_CPUS-1] = NUMA_NO_NODE
 };
