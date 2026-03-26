@@ -1,3 +1,6 @@
+/* XXX: madvice (not fadvice) for memory based files?
+ *      device, etc
+ */
 /*
  *	linux/mm/madvise.c
  *

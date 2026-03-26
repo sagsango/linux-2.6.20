@@ -12,6 +12,7 @@
 
 struct page;
 
+/* XXX: Backing device state &/
 /*
  * Bits in backing_dev_info.state
  */
@@ -24,6 +25,7 @@ enum bdi_state {
 
 typedef int (congested_fn)(void *, int);
 
+/* XXX: Backing device info */
 struct backing_dev_info {
 	unsigned long ra_pages;	/* max readahead in PAGE_CACHE_SIZE units */
 	unsigned long state;	/* Always use atomic bitops on this */
@@ -35,6 +37,7 @@ struct backing_dev_info {
 };
 
 
+/* XXX: Backing device capability */
 /*
  * Flags in backing_dev_info::capability
  * - The first two flags control whether dirty pages will contribute to the

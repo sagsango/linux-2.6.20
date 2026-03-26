@@ -1,6 +1,7 @@
 #ifndef FADVISE_H_INCLUDED
 #define FADVISE_H_INCLUDED
 
+/* XXX: Type of fadvise */
 #define POSIX_FADV_NORMAL	0 /* No further special treatment.  */
 #define POSIX_FADV_RANDOM	1 /* Expect random page references.  */
 #define POSIX_FADV_SEQUENTIAL	2 /* Expect sequential page references.  */

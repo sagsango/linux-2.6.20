@@ -63,15 +63,19 @@ asmlinkage long sys_fadvise64_64(int fd, loff_t offset, loff_t len, int advice)
 	bdi = mapping->backing_dev_info;
 
 	switch (advice) {
+        /* XXX: NORMAL */
 	case POSIX_FADV_NORMAL:
 		file->f_ra.ra_pages = bdi->ra_pages;
 		break;
+        /* XXX: RANDOM */
 	case POSIX_FADV_RANDOM:
 		file->f_ra.ra_pages = 0;
 		break;
+        /* XXX: SEQUENTIAL */
 	case POSIX_FADV_SEQUENTIAL:
 		file->f_ra.ra_pages = bdi->ra_pages * 2;
 		break;
+        /* XXX: WILLNEED */
 	case POSIX_FADV_WILLNEED:
 		if (!mapping->a_ops->readpage) {
 			ret = -EINVAL;
@@ -93,6 +97,7 @@ asmlinkage long sys_fadvise64_64(int fd, loff_t offset, loff_t len, int advice)
 		if (ret > 0)
 			ret = 0;
 		break;
+        /* XXX: DONTNEED */
 	case POSIX_FADV_NOREUSE:
 		break;
 	case POSIX_FADV_DONTNEED:
