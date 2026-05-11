@@ -112,6 +112,7 @@ static int kthread(void *_create)
 	return 0;
 }
 
+/* XXX: Create the kernel thread here */
 /* We are keventd: create a thread. */
 static void keventd_create_kthread(struct work_struct *work)
 {
@@ -132,6 +133,7 @@ static void keventd_create_kthread(struct work_struct *work)
 	complete(&create->done);
 }
 
+/* XXX: kthread create */
 /**
  * kthread_create - create a kthread.
  * @threadfn: the function to run until signal_pending(current).
@@ -158,10 +160,16 @@ struct task_struct *kthread_create(int (*threadfn)(void *data),
 {
 	struct kthread_create_info create;
 
+    /* XXX: What to execute after thred creation */
 	create.threadfn = threadfn;
 	create.data = data;
 	init_completion(&create.started);
 	init_completion(&create.done);
+    /* XXX: How to create thread: uisng keventd_create_kthread() 
+     *      kthread_create_info.work.func = keventd_create_kthread()
+     *
+     *      seems like creating thread itself a type of work
+     */
 	INIT_WORK(&create.work, keventd_create_kthread);
 
 	/*

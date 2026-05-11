@@ -928,7 +928,8 @@ bad_gs:
         movl %eax,%gs
         jmp  2b
         .previous       
-	
+
+/* XXX: creation of kernel thread */
 /*
  * Create a kernel thread.
  *

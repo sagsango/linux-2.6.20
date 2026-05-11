@@ -26,11 +26,17 @@
 
 #ifdef CONFIG_SMP
 
+/* XXX: Wrapper on the per_cpu data */
 struct percpu_data {
 	void *ptrs[NR_CPUS];
 };
 
 #define __percpu_disguise(pdata) (struct percpu_data *)~(unsigned long)(pdata)
+
+/* XXX: to get the percpu data, we use this macro
+ *      which just finds the data by cpu ad index in 
+ *      the percpu_data struct 
+ */
 /* 
  * Use this to get to a cpu's version of the per-cpu object dynamically
  * allocated. Non-atomic access to the current CPU's version should

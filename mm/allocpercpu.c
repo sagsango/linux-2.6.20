@@ -64,6 +64,10 @@ void *percpu_populate(void *__pdata, size_t size, gfp_t gfp, int cpu)
 }
 EXPORT_SYMBOL_GPL(percpu_populate);
 
+/* XXX: For percpu data creation, populate the array of the pointers
+ *      which will be percpu data
+ *      called by __percpu_alloc_mask()
+ */
 /**
  * percpu_populate_mask - populate per-cpu data for more cpu's
  * @__pdata: per-cpu data to populate further
@@ -89,6 +93,9 @@ int __percpu_populate_mask(void *__pdata, size_t size, gfp_t gfp,
 }
 EXPORT_SYMBOL_GPL(__percpu_populate_mask);
 
+/* XXX: Per cpu data creation wrapper
+ *      creates the wrapper on the array of pointers
+ */
 /**
  * percpu_alloc_mask - initial setup of per-cpu data
  * @size: size of per-cpu object

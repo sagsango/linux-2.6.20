@@ -67,6 +67,7 @@ struct cpu_workqueue_struct {
  * per-CPU workqueues:
  */
 struct workqueue_struct {
+    /* XXX: cpu_wq is a per cpu variable */
 	struct cpu_workqueue_struct *cpu_wq;
 	const char *name;
 	struct list_head list; 	/* Empty if single thread */
@@ -490,6 +491,7 @@ struct workqueue_struct *__create_workqueue(const char *name,
 	if (!wq)
 		return NULL;
 
+    /* XXX: alloc percpu data */
 	wq->cpu_wq = alloc_percpu(struct cpu_workqueue_struct);
 	if (!wq->cpu_wq) {
 		kfree(wq);
@@ -498,6 +500,7 @@ struct workqueue_struct *__create_workqueue(const char *name,
 
 	wq->name = name;
 	mutex_lock(&workqueue_mutex);
+    /* XXX: Now create percpu worker thread */
 	if (singlethread) {
 		INIT_LIST_HEAD(&wq->list);
 		p = create_workqueue_thread(wq, singlethread_cpu, freezeable);
