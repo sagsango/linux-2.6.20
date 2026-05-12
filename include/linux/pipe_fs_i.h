@@ -9,6 +9,7 @@
 #define PIPE_BUF_FLAG_ATOMIC	0x02	/* was atomically mapped */
 #define PIPE_BUF_FLAG_GIFT	0x04	/* page is a gift */
 
+/* XXX: Pile buufer which has the acual page */
 struct pipe_buffer {
 	struct page *page;
 	unsigned int offset, len;
@@ -38,6 +39,7 @@ struct pipe_buf_operations {
 	void (*get)(struct pipe_inode_info *, struct pipe_buffer *);
 };
 
+/* XXX: pipe_inode_info has the buf/pages where pipe data will be stored */
 struct pipe_inode_info {
 	wait_queue_head_t wait;
 	unsigned int nrbufs, curbuf;

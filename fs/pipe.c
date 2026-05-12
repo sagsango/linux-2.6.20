@@ -217,6 +217,7 @@ static const struct pipe_buf_operations anon_pipe_buf_ops = {
 	.get = generic_pipe_buf_get,
 };
 
+/* XXX: pipe read */
 static ssize_t
 pipe_read(struct kiocb *iocb, const struct iovec *_iov,
 	   unsigned long nr_segs, loff_t pos)
@@ -881,6 +882,10 @@ fail_inode:
 	return NULL;
 }
 
+/* XXX: create write_pipe
+ *      it will create inode for pipe
+ *      and pipe_inode_info for pipe
+ */
 struct file *create_write_pipe(void)
 {
 	int err;
@@ -961,15 +966,34 @@ struct file *create_read_pipe(struct file *wrf)
 	return f;
 }
 
+/* XXX: Create a pipe step 2 */
 int do_pipe(int *fd)
 {
 	struct file *fw, *fr;
 	int error;
 	int fdw, fdr;
 
+    /* XXX: Create
+     *      1. write pipe,
+     *      2. pipe_inode_info
+     *          it has:
+     *          a. nrbufs, curbuf
+     *          a. pipe_bufs[PIPE_BUFFERS]
+     *              struct pipe_buffer has page
+     *
+     *              
+     */
 	fw = create_write_pipe();
 	if (IS_ERR(fw))
 		return PTR_ERR(fw);
+    /* XXX: create read_pipe
+     *      which will point to same inode as
+     *      the write end pipe inode
+     *
+     *      inode->i_pipe = pipe_inode_info
+     *      This is how the inode knows the 
+     *      pipe pages or bufs
+     */
 	fr = create_read_pipe(fw);
 	error = PTR_ERR(fr);
 	if (IS_ERR(fr))

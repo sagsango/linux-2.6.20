@@ -20,6 +20,7 @@
 #include <asm/uaccess.h>
 #include <asm/ia32.h>
 
+/* XXX: Create a pipe */
 /*
  * sys_pipe() is the normal C calling standard for creating
  * a pipe. It's not the way Unix traditionally does this, though.
