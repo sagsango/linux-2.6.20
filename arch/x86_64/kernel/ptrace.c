@@ -306,6 +306,7 @@ static unsigned long getreg(struct task_struct *child, unsigned long regno)
 
 }
 
+/* XXX: ptrace systems call op */
 long arch_ptrace(struct task_struct *child, long request, long addr, long data)
 {
 	long i, ret;
