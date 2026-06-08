@@ -116,6 +116,7 @@ static int lines, cols;
 
 #include "../../../../lib/inflate.c"
 
+/* XXX: malloc and free in eartly stage, before the kernel */
 static void *malloc(int size)
 {
 	void *p;
@@ -133,7 +134,7 @@ static void *malloc(int size)
 
 	return p;
 }
-
+/* XXX: We dont care */
 static void free(void *where)
 {	/* Don't care */
 }
@@ -157,6 +158,7 @@ static void scroll(void)
 		vidmem[i] = ' ';
 }
 
+/* XXX: Early print using port io */
 static void putstr(const char *s)
 {
 	int x,y,pos;
@@ -330,7 +332,7 @@ static void close_output_buffer_if_we_run_high(struct moveparams *mv)
 		mv->hcount = 0;
 	}
 }
-
+/* XXX: decompress the kernel */
 int decompress_kernel(struct moveparams *mv, void *rmode)
 {
 	real_mode = rmode;

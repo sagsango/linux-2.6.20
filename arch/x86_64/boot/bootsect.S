@@ -1,4 +1,13 @@
 /*
+ * XXX:
+ * This bootsect.S is a stub boot sector. It does not boot Linux directly anymore. It only prints:
+ * Direct booting from floppy is no longer supported.
+ * Please use a boot loader program instead.
+ *
+ */
+
+
+/*
  *	bootsect.S		Copyright (C) 1991, 1992 Linus Torvalds
  *
  *	modified by Drew Eckhardt
@@ -43,10 +52,17 @@ SWAP_DEV	= 0			/* SWAP_DEV is now written by "build" */
 .global _start
 _start:
 
+    /* XXX: BIOS loads boot sector at physical 0x7c00. BOOTSEG = 0x07C0 
+            jmp addr; only updates the rip
+            jmpl SEG, off; does cs=SEG, ip=off
+    */
 	# Normalize the start address
 	jmpl	$BOOTSEG, $start2
 
 start2:
+    /* XXX: All the segmnets are inited with the 0x07c0
+            sp also have 0x07c0
+     */
 	movw	%cs, %ax
 	movw	%ax, %ds
 	movw	%ax, %es

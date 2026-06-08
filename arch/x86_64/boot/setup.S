@@ -289,7 +289,8 @@ loader_ok:
 	pushw	%ds
 	movw	%cs,%ax
 	movw	%ax,%ds
-	
+
+/* XXX: CPUID auth */
 	/* minimum CPUID flags for x86-64 */
 	/* see http://www.x86-64.org/lists/discuss/msg02971.html */		
 #define SSE_MASK ((1<<25)|(1<<26))
