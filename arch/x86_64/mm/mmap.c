@@ -6,6 +6,7 @@
 #include <linux/random.h>
 #include <asm/ia32.h>
 
+/* XXX: mmap randomization */
 /* Notebook: move the mmap code from sys_x86_64.c over here. */
 
 void arch_pick_mmap_layout(struct mm_struct *mm)

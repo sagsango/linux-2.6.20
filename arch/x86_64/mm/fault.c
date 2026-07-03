@@ -270,6 +270,7 @@ static noinline void pgtable_bad(unsigned long address, struct pt_regs *regs,
 	do_exit(SIGKILL);
 }
 
+/* XXX: Page fault handleing in 4K pages */
 /*
  * Handle a fault on the vmalloc area
  *
@@ -325,6 +326,7 @@ static int vmalloc_fault(unsigned long address)
 int page_fault_trace = 0;
 int exception_trace = 1;
 
+/* XXX: 
 /*
  * This routine handles page faults.  It determines the address,
  * and the problem, and then passes it off to one of the appropriate
