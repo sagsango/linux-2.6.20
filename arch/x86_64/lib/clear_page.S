@@ -7,7 +7,7 @@
  */			
 	ALIGN
 clear_page_c:
-	CFI_STARTPROC
+	CFI_STARTPROC /* XXX: Compiler intrinsic, gdb to notify function starts*/
 	movl $4096/8,%ecx
 	xorl %eax,%eax
 	rep stosq
