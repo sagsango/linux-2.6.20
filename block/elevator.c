@@ -1,3 +1,16 @@
+
+/* XXX: Core logic for the disk io scheduling.
+ *
+ * - Register schedulers
+ * - Select default scheduler
+ * - Switch scheduler at runtime
+ * - Merge requests
+ * - Maintain request hash
+ * - Maintain RB-tree helpers
+ * - Dispatch requests
+ * - Sysfs interface
+ */
+
 /*
  *  Block device elevator/IO-scheduler.
  *

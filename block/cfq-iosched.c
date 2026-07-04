@@ -1,3 +1,6 @@
+/* XXX: CFQ = Completely Fair Queuing.
+ * for Disk io per process
+ */
 /*
  *  CFQ, or complete fairness queueing, disk scheduler.
  *

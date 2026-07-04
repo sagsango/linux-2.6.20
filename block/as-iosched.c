@@ -1,3 +1,8 @@
+/* Anticipatory I/O scheduler
+ * to minimize the seek time in read/write
+ */
+
+
 /*
  *  Anticipatory & deadline i/o scheduler.
  *

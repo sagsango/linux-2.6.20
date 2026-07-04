@@ -1,4 +1,28 @@
 /*
+ * XXX:
+ * The NOOP I/O scheduler is the simplest Linux block scheduler.
+
+It does almost no scheduling policy.
+
+Main idea:
+
+    Keep requests in a simple FIFO list.
+    Let the block layer/elevator framework handle merging.
+    Dispatch requests with minimal reordering.
+
+NOOP is useful when the storage device already does its own scheduling,
+for example:
+
+    - SSDs
+    - hardware RAID controllers
+    - virtual disks
+    - devices with internal command reordering
+
+For such devices, complex kernel-side disk scheduling may only add overhead.
+*/
+
+
+/*
  * elevator noop
  */
 #include <linux/blkdev.h>
