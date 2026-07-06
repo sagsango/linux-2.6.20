@@ -1,0 +1,6 @@
+# TODO: Parent Kconfig should include this
+config QEMU_DEMO
+	tristate "QEMU demo PCI device"
+	depends on PCI
+	help
+	  Simple PCI char driver for a QEMU-emulated device.
