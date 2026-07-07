@@ -636,6 +636,7 @@ static void __init do_initcalls(void)
 	initcall_t *call;
 	int count = preempt_count();
 
+    /* XXX: All the drivers and modues inited here */
 	for (call = __initcall_start; call < __initcall_end; call++) {
 		char *msg = NULL;
 		char msgbuf[40];
