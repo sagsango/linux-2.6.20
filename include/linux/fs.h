@@ -900,6 +900,9 @@ extern spinlock_t sb_lock;
 #define S_BIAS (1<<30)
 struct super_block {
 	struct list_head	s_list;		/* Keep this first */
+	/* XXX: Superblock has device number which will help
+		to hook the right disk drivers
+	*/
 	dev_t			s_dev;		/* search index; _not_ kdev_t */
 	unsigned long		s_blocksize;
 	unsigned char		s_blocksize_bits;

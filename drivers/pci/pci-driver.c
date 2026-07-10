@@ -149,6 +149,7 @@ const struct pci_device_id *pci_match_id(const struct pci_device_id *ids,
 	return NULL;
 }
 
+/* XXX: Here device and driver matching happens */
 /**
  * pci_match_device - Tell if a PCI device structure has a matching PCI device id structure
  * @drv: the PCI driver to match against
@@ -195,6 +196,12 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
 	current->mempolicy = &default_policy;
 	mpol_get(current->mempolicy);
 #endif
+	/* XXX: Driver probes the device 
+		1. PCI bus scan (device discopery) happens.
+		2. Driver registration happens latter
+		   as the part of kernel or
+		   driver is loaded latter as kernel module
+	*/
 	error = drv->probe(dev, id);
 #ifdef CONFIG_NUMA
 	set_cpus_allowed(current, oldmask);
@@ -204,6 +211,20 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
 	return error;
 }
 
+/* XXX: If given PCI driver wants to take ownership of a
+ *      spesific physical ddevice, and if so safly execute
+ *      that driver.
+ *	
+ * 	TODO: When pci scan happens ufs card mean vendor scpecific
+ *      driver get hookedup and /dev/device_name is created
+ *      when you mount this device you have to epesify the file
+ *      system type, then mount will fill all the superblock
+ *      info including the device ids etc so that vendor driver
+ *      can be accessed.
+ * 
+ *      Think; pci bus is also a device where other peripheral
+ *      devices are connected.
+ */
 /**
  * __pci_device_probe()
  * @drv: driver to call to check if it wants the PCI device
@@ -218,11 +239,16 @@ __pci_device_probe(struct pci_driver *drv, struct pci_dev *pci_dev)
 	const struct pci_device_id *id;
 	int error = 0;
 
+/* XXX: Safety check: Only proceed if the device isn't already claimed 
+	and the driver actually implements a probe function.
+*/
 	if (!pci_dev->driver && drv->probe) {
 		error = -ENODEV;
 
+// 2. Hardware Verification: Scan the driver's ID table against this device
 		id = pci_match_device(drv, pci_dev);
 		if (id)
+// 3. Hand control over to the actual driver module logic
 			error = pci_call_probe(drv, pci_dev, id);
 		if (error >= 0) {
 			pci_dev->driver = drv;
@@ -570,6 +596,10 @@ struct bus_type pci_bus_type = {
 	.dev_attrs	= pci_dev_attrs,
 };
 
+/* XXX: PCI bus is itself a device
+	where other devices are attached
+	where and how PCI bus driver inited/called
+*/
 static int __init pci_driver_init(void)
 {
 	return bus_register(&pci_bus_type);

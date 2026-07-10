@@ -1252,6 +1252,7 @@ static ssize_t ufs_quota_read(struct super_block *, int, char *,size_t, loff_t);
 static ssize_t ufs_quota_write(struct super_block *, int, const char *, size_t, loff_t);
 #endif
 
+/* XXX: superblock operations */
 static struct super_operations ufs_super_ops = {
 	.alloc_inode	= ufs_alloc_inode,
 	.destroy_inode	= ufs_destroy_inode,
@@ -1363,6 +1364,15 @@ out:
 static int ufs_get_sb(struct file_system_type *fs_type,
 	int flags, const char *dev_name, void *data, struct vfsmount *mnt)
 {
+	/* XXX:
+		During the get sb; ufs_fill_super will init the
+	   	super block ops; 
+		just keep track but, duing the mount we will
+	   		read the super block;
+			and mount it finally
+		
+	*/
+	
 	return get_sb_bdev(fs_type, flags, dev_name, data, ufs_fill_super, mnt);
 }
 

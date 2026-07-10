@@ -65,6 +65,21 @@ struct bio;
 typedef int (bio_end_io_t) (struct bio *, unsigned int, int);
 typedef void (bio_destructor_t) (struct bio *);
 
+/* XXX: All file systems have same flow
+	and this is a generaic block io request
+	driver has not been choosen yet!
+
+	We are here in for UFS io performance issue understanding!
+
+generic flow:
+
+read()/write() on file system:
+userspce=>VFS=>FileSystem=>PageCache=>BlockLayer=>backingDevice=>Driver=>Disk
+
+read()/write() on device (dd):
+userspce=>VFS=>backingDevice=>Driver=>Disk
+*/
+	
 /*
  * main unit of I/O for the block layer and lower layers (ie drivers and
  * stacking drivers)

@@ -3090,6 +3090,9 @@ static inline int should_fail_request(struct bio *bio)
 
 #endif /* CONFIG_FAIL_MAKE_REQUEST */
 
+/* XXX: Generic block io request
+	Its same for all file systems
+*/
 /**
  * generic_make_request: hand a buffer to its device driver for I/O
  * @bio:  The bio describing the location in memory and on the device.
