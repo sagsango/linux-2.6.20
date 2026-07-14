@@ -112,6 +112,14 @@ extern void setup_arch(char **);
 #define fs_initcall(fn)			__define_initcall("5",fn,5)
 #define fs_initcall_sync(fn)		__define_initcall("5s",fn,5s)
 #define rootfs_initcall(fn)		__define_initcall("rootfs",fn,rootfs)
+/* XXX: 6th layer of initialization is pci devices
+ * 	before it get inited we already inited the
+ * 		- 1. core inits
+ * 		- 2. arch related inits
+ * 		- 3. subsys inits
+ * 		- 4. fs_inits
+ * 		- 5. rootfs inits
+ */
 #define device_initcall(fn)		__define_initcall("6",fn,6)
 #define device_initcall_sync(fn)	__define_initcall("6s",fn,6s)
 #define late_initcall(fn)		__define_initcall("7",fn,7)

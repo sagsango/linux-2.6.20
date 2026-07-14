@@ -312,7 +312,7 @@ exit:
  * always decremented if it is not %NULL.
  */
 struct pci_dev *
-pci_get_device(unsigned int vendor, unsigned int device, struct pci_dev *from)
+pci_dev_gpci_get_device(unsigned int vendor, unsigned int device, struct pci_dev *from)
 {
 	return pci_get_subsys(vendor, device, PCI_ANY_ID, PCI_ANY_ID, from);
 }

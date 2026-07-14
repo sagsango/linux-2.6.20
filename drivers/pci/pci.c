@@ -1148,7 +1148,11 @@ pci_set_consistent_dma_mask(struct pci_dev *dev, u64 mask)
 	return 0;
 }
 #endif
-     
+
+/* XXX: Init all PCI devices 
+	PCI device list already has been created before somehere
+	we need to just init all the pci devices
+*/     
 static int __devinit pci_init(void)
 {
 	struct pci_dev *dev = NULL;
@@ -1179,6 +1183,7 @@ static int __devinit pci_setup(char *str)
 }
 early_param("pci", pci_setup);
 
+/* XXX: Init all pci devices */
 device_initcall(pci_init);
 
 #if defined(CONFIG_ISA) || defined(CONFIG_EISA)
