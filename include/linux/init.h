@@ -93,6 +93,12 @@ extern void setup_arch(char **);
 	static initcall_t __initcall_##fn##id __attribute_used__ \
 	__attribute__((__section__(".initcall" level ".init"))) = fn
 
+
+/* XXX: Here also we have multiple level of initialization 
+	Means when kernel boots which driver, modules had to 
+	be inited first or the chronological order
+*/
+
 /*
  * A "pure" initcall has no dependencies on anything else, and purely
  * initializes variables that couldn't be statically initialized.

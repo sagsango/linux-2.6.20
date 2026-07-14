@@ -951,6 +951,7 @@ static const struct file_operations memory_fops = {
 	.open		= memory_open,	/* just a selector for the real open */
 };
 
+/* XXX: In memory char device list; with its ops*/
 static const struct {
 	unsigned int		minor;
 	char			*name;
@@ -975,6 +976,7 @@ static const struct {
 
 static struct class *mem_class;
 
+/* XXX: Init all the mem-fs char driver */
 static int __init chr_dev_init(void)
 {
 	int i;
@@ -991,4 +993,6 @@ static int __init chr_dev_init(void)
 	return 0;
 }
 
+/* in memory file system init
+   	will create the char device entries*/
 fs_initcall(chr_dev_init);

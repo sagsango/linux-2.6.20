@@ -858,6 +858,7 @@ static ssize_t extract_entropy_user(struct entropy_store *r, void __user *buf,
 	return ret;
 }
 
+/* XXX: get random nbytes from buf */
 /*
  * This function is the exported kernel interface.  It returns some
  * number of good random numbers, suitable for seeding TCP sequence
@@ -901,8 +902,10 @@ static int __init rand_initialize(void)
 	init_std_data(&nonblocking_pool);
 	return 0;
 }
+/* XXX: Module init */
 module_init(rand_initialize);
 
+/* XXX: What irq will do with its timer_random_state */
 void rand_initialize_irq(int irq)
 {
 	struct timer_rand_state *state;
@@ -921,6 +924,7 @@ void rand_initialize_irq(int irq)
 	}
 }
 
+/* XXX: What disk will do with its timer_random_state */
 #ifdef CONFIG_BLOCK
 void rand_initialize_disk(struct gendisk *disk)
 {
@@ -938,6 +942,11 @@ void rand_initialize_disk(struct gendisk *disk)
 }
 #endif
 
+/* XXX: rand random nbytes 
+	through a VFS (device)
+
+	although we are totally ignoring the offset
+*/
 static ssize_t
 random_read(struct file * file, char __user * buf, size_t nbytes, loff_t *ppos)
 {
@@ -949,7 +958,7 @@ random_read(struct file * file, char __user * buf, size_t nbytes, loff_t *ppos)
 	while (nbytes > 0) {
 		n = nbytes;
 		if (n > SEC_XFER_SIZE)
-			n = SEC_XFER_SIZE;
+		)n = SEC_XFER_SIZE;
 
 		DEBUG_ENT("reading %d bits\n", n*8);
 
@@ -1055,6 +1064,7 @@ random_write(struct file * file, const char __user * buffer,
 	}
 }
 
+/* XXX: Random ioctl support */
 static int
 random_ioctl(struct inode * inode, struct file * file,
 	     unsigned int cmd, unsigned long arg)
@@ -1117,6 +1127,7 @@ random_ioctl(struct inode * inode, struct file * file,
 	}
 }
 
+/* XXX: device random file operation support */
 struct file_operations random_fops = {
 	.read  = random_read,
 	.write = random_write,
@@ -1124,6 +1135,7 @@ struct file_operations random_fops = {
 	.ioctl = random_ioctl,
 };
 
+/* XXX: device urandom file operation support */
 struct file_operations urandom_fops = {
 	.read  = urandom_read,
 	.write = random_write,
@@ -1295,7 +1307,7 @@ ctl_table random_table[] = {
 /********************************************************************
  *
  * Random funtions for networking
- *
+rand_initialize_irq *
  ********************************************************************/
 
 /*
