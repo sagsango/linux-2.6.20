@@ -1183,7 +1183,12 @@ static int __devinit pci_setup(char *str)
 }
 early_param("pci", pci_setup);
 
-/* XXX: Init all pci devices */
+/* XXX: Init pci devices already happend 
+		postcore_initcall(pci_driver_init);
+		pri-driver.c
+
+	Its just fixup
+*/
 device_initcall(pci_init);
 
 #if defined(CONFIG_ISA) || defined(CONFIG_EISA)

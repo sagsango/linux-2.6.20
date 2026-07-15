@@ -477,7 +477,7 @@ static int __init pci_proc_init(void)
 	}
 	return 0;
 }
-
+/* XXX: pci procfs init during the 6th setp */
 __initcall(pci_proc_init);
 
 #ifdef CONFIG_HOTPLUG

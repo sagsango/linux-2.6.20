@@ -562,7 +562,7 @@ struct bus_type pci_bus_type = {
 	.uevent		= pci_uevent,
 	.probe		= pci_device_probe,
 	.remove		= pci_device_remove,
-	.suspend	= pci_device_suspend,
+	.suspend	= pci_device_suspend,objects:
 	.suspend_late	= pci_device_suspend_late,
 	.resume_early	= pci_device_resume_early,
 	.resume		= pci_device_resume,
@@ -575,6 +575,8 @@ static int __init pci_driver_init(void)
 	return bus_register(&pci_bus_type);
 }
 
+/* XXX: PCI driver init with happens  in the postcore 
+	install 2nd step  */
 postcore_initcall(pci_driver_init);
 
 EXPORT_SYMBOL(pci_match_id);

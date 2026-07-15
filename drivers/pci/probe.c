@@ -106,6 +106,7 @@ static int __init pcibus_class_init(void)
 {
 	return class_register(&pcibus_class);
 }
+/* XXX: greister the pcibus post core */
 postcore_initcall(pcibus_class_init);
 
 /*

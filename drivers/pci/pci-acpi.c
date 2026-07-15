@@ -324,4 +324,5 @@ static int __init acpi_pci_init(void)
 	platform_pci_set_power_state = acpi_pci_set_power_state;
 	return 0;
 }
+/* XXX: acpi_pci_init in step 3 */
 arch_initcall(acpi_pci_init);

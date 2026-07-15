@@ -684,4 +684,5 @@ static int __init pci_sysfs_init(void)
 	return 0;
 }
 
+/* XXX: pci sysfs entry created in setp 6 */
 __initcall(pci_sysfs_init);
