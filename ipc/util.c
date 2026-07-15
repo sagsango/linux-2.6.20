@@ -146,6 +146,7 @@ void free_ipc_ns(struct kref *kref)
 }
 #endif
 
+/* XXX: IPC init happens in the last init step */
 /**
  *	ipc_init	-	initialise IPC subsystem
  *
