@@ -1,3 +1,6 @@
+/* XXX: One of the basic char driver
+ * 	Lets understand it end to end
+ */
 /*
  * CMOS/NV-RAM driver for Linux
  *
@@ -350,6 +353,11 @@ nvram_ioctl(struct inode *inode, struct file *file,
 	}
 }
 
+/* XXX: When open is being called;
+	the vfs will give us the same inode and file
+	structure 
+ */
+	
 static int
 nvram_open(struct inode *inode, struct file *file)
 {
@@ -408,8 +416,13 @@ nvram_read_proc(char *buffer, char **start, off_t offset,
 	int i, len = 0;
 	off_t begin = 0;
 
+	/* XXX: Not sure about this lock 
+		because we do CMOS_READ() port io?
+		why?
+	*/
 	spin_lock_irq(&rtc_lock);
 	for (i = 0; i < NVRAM_BYTES; ++i)
+		/* We do the __nvram_read_byte */
 		contents[i] = __nvram_read_byte(i);
 	spin_unlock_irq(&rtc_lock);
 
@@ -437,6 +450,13 @@ nvram_read_proc(char *buffer, char **start, off_t offset,
 
 #endif /* CONFIG_PROC_FS */
 
+/* XXX:
+	NOTE: for all these fileops, VFS will pass struct file *, 
+	and struct inode *, so if 2 different userspace process
+	have opend the /dev/nvram, then 2 process will have thier
+	own diff struct file *, while for both of the process 
+	struct inode *, will be the same.
+*/
 static const struct file_operations nvram_fops = {
 	.owner		= THIS_MODULE,
 	.llseek		= nvram_llseek,
@@ -462,12 +482,24 @@ nvram_init(void)
 	if (!CHECK_DRIVER_INIT())
 		return -ENXIO;
 
+	/* XXX: Register the device with 
+		minor number
+		name
+		file_operations
+
+		It will create a /dev/<device_name> entry
+	*/
 	ret = misc_register(&nvram_dev);
 	if (ret) {
 		printk(KERN_ERR "nvram: can't misc_register on minor=%d\n",
 		    NVRAM_MINOR);
 		goto out;
 	}
+	/* XXX: create a proc entry for the driver
+		and proc entry will supoort only read
+
+		if procfs is ont configured read will do nothing
+	 */ 
 	if (!create_proc_read_entry("driver/nvram", 0, NULL, nvram_read_proc,
 		NULL)) {
 		printk(KERN_ERR "nvram: can't create /proc/driver/nvram\n");
@@ -490,6 +522,7 @@ nvram_cleanup_module(void)
 	misc_deregister(&nvram_dev);
 }
 
+/*XXX: Module init and exit functions */
 module_init(nvram_init);
 module_exit(nvram_cleanup_module);
 

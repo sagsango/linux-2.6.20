@@ -365,6 +365,7 @@ static void klist_children_put(struct klist_node *n)
 }
 
 
+/* XXX: Put device in in memory device subsystem structure */
 /**
  *	device_initialize - init device structure.
  *	@dev:	device.
@@ -435,6 +436,7 @@ static int setup_parent(struct device *dev, struct device *parent)
 }
 #endif
 
+/* XXX: Finally add the device */
 /**
  *	device_add - add device to device hierarchy.
  *	@dev:	device.
@@ -485,6 +487,21 @@ int device_add(struct device *dev)
 	if (dev->driver)
 		dev->uevent_attr.attr.owner = dev->driver->owner;
 	dev->uevent_attr.store = store_uevent;
+	/* XXX: Create device with uenent
+		uevent will be listen by the udev
+		these type of uevent get created to notify
+		the userspace that device topology has changed.
+		means device hot plugged, or hot removed etc.
+
+	udevd/systemd-udevd (The Standard Daemon):
+		What it does: It listens to the Netlink socket continuously. 
+		When it receives a uevent (like a new USB drive plug-in),
+		it matches the event details against your system's rules
+		files (found in /etc/udev/rules.d/ and /lib/udev/rules.d/).
+		Action taken: It creates device nodes in /dev, sets file 
+		permissions, creates symlinks, or launches scripts based
+		on those rules.
+	*/
 	error = device_create_file(dev, &dev->uevent_attr);
 	if (error)
 		goto attrError;
@@ -501,6 +518,7 @@ int device_add(struct device *dev)
 		if (dev->driver)
 			attr->attr.owner = dev->driver->owner;
 		attr->show = show_dev;
+		/* XXX: Create the device file with diff attr */
 		error = device_create_file(dev, attr);
 		if (error) {
 			kfree(attr);
@@ -584,6 +602,11 @@ int device_add(struct device *dev)
 }
 
 
+/* XXX: 2 step registraction process
+	create kernel related data structures
+	then generate uevent and make device entry in /dev procfs.
+ */
+
 /**
  *	device_register - register a device with the system.
  *	@dev:	pointer to the device structure
@@ -602,7 +625,7 @@ int device_register(struct device *dev)
 	return device_add(dev);
 }
 
-
+show_dev;
 /**
  *	get_device - increment reference count for device.
  *	@dev:	device.
@@ -810,6 +833,7 @@ static void device_create_release(struct device *dev)
 	kfree(dev);
 }
 
+/* XXX: Create a char device and put it in sysfs /dev */
 /**
  * device_create - creates a device and registers it with sysfs
  * @class: pointer to the struct class that this device should be registered to

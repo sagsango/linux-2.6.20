@@ -202,6 +202,9 @@ int misc_register(struct miscdevice * misc)
 	INIT_LIST_HEAD(&misc->list);
 
 	down(&misc_sem);
+	/* XXX: Check if a device already exist with the 
+		same minor number
+	*/
 	list_for_each_entry(c, &misc_list, list) {
 		if (c->minor == misc->minor) {
 			up(&misc_sem);
@@ -209,6 +212,9 @@ int misc_register(struct miscdevice * misc)
 		}
 	}
 
+	/* XXX: If minor number is not specified then use
+		an unssigned minor number.
+	*/
 	if (misc->minor == MISC_DYNAMIC_MINOR) {
 		int i = DYNAMIC_MINORS;
 		while (--i >= 0)
@@ -223,6 +229,8 @@ int misc_register(struct miscdevice * misc)
 
 	if (misc->minor < DYNAMIC_MINORS)
 		misc_minors[misc->minor >> 3] |= 1 << (misc->minor & 7);
+
+	/* XXX: Make the device number (minor << 20 | minor)=why? */
 	dev = MKDEV(MISC_MAJOR, misc->minor);
 
 	misc->this_device = device_create(misc_class, misc->parent, dev,
