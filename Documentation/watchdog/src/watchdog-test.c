@@ -13,6 +13,7 @@
 
 int fd;
 
+/* XXX: Same watchdog but through ioctl instead of the write() */
 /*
  * This function simply sends an IOCTL to the driver, which in turn ticks
  * the PC Watchdog card to reset its internal timer so it doesn't trigger

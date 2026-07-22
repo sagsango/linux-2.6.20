@@ -95,6 +95,10 @@ int C_A_D = 1;
 struct pid *cad_pid;
 EXPORT_SYMBOL(cad_pid);
 
+/* XXX: Notifires list which will be called before anyshutdown
+ *	TODO: Lets print all those it linux-6.8
+ */
+
 /*
  *	Notifier list for kernel code which wants to be called
  *	at shutdown. This is used to stop any idling DMA operations

@@ -1,4 +1,8 @@
-
+/* XXX: Introduction to (first*) NMI watchdog
+	before that we had watchdog which was not based on NMI
+	timer interrupt, so if timer get stuck watchdog will
+	fail to reboot the system
+*/
 [NMI watchdog is available for x86 and x86-64 architectures]
 
 Is your system locking up unpredictably? No keyboard activity, just
@@ -26,6 +30,8 @@ For x86-64, the needed APIC is always compiled in, and the NMI watchdog is
 always enabled with I/O-APIC mode (nmi_watchdog=1). Currently, local APIC
 mode (nmi_watchdog=2) does not work on x86-64.
 
+/* XXX: Boot param to enable it */
+
 Using local APIC (nmi_watchdog=2) needs the first performance register, so
 you can't use it for other purposes (such as high precision performance
 profiling.) However, at least oprofile and the perfctr driver disable the
@@ -44,6 +50,16 @@ reboot with nmi_watchdog=2 and check the NMI count.  If it is still
 zero then log a problem, you probably have a processor that needs to be
 added to the nmi code.
 
+/* XXX: Scenarios:
+	1. The process dont leave the cpu?
+		- Watchdog focus this case, where process dont leave 
+		  the cpu (most probabily killing that process)
+		- ex: Process hangs and does not repond to the keyboard,
+		  mouse, nic and also not leave the cpu.
+	2. Deadlock between 2 threads:
+		Lets say A and B are fighting for the lock heald by each
+		other.
+*/
 A 'lockup' is the following scenario: if any CPU in the system does not
 execute the period local timer interrupt for more than 5 seconds, then
 the NMI handler generates an oops and kills the process. This
