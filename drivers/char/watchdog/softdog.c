@@ -1,3 +1,4 @@
+/* XXX: TODO: Do more watchdog driver codewalk */
 /*
  *	SoftDog	0.07:	A Software Watchdog Device
  *
@@ -76,6 +77,7 @@ MODULE_PARM_DESC(soft_noboot, "Softdog action, set to 1 to ignore reboots, 0 to 
 
 static void watchdog_fire(unsigned long);
 
+/* XXX: TODO: Timer */
 static struct timer_list watchdog_ticktock =
 		TIMER_INITIALIZER(watchdog_fire, 0, 0);
 static unsigned long driver_open, orphan_timer;
@@ -275,6 +277,7 @@ static int __init watchdog_init(void)
 			TIMER_MARGIN);
 	}
 
+	/* XXX: TODO: reboot_notifier (one of the 4 types) */
 	ret = register_reboot_notifier(&softdog_notifier);
 	if (ret) {
 		printk (KERN_ERR PFX "cannot register reboot notifier (err=%d)\n",
@@ -295,6 +298,8 @@ static int __init watchdog_init(void)
 	return 0;
 }
 
+/* XXX: TODO: all the module exits how they will be called; and
+	      where and when (rmmod & poweroff)*/
 static void __exit watchdog_exit(void)
 {
 	misc_deregister(&softdog_miscdev);
