@@ -799,6 +799,10 @@ void kernel_power_off(void)
 	machine_power_off();
 }
 EXPORT_SYMBOL_GPL(kernel_power_off);
+/* XXX: Reboot systems call;
+	there are multiple things we can do here
+	based on cmd
+*/
 /*
  * Reboot system call: for obvious reasons only root may call it,
  * and even root needs to set up some magic numbers in the registers

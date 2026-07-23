@@ -12,6 +12,7 @@
 #define	LINUX_REBOOT_MAGIC2C	537993216
 
 
+/* XXX: Reboot systems call command */
 /*
  * Commands accepted by the _reboot() system call.
  *
