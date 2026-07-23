@@ -1,14 +1,62 @@
-init
-├── calibrate.c
-├── do_mounts_initrd.c
-├── do_mounts_md.c
-├── do_mounts_rd.c
-├── do_mounts.c
-├── do_mounts.h
-├── initramfs.c
-├── Kconfig
-├── main.c
-├── Makefile
-└── version.c
+========================================================================================
+                     LINUX SHELL, TTY, CONSOLE & KEYBOARD FLOW
+========================================================================================
 
-1 directory, 11 files
+    [ INPUT FLOW: KEYBOARD TO SHELL ]            [ OUTPUT FLOW: SHELL TO MONITOR ]
+    
+       +───────────────────────────+                +───────────────────────────+
+       │ Physical Keyboard Matrix  │                │  Physical Monitor Screen  │
+       +─────────────┬─────────────+                +─────────────▲─────────────+
+                     │                                            │
+                     │ (Hardware Scan Codes)                      │ (RGB Pixel Vectors)
+                     ▼                                            │
+       +───────────────────────────+                +─────────────┴─────────────+
+       │ Keyboard Controller / Driver│               │ Graphics Driver / DRM Core│
+       │     (atkbd.c / usbkbd.c)  │                │     (e.g., drivers/gpu)   │
+       +─────────────┬─────────────+                +─────────────▲─────────────+
+                     │                                            │
+                     │ (Universal Keycodes)                       │ (Framebuffers / Pixels)
+                     ▼                                            │
+       +───────────────────────────+                +─────────────┴─────────────+
+       │    Kernel Input Core      │                │  Kernel Framebuffer / VT  │
+       │     (drivers/input)       │                │    (drivers/video/fbdev)  │
+       +─────────────┬─────────────+                +─────────────▲─────────────+
+                     │                                            │
+                     │ (Translated ASCII Bytes)                   │ (Raw Character Streams)
+                     ▼                                            │
+  ┌──────────────────┴────────────────────────────────────────────┴──────────────────┐
+  │                           KERNEL TTY SUBSYSTEM                                   │
+  │                                                                                  │
+  │   +───────────────────────────+                  +───────────────────────────+   │
+  │   │     TTY Flip Buffer       │                  │     Console Multiplexer   │   │
+  │   │  (Fast Interrupt Buffer)  │                  │      (kernel/print.c)     │   │
+  │   +─────────────┬─────────────+                  +─────────────▲─────────────+   │
+  │                 │                                              │                 │
+  │                 ▼                                              │                 │
+  │   +───────────────────────────+                  +─────────────┴─────────────+   │
+  │   │    Line Discipline        ├─────────────────►│     TTY Write Buffer      │   │
+  │   │  (n_tty.c: Handles Echo)  │  (Instant Echo)  │      (Output Queue)       │   │
+  │   +─────────────┬─────────────+                  +─────────────▲─────────────+   │
+  │                 │                                              │                 │
+  │                 ▼                                              │                 │
+  │   +───────────────────────────+                                │                 │
+  │   │     TTY Read Buffer       │                                │                 │
+  │   │      (Input Queue)        │                                │                 │
+  │   +─────────────┬─────────────+                                │                 │
+  └─────────────────┼──────────────────────────────────────────────┼─────────────────┘
+                    │                                              │
+    ────────────────┼──────────────────────────────────────────────┼──────────────────
+                    │ (Blocks until '\n')                          │ (Flushes Output data)
+                    ▼                                              │
+       +───────────────────────────+                +─────────────┴─────────────+
+       │     read(fd, buf, size)   │                │    write(fd, buf, size)   │
+       +─────────────┬─────────────+                +─────────────▲─────────────+
+                     │                                             │
+                     └─────────────────────► ◄─────────────────────┘
+                                           │
+                                           ▼
+                             +───────────────────────────+
+                             │   Userspace Shell App     │
+                             │      (e.g., /bin/bash)    │
+                             +───────────────────────────+
+
