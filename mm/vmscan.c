@@ -1097,6 +1097,9 @@ out:
 	return ret;
 }
 
+/* XXX: Called by the kswapd to release the pages from the respective
+	numa node
+*/
 /*
  * For kswapd, balance_pgdat() will work across all this node's zones until
  * they are all at pages_high.
@@ -1210,6 +1213,7 @@ loop_again:
 			temp_priority[i] = priority;
 			sc.nr_scanned = 0;
 			note_zone_scanning_priority(zone, priority);
+			/* XXX: TODO: - Start from here */
 			nr_reclaimed += shrink_zone(priority, zone, &sc);
 			reclaim_state->reclaimed_slab = 0;
 			nr_slab = shrink_slab(sc.nr_scanned, GFP_KERNEL,
