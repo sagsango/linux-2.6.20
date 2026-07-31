@@ -24,6 +24,8 @@ void pgdat_resize_unlock(struct pglist_data *pgdat, unsigned long *flags)
 {
 	spin_unlock_irqrestore(&pgdat->node_size_lock, *flags);
 }
+
+/* XXX: During the memory hotplug the pglist data struct is inited */
 static inline
 void pgdat_resize_init(struct pglist_data *pgdat)
 {

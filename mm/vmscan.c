@@ -1270,6 +1270,9 @@ out:
 	return nr_reclaimed;
 }
 
+/* XXX: kswapd daemon 
+	started from init process
+*/
 /*
  * The background pageout daemon, started as a kernel thread
  * from the init process. 
@@ -1533,6 +1536,7 @@ static int __devinit cpu_callback(struct notifier_block *nfb,
 	return NOTIFY_OK;
 }
 
+/* XXX: Run the kswap daemon */
 /*
  * This kswapd start function will be called by init and node-hot-add.
  * On node-hot-add, kswapd will moved to proper cpus if cpus are hot-added.
@@ -1545,6 +1549,9 @@ int kswapd_run(int nid)
 	if (pgdat->kswapd)
 		return 0;
 
+	/* XXX: pgdat = numa node;
+		now every numa node has its swap thread 
+	*/
 	pgdat->kswapd = kthread_run(kswapd, pgdat, "kswapd%d", nid);
 	if (IS_ERR(pgdat->kswapd)) {
 		/* failure at boot is fatal */
@@ -1559,13 +1566,16 @@ static int __init kswapd_init(void)
 {
 	int nid;
 
+	/* XXX: init the memory cluster size */
 	swap_setup();
+	/* XXX: For every node */
 	for_each_online_node(nid)
  		kswapd_run(nid);
 	hotcpu_notifier(cpu_callback, 0);
 	return 0;
 }
 
+/* XXX: kswapd init */
 module_init(kswapd_init)
 
 #ifdef CONFIG_NUMA

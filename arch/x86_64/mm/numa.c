@@ -22,14 +22,26 @@
 #define Dprintk(x...)
 #endif
 
+/* XXX: So here we have pglist_data for each of the numa */
 struct pglist_data *node_data[MAX_NUMNODES] __read_mostly;
+/* XXX: Bitmap for each numa node */
 bootmem_data_t plat_node_bdata[MAX_NUMNODES];
 
 struct memnode memnode;
 
+/* XXX: cpu_node_number to numa_node_number mapping */
 unsigned char cpu_to_node[NR_CPUS] __read_mostly = {
 	[0 ... NR_CPUS-1] = NUMA_NO_NODE
 };
+/* XXX: Hardware processor id to the numa node 
+	hardware is very different from the cpu logic
+	cpu = abstractoin for the OS.
+	
+	hardware socket -> hardware thread	-> CPU 0
+			-> hardware thread	-> CPU 1
+
+	there is a kerel.doc for x86 blog for this mapping
+*/
 unsigned char apicid_to_node[MAX_LOCAL_APIC] __cpuinitdata = {
  	[0 ... MAX_LOCAL_APIC-1] = NUMA_NO_NODE
 };
@@ -335,6 +347,10 @@ static void __init arch_sparse_init(void)
 #define arch_sparse_init() do {} while (0)
 #endif
 
+/* XXX: If numa not supported we take
+	only 1 numa node it will have
+	all the memory
+*/
 void __init paging_init(void)
 { 
 	int i;

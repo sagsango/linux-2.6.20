@@ -2920,6 +2920,7 @@ unsigned long __init find_max_pfn_with_active_regions(void)
 	return max_pfn;
 }
 
+/* XXX: init all the numa nodes */
 /**
  * free_area_init_nodes - Initialise all pg_data_t and zone data
  * @max_zone_pfn: an array of max PFNs for each zone

@@ -23,6 +23,7 @@ extern unsigned long max_pfn;
 extern unsigned long saved_max_pfn;
 #endif
 
+/* XXX: Numa-node's (bit map? for frames) */
 /*
  * node_bootmem_map is a map pointer - the bits represent all physical 
  * memory pages (including holes) on the node.

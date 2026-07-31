@@ -403,6 +403,11 @@ void __cpuinit zap_low_mappings(int cpu)
 	__flush_tlb_all();
 }
 
+/* XXX: during the boot the numa node init will happen 
+	one more thing we have to configure the numa
+	during the build:
+		CONFIG_NUMA=y
+*/
 #ifndef CONFIG_NUMA
 void __init paging_init(void)
 {

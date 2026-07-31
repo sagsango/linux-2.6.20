@@ -391,6 +391,8 @@ struct node_active_region {
 extern struct page *mem_map;
 #endif
 
+
+/* XXX: Every numa node has this */
 /*
  * The pg_data_t structure is used in machines with CONFIG_DISCONTIGMEM
  * (mostly NUMA machines?) to denote a higher-level memory zone than the
@@ -421,13 +423,14 @@ typedef struct pglist_data {
 	 */
 	spinlock_t node_size_lock;
 #endif
+	/* XXX: pfn start and total frames it has */
 	unsigned long node_start_pfn;
 	unsigned long node_present_pages; /* total number of physical pages */
 	unsigned long node_spanned_pages; /* total size of physical page
 					     range, including holes */
-	int node_id;
+	int node_id; /* XXX: Numa node id */
 	wait_queue_head_t kswapd_wait;
-	struct task_struct *kswapd;
+	struct task_struct *kswapd; /* XXX: swapping daemon for this numa node */
 	int kswapd_max_order;
 } pg_data_t;
 

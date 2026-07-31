@@ -23,6 +23,7 @@ extern struct memnode memnode;
 #define memnode_shift memnode.shift
 #define memnodemap memnode.map
 
+
 extern struct pglist_data *node_data[];
 
 static inline __attribute__((pure)) int phys_to_nid(unsigned long addr) 

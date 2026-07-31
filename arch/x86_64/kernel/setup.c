@@ -394,7 +394,7 @@ void __init setup_arch(char **cmdline_p)
 
 	init_memory_mapping(0, (end_pfn_map << PAGE_SHIFT));
 
-	dmi_scan_machine();
+	dmpaging_initi_scan_machine();
 
 	zap_low_mappings(0);
 
@@ -421,6 +421,9 @@ void __init setup_arch(char **cmdline_p)
 	acpi_numa_init();
 #endif
 
+	/* XXX: If numa config then we have multiple
+		numa nodes otherwise only 1
+	*/
 #ifdef CONFIG_NUMA
 	numa_initmem_init(0, end_pfn); 
 #else
@@ -490,6 +493,10 @@ void __init setup_arch(char **cmdline_p)
 	}
 #endif
 
+	/* XXX: here we setup all the numa nodes
+		and then map all the frams to those
+		each numa has multiple zones also
+	*/
 	paging_init();
 
 #ifdef CONFIG_PCI
