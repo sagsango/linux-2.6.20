@@ -394,7 +394,7 @@ void __init setup_arch(char **cmdline_p)
 
 	init_memory_mapping(0, (end_pfn_map << PAGE_SHIFT));
 
-	dmpaging_initi_scan_machine();
+	dmi_scan_machine();
 
 	zap_low_mappings(0);
 
