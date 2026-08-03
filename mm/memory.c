@@ -2442,6 +2442,10 @@ unlock:
 	return VM_FAULT_MINOR;
 }
 
+/* XXX: See we have mmap_sem in read state for now 
+ * 	but when we read/write the pte
+ * 	we will tak ethe page_table_lock
+ */
 /*
  * By the time we get here, we already hold the mm semaphore
  */
@@ -2487,6 +2491,9 @@ int __pud_alloc(struct mm_struct *mm, pgd_t *pgd, unsigned long address)
 	if (!new)
 		return -ENOMEM;
 
+	/* XXX: when reading/writing page table
+	 * 	we take the page_table_lock
+	 */
 	spin_lock(&mm->page_table_lock);
 	if (pgd_present(*pgd))		/* Another has populated it */
 		pud_free(new);

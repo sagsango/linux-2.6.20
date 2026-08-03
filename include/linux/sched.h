@@ -323,7 +323,16 @@ struct mm_struct {
 	atomic_t mm_users;			/* How many users with user space? */
 	atomic_t mm_count;			/* How many references to "struct mm_struct" (users count as 1) */
 	int map_count;				/* number of VMAs */
+	/* XXX: for vmas */
 	struct rw_semaphore mmap_sem;
+	/* XXX: for page table 
+	 * 	but still its slow 
+	 * 	as it protects the whole page table
+	 *
+	 * 	Split Page Table Lock: 
+	 * 	A Linux kernel software optimization.Mechanism: Breaks down one giant software 
+	 * 	lock (mm->page_table_lock) into many smaller software locks.
+	 * 	*/
 	spinlock_t page_table_lock;		/* Protects page tables and some counters */
 
 	struct list_head mmlist;		/* List of maybe swapped mm's.  These are globally strung
@@ -791,7 +800,7 @@ struct uts_namespace;
 
 enum sleep_type {
 	SLEEP_NORMAL,
-	SLEEP_NONINTERACTIVE,
+	SLEEP_NONINTERACTI&mm->mmap_semVE,
 	SLEEP_INTERACTIVE,
 	SLEEP_INTERRUPTED,
 };

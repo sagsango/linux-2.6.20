@@ -381,6 +381,9 @@ fastcall void __kprobes do_page_fault(struct pt_regs *regs,
 	if (in_atomic() || !mm)
 		goto bad_area_nosemaphore;
 
+	/* XXX: we are going to read the vma
+	 * 	so we will tak ethe mmap_sem read lock
+	 */
 	/* When running in the kernel we expect faults to occur only to
 	 * addresses in user space.  All other faults represent errors in the
 	 * kernel and should generate an OOPS.  Unfortunatly, in the case of an
