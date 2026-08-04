@@ -179,6 +179,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 	tsk->thread_info = ti;
 	setup_thread_stack(tsk, orig);
 
+	/* XXX: TODO: How canary or stackportection works! */
 #ifdef CONFIG_CC_STACKPROTECTOR
 	tsk->stack_canary = get_random_int();
 #endif

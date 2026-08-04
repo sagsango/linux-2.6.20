@@ -7,6 +7,24 @@
 #include <linux/cache.h>
 #include <asm/page.h>
 
+/* XXX: per process datastructure;
+ * 	which will be pointed by the gs register
+ * 	
+ *
+ * XXX: How GCC SSP (Stack Smashing Protection)  Works in Kernel Space
+ * When a kernel function is compiled with -fstack-protector, GCC emits a
+ * localized prologue and epilogue for that function: [3]
+ * Prologue: GCC reads a 64-bit secret value (the "canary") from a hardcoded
+ * hardware register offset and pushes it onto the kernel stack right before
+ * allocating space for local buffers. [4, 5, 6] Epilogue: Before returning, GCC
+ * reads the same hardcoded register offset and compares it to the value left on
+ * the stack. If they do not match, it jumps to __stack_chk_fail() and throws a
+ * kernel panic. [6, 7, 8] For this to function correctly, GCC expects the
+ * reference canary to always live at a precise location in memory. On x86_64
+ * Linux at the time, GCC hardcoded this check to look at offset 40 (0x28)
+ * relative to the %gs segment register. [9, 10]
+*/
+
 /* Per processor datastructure. %gs points to it while the kernel runs */ 
 struct x8664_pda {
 	struct task_struct *pcurrent;	/* 0  Current process */
