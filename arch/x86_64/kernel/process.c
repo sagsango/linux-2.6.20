@@ -711,6 +711,7 @@ asmlinkage long sys_fork(struct pt_regs *regs)
 	return do_fork(SIGCHLD, regs->rsp, regs, 0, NULL, NULL);
 }
 
+/* XXX: 1. lets statrt from here */
 asmlinkage long
 sys_clone(unsigned long clone_flags, unsigned long newsp,
 	  void __user *parent_tid, void __user *child_tid, struct pt_regs *regs)

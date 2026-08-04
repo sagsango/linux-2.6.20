@@ -196,14 +196,22 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 #ifdef CONFIG_MMU
 static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 {
+	/* XXX: vma pointers */
 	struct vm_area_struct *mpnt, *tmp, **pprev;
 	struct rb_node **rb_link, *rb_parent;
 	int retval;
 	unsigned long charge;
 	struct mempolicy *pol;
 
+	/* XXX: why oldmm has write sem_lock
+	 * 	we should take the read sem_lock?
+	 */
 	down_write(&oldmm->mmap_sem);
 	flush_cache_dup_mm(oldmm);
+	/* XXX: mmap means vma's
+	 * 	so when we read/write to them we have to take
+	 *	read or write sem_lock
+	 */
 	/*
 	 * Not linked in yet - no deadlock potential:
 	 */
@@ -940,6 +948,9 @@ static inline void rt_mutex_init_task(struct task_struct *p)
 #endif
 }
 
+/* XXX: Core logic of clone/fork/vfork 
+ * 	very important
+ */
 /*
  * This creates a new process as a copy of the old one,
  * but does not actually start it yet.
@@ -1341,6 +1352,10 @@ static inline int fork_traceflag (unsigned clone_flags)
 	return 0;
 }
 
+/* XXX: 2. copy process & take care of 
+ * 	   ptrace
+ * 	   CLONE_VFORK
+ */
 /*
  *  Ok, this is the main fork-routine.
  *
