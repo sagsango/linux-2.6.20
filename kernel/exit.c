@@ -916,6 +916,9 @@ fastcall NORET_TYPE void do_exit(long code)
 	if (unlikely(tsk->audit_context))
 		audit_free(tsk);
 
+	/* XXX: This is how we notify the userspace
+	 * 	through nvlink
+	 */
 	taskstats_exit(tsk, group_dead);
 
 	exit_mm(tsk);

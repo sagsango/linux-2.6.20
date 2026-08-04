@@ -1,3 +1,22 @@
+/* XXX:
+ * kernel/taskstats.c serves as the primary backend for the Taskstats
+ * interface. This subsystem gathers per-task and per-process resource
+ * statistics (such as CPU time, page faults, and I/O) and sends them
+ * to userspace using Generic Netlink sockets
+ *
+ *
+ * XXX:
+ * This is a layer between the notifier function and the actual 
+ * link driver. ex:
+ * 	kernel/exit.c::do_exit() -> 
+ * 		kernel/taskstats.c::taskstats_exit() ->
+ * 			include/net/genetlink.h::genlmsg_unicast()
+ * 
+ * XXX: 
+ * How to packets are formated you can see:
+ * 	include/net/netlink.h
+ */
+
 /*
  * taskstats.c - Export per-task statistics to userland
  *
@@ -60,6 +79,7 @@ struct listener_list {
 	struct rw_semaphore sem;
 	struct list_head list;
 };
+/* XXX: per cpu listners */
 static DEFINE_PER_CPU(struct listener_list, listener_array);
 
 enum actions {
@@ -114,7 +134,7 @@ static int send_reply(struct sk_buff *skb, pid_t pid)
 
 	return genlmsg_unicast(skb, pid);
 }
-
+bitmap_parselist
 /*
  * Send taskstats data in @skb to listeners registered for @cpu's exit data
  */
@@ -278,6 +298,11 @@ ret:
 	return;
 }
 
+/* XXX: add current process as listner to every cpu.
+ * 	but how and when we will be notified?
+ *
+ * 	called by : taskstats_user_cmd
+ */
 static int add_del_listener(pid_t pid, cpumask_t *maskp, int isadd)
 {
 	struct listener_list *listeners;
@@ -288,6 +313,7 @@ static int add_del_listener(pid_t pid, cpumask_t *maskp, int isadd)
 	if (!cpus_subset(mask, cpu_possible_map))
 		return -EINVAL;
 
+	/* XXX: If add */
 	if (isadd == REGISTER) {
 		for_each_cpu_mask(cpu, mask) {
 			s = kmalloc_node(sizeof(struct listener), GFP_KERNEL,
@@ -308,6 +334,7 @@ static int add_del_listener(pid_t pid, cpumask_t *maskp, int isadd)
 
 	/* Deregister or cleanup */
 cleanup:
+	/* XXX: If delete */
 	for_each_cpu_mask(cpu, mask) {
 		listeners = &per_cpu(listener_array, cpu);
 		down_write(&listeners->sem);
@@ -345,6 +372,7 @@ static int parse(struct nlattr *na, cpumask_t *mask)
 	return ret;
 }
 
+/* XXX: send the reply through the nla link */
 static struct taskstats *mk_reply(struct sk_buff *skb, int type, u32 pid)
 {
 	struct nlattr *na, *ret;
@@ -369,6 +397,8 @@ err:
 	return NULL;
 }
 
+
+/* XXX: like ioctl by user */
 static int taskstats_user_cmd(struct sk_buff *skb, struct genl_info *info)
 {
 	int rc = 0;
@@ -451,6 +481,9 @@ ret:
 	return sig->stats;
 }
 
+/* XXX: Before program exit it notrifies by calling 
+ * 	this function
+ */
 /* Send pid data out on exit */
 void taskstats_exit(struct task_struct *tsk, int group_dead)
 {
@@ -513,12 +546,14 @@ err:
 	nlmsg_free(rep_skb);
 }
 
+/* XXX: This is how user is going to talk to us */
 static struct genl_ops taskstats_ops = {
 	.cmd		= TASKSTATS_CMD_GET,
 	.doit		= taskstats_user_cmd,
 	.policy		= taskstats_cmd_get_policy,
 };
 
+/* XXX: inited by start_kernel */
 /* Needed early in initialization */
 void __init taskstats_init_early(void)
 {
