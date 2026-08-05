@@ -23,6 +23,19 @@
 # include "rtmutex.h"
 #endif
 
+
+/*
+ * TODO: Understand the locking logic properly.
+ *       It will help in lock design
+ *
+ * XXX: remember these:-
+ * #define RT_MUTEX_OWNER_PENDING  1UL
+ * #define RT_MUTEX_HAS_WAITERS    2UL
+ * #define RT_MUTEX_OWNER_MASKALL  3UL
+ *
+ * lock-owner state will get cmpxchg
+ */
+
 /*
  * lock->owner state tracking:
  *
@@ -30,15 +43,15 @@
  * are used to keep track of the "owner is pending" and "lock has
  * waiters" state.
  *
- * owner	bit1	bit0
- * NULL		0	0	lock is free (fast acquire possible)
- * NULL		0	1	invalid state
- * NULL		1	0	Transitional State*
- * NULL		1	1	invalid state
- * taskpointer	0	0	lock is held (fast release possible)
- * taskpointer	0	1	task is pending owner
- * taskpointer	1	0	lock is held and has waiters
- * taskpointer	1	1	task is pending owner and lock has more waiters
+ * owner	   bit1	bit0
+ * NULL		   0	0	lock is free (fast acquire possible)
+ * NULL		   0	1	invalid state
+ * NULL		   1	0	Transitional State*
+ * NULL		   1	1	invalid state
+ * taskpointer 0	0	lock is held (fast release possible)
+ * taskpointer 0	1	task is pending owner
+ * taskpointer 1	0	lock is held and has waiters
+ * taskpointer 1	1	task is pending owner and lock has more waiters
  *
  * Pending ownership is assigned to the top (highest priority)
  * waiter of the lock, when the lock is released. The thread is woken
@@ -103,6 +116,9 @@ static inline void mark_rt_mutex_waiters(struct rt_mutex *lock)
 }
 #endif
 
+/* XXX: Priority of the task is caluated by hightest of it's and
+ *      and all of its waiters priority
+ */
 /*
  * Calculate task priority from the waiter list priority
  *
@@ -114,6 +130,7 @@ int rt_mutex_getprio(struct task_struct *task)
 	if (likely(!task_has_pi_waiters(task)))
 		return task->normal_prio;
 
+    /* XXX: a lower numerical value represents a higher priority */
 	return min(task_top_pi_waiter(task)->pi_list_entry.prio,
 		   task->normal_prio);
 }
@@ -127,10 +144,12 @@ static void __rt_mutex_adjust_prio(struct task_struct *task)
 {
 	int prio = rt_mutex_getprio(task);
 
+    /* XXX: Set effective priority */
 	if (task->prio != prio)
 		rt_mutex_setprio(task, prio);
 }
 
+/* XXX: Undo Boosing ??? I think its do boosting? */
 /*
  * Adjust task priority (undo boosting). Called from the exit path of
  * rt_mutex_slowunlock() and rt_mutex_slowlock().
@@ -149,6 +168,8 @@ static void rt_mutex_adjust_prio(struct task_struct *task)
 	spin_unlock_irqrestore(&task->pi_lock, flags);
 }
 
+
+/* XXX: Start from here */
 /*
  * Max number of times we'll walk the boosting chain:
  */

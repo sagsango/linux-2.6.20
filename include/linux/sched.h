@@ -798,6 +798,23 @@ enum sleep_type {
 
 struct prio_array;
 
+/* XXX:
+ *  task struct has these priority related members:
+ *  1. int prio,                        <--- Current Effective Prio
+ *  2. int static_prio, 
+ *  3. int normal_prio;                 <--- Normal Prio
+ *  4. struct prio_array *array;
+ *  5. unsigned short ioprio;
+ *
+ *  6. unsigned long rt_priority;       <--- i guess its for SHED_RT           
+ *
+ *     #ifdef CONFIG_RT_MUTEXES
+ *     // PI waiters blocked on a rt_mutex held by this task 
+ *  7. struct plist_head pi_waiters;
+ *     // Deadlock detection and priority inheritance handling 
+ *  8. struct rt_mutex_waiter *pi_blocked_on;
+ *     #endif
+ */
 struct task_struct {
 	volatile long state;	/* -1 unrunnable, 0 runnable, >0 stopped */
 	struct thread_info *thread_info;
@@ -963,6 +980,7 @@ struct task_struct {
 	/* Protection of the PI data structures: */
 	spinlock_t pi_lock;
 
+    /* XXX: RT_MUTEXS */
 #ifdef CONFIG_RT_MUTEXES
 	/* PI waiters blocked on a rt_mutex held by this task */
 	struct plist_head pi_waiters;

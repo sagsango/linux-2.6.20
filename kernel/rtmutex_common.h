@@ -64,6 +64,7 @@ static inline int rt_mutex_has_waiters(struct rt_mutex *lock)
 	return !plist_head_empty(&lock->wait_list);
 }
 
+/* XXX: get the top priority waiter */
 static inline struct rt_mutex_waiter *
 rt_mutex_top_waiter(struct rt_mutex *lock)
 {
@@ -81,6 +82,7 @@ static inline int task_has_pi_waiters(struct task_struct *p)
 	return !plist_head_empty(&p->pi_waiters);
 }
 
+/* XXX: tasks top priority waiter */
 static inline struct rt_mutex_waiter *
 task_top_pi_waiter(struct task_struct *p)
 {

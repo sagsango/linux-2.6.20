@@ -16,6 +16,7 @@
 #include <linux/plist.h>
 #include <linux/spinlock_types.h>
 
+/* XXX: rt_mutex struct */
 /**
  * The rt_mutex structure
  *
@@ -25,7 +26,12 @@
  */
 struct rt_mutex {
 	spinlock_t		wait_lock;
-	struct plist_head	wait_list;
+	struct plist_head	wait_list; /* XXX: task_struct also
+                                      have list for waiter,
+                                      that one is for higher
+                                      priority tasks
+                                    */
+
 	struct task_struct	*owner;
 #ifdef CONFIG_DEBUG_RT_MUTEXES
 	int			save_state;
@@ -82,6 +88,7 @@ static inline int rt_mutex_is_locked(struct rt_mutex *lock)
 	return lock->owner != NULL;
 }
 
+/* XXX: I guess we can start from here */
 extern void __rt_mutex_init(struct rt_mutex *lock, const char *name);
 extern void rt_mutex_destroy(struct rt_mutex *lock);
 
