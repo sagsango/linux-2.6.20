@@ -26,6 +26,9 @@ extern void init_fpu(struct task_struct *child);
 extern int save_i387(struct _fpstate __user *buf);
 extern asmlinkage void math_state_restore(void);
 
+/* XXX: TODO: lazy FPU state saving (fpu regsiters)
+ * 	its also includes xmm, ymm, zmm, avx
+ * 	etc registers */
 /*
  * FPU lazy state save handling...
  */
@@ -143,6 +146,11 @@ static inline int save_i387_checking(struct i387_fxsave_struct __user *fx)
 	return err;
 } 
 
+/* XXX: dumping the FPU registers into the memory
+ * 	memory = tsk->thread.i87.fxsave
+ * 	it also includes the xxm, ymm, zmm registers statea togather with
+ * 	avx etc.
+ */
 static inline void __fxsave_clear(struct task_struct *tsk)
 {
 	/* Using "rex64; fxsave %0" is broken because, if the memory operand

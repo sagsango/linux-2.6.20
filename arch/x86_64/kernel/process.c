@@ -442,6 +442,7 @@ static inline u32 read_32bit_tls(struct task_struct *t, int tls)
 		(((u32)desc->base2) << 24);
 }
 
+/* XXX: Why? */
 /*
  * This gets called before we allocate a new thread and copy
  * the current task into it.

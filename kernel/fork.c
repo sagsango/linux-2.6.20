@@ -163,6 +163,9 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 	struct task_struct *tsk;
 	struct thread_info *ti;
 
+	/* XXX: save the fpu state right now
+	 * 	we do save fpu state lazily
+	 */
 	prepare_to_copy(orig);
 
 	tsk = alloc_task_struct();
@@ -183,6 +186,7 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 	tsk->stack_canary = get_random_int();
 #endif
 
+	/* XXX: Refocunt of new task */
 	/* One for us, one for whoever does the "release_task()" (usually parent) */
 	atomic_set(&tsk->usage,2);
 	atomic_set(&tsk->fs_excl, 0);
@@ -988,11 +992,13 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	if ((clone_flags & CLONE_SIGHAND) && !(clone_flags & CLONE_VM))
 		return ERR_PTR(-EINVAL);
 
+	/* XXX: TODO */
 	retval = security_task_create(clone_flags);
 	if (retval)
 		goto fork_out;
 
 	retval = -ENOMEM;
+	/* XXX: 1. dup task */
 	p = dup_task_struct(current);
 	if (!p)
 		goto fork_out;
