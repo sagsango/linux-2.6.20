@@ -926,7 +926,10 @@ struct task_struct {
 	struct sysv_sem sysvsem;
 #endif
 /* CPU-specific state of this task */
-	struct thread_struct thread;
+	struct thread_struct thread; /* XXX: arch related thread
+                                         metadata which is
+                                         fiff from thread_info
+                                 */
 /* filesystem information */
 	struct fs_struct *fs;
 /* open file information */

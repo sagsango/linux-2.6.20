@@ -168,16 +168,23 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 	 */
 	prepare_to_copy(orig);
 
+    /* XXX: allocate from slab allocator */
 	tsk = alloc_task_struct();
 	if (!tsk)
 		return NULL;
 
+    /* XXX: allocate and copy thread info */
 	ti = alloc_thread_info(tsk);
 	if (!ti) {
 		free_task_struct(tsk);
 		return NULL;
 	}
 
+    /* XXX: task struct has a log of pointers
+     *      we are just copying eveything.
+     *      TODO: confirm that each of shared pointers
+     *            are thread safe
+     */
 	*tsk = *orig;
 	tsk->thread_info = ti;
 	setup_thread_stack(tsk, orig);
@@ -945,8 +952,22 @@ asmlinkage long sys_set_tid_address(int __user *tidptr)
 
 static inline void rt_mutex_init_task(struct task_struct *p)
 {
+
+    /* XXX: TODO: Real time mutexes with priority
+     *      inversion support
+     */
 #ifdef CONFIG_RT_MUTEXES
 	spin_lock_init(&p->pi_lock);
+     /* XXX:
+      * Initializes a priority-sorted list head (pi_waiters). This list
+      * tracks all higher-priority tasks currently blocked and waiting for
+      * a lock held by this task, allowing the kernel to calculate priority
+      * boosting.
+      *
+      * TODO:
+      *     https://docs.kernel.org/locking/rt-mutex-design.html
+      *     https://docs.kernel.org/locking/rt-mutex.html
+      */
 	plist_head_init(&p->pi_waiters, &p->pi_lock);
 	p->pi_blocked_on = NULL;
 #endif
@@ -998,11 +1019,15 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 		goto fork_out;
 
 	retval = -ENOMEM;
-	/* XXX: 1. dup task */
+	/* XXX: 1. dup task
+     *         thread_info
+     *         thread_struct : arch related*/
 	p = dup_task_struct(current);
 	if (!p)
 		goto fork_out;
 
+    /* XXX: 2. Real time mutex initialization
+     */
 	rt_mutex_init_task(p);
 
 #ifdef CONFIG_TRACE_IRQFLAGS

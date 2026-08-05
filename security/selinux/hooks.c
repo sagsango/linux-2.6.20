@@ -4709,6 +4709,10 @@ static struct security_operations selinux_ops = {
 	.file_send_sigiotask =		selinux_file_send_sigiotask,
 	.file_receive =			selinux_file_receive,
 
+    /* XXX: task create security hook 
+     *      TODO: go in mode detail about the 
+     *      selinux secuty hook
+     */
 	.task_create =			selinux_task_create,
 	.task_alloc_security =		selinux_task_alloc_security,
 	.task_free_security =		selinux_task_free_security,
