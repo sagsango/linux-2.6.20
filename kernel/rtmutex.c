@@ -327,34 +327,68 @@ static inline int try_to_steal_lock(struct rt_mutex *lock)
 	struct rt_mutex_waiter *next;
 	unsigned long flags;
 
+    /* XXX: Double check our assumtion
+     *      that there is a pending owner
+     *      and we will steel task from 
+     *      him
+     */
 	if (!rt_mutex_owner_pending(lock))
 		return 0;
 
+    /* XXX: if the pending owner is us
+     *      then we already won */
 	if (pendowner == current)
 		return 1;
 
+    /* XXX: priority inharitance lock of the pending
+     * owner is taken here. to check his metadata;
+     *
+     * if our priority is less than the pendin owen
+     * then we lost
+     */
 	spin_lock_irqsave(&pendowner->pi_lock, flags);
 	if (current->prio >= pendowner->prio) {
 		spin_unlock_irqrestore(&pendowner->pi_lock, flags);
 		return 0;
 	}
+    /* XXX: If we are here means our priority is
+     * higher than the pending owner
+     */
 
+    /* XXX: Note pi_lock = priority inharitance lock 
 	/*
 	 * Check if a waiter is enqueued on the pending owners
 	 * pi_waiters list. Remove it and readjust pending owners
 	 * priority.
 	 */
 	if (likely(!rt_mutex_has_waiters(lock))) {
+        /* XXX: now there is only pending owner and us
+         *      so we are the winner as (our priority is high)
+         */
 		spin_unlock_irqrestore(&pendowner->pi_lock, flags);
 		return 1;
 	}
 
+    /* XXX: If we are here means there are some waiter too! */
 	/* No chain handling, pending owner is not blocked on anything: */
 	next = rt_mutex_top_waiter(lock);
 	plist_del(&next->pi_list_entry, &pendowner->pi_waiters);
+    /* XXX: lets first adjust the pending owner priority
+     *      beased on the waiters priority
+     *      
+     *      But we are still not in waiter list
+     *      and also we removed the top waiter (next)
+     */
 	__rt_mutex_adjust_prio(pendowner);
 	spin_unlock_irqrestore(&pendowner->pi_lock, flags);
 
+
+    /* XXX: now either we are the owner or the next is
+     * the owener.
+     *
+     * so if next == current;
+     * we already won
+     */
 	/*
 	 * We are going to steal the lock and a waiter was
 	 * enqueued on the pending owners pi_waiters queue. So
@@ -370,6 +404,17 @@ static inline int try_to_steal_lock(struct rt_mutex *lock)
 	 * might be current:
 	 */
 	if (likely(next->task != current)) {
+        /* XXX: if next is different 
+         *
+         *      we will add the next in our
+         *      priority inharitance list
+         *      and make ourself the owner
+         *
+         *
+         *      NOTE: here we might had lower priority than 
+         *      the next; but we are just going in.
+         *      so also need to update our priority
+         */
 		spin_lock_irqsave(&current->pi_lock, flags);
 		plist_add(&next->pi_list_entry, &current->pi_waiters);
 		__rt_mutex_adjust_prio(current);
@@ -410,6 +455,10 @@ static int try_to_take_rt_mutex(struct rt_mutex *lock)
 	 */
 	mark_rt_mutex_waiters(lock);
 
+    /* XXX: If it has an owner then we will try to steal the lock
+     * and see if we get the lock, otherwise if are going to become
+     * the owner
+     */
 	if (rt_mutex_owner(lock) && !try_to_steal_lock(lock))
 		return 0;
 
@@ -456,7 +505,12 @@ static int task_blocks_on_rt_mutex(struct rt_mutex *lock,
 	spin_unlock_irqrestore(&current->pi_lock, flags);
 
 	if (waiter == rt_mutex_top_waiter(lock)) {
+        /* XXX: waiter which is current task is going to get it 
+         *      possibly*/
 		spin_lock_irqsave(&owner->pi_lock, flags);
+        /* XXX: remove the top waiter from the owenr waiters list
+         *      and add ourself to the owers waiters list
+         */
 		plist_del(&top_waiter->pi_list_entry, &owner->pi_waiters);
 		plist_add(&waiter->pi_list_entry, &owner->pi_waiters);
 
@@ -642,6 +696,7 @@ rt_mutex_slowlock(struct rt_mutex *lock, int state,
 
 	spin_lock(&lock->wait_lock);
 
+    /* XXX: Try here first! */
 	/* Try to acquire the lock again: */
 	if (try_to_take_rt_mutex(lock)) {
 		spin_unlock(&lock->wait_lock);
@@ -656,10 +711,27 @@ rt_mutex_slowlock(struct rt_mutex *lock, int state,
 			      HRTIMER_ABS);
 
 	for (;;) {
+
+        /* XXX: try_to_take_rt_mutex
+         *      we already have the wait_lock
+         *      this will return 1 on sucess
+         */
 		/* Try to acquire the lock: */
 		if (try_to_take_rt_mutex(lock))
 			break;
 
+        /* XXX: if interruptable but we diabled the 
+         *      IRQs and there are pending signals
+         *      then we need to return from 
+         *      here
+         *
+         *
+         *      NOTE: while we diabled the irqs
+         *      in this cpu, other cpu migh have
+         *      handleded those or (some other
+         *      machanism like pic will do somthing
+         *      or device will interrupt again
+         */
 		/*
 		 * TASK_INTERRUPTIBLE checks for signals and
 		 * timeout. Ignored otherwise.
