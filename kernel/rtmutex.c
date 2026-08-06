@@ -163,6 +163,7 @@ static void rt_mutex_adjust_prio(struct task_struct *task)
 {
 	unsigned long flags;
 
+	/* XXX: TODO: why irq save */
 	spin_lock_irqsave(&task->pi_lock, flags);
 	__rt_mutex_adjust_prio(task);
 	spin_unlock_irqrestore(&task->pi_lock, flags);
@@ -175,6 +176,9 @@ static void rt_mutex_adjust_prio(struct task_struct *task)
  */
 int max_lock_depth = 1024;
 
+/* XXX:
+ * 	detect_deadlock = deadlock detection is on or off
+ */
 /*
  * Adjust the priority chain. Also used for deadlock detection.
  * Decreases task's usage by one - may thus free the task.
@@ -233,6 +237,9 @@ static int rt_mutex_adjust_prio_chain(struct task_struct *task,
 	if (!waiter || !waiter->task)
 		goto out_unlock_pi;
 
+	/* XXX: if there is a top waiter then just release 
+	 * 	(Confirm: second condition always true)
+	 */
 	if (top_waiter && (!task_has_pi_waiters(task) ||
 			   top_waiter != task_top_pi_waiter(task)))
 		goto out_unlock_pi;
@@ -834,6 +841,7 @@ rt_mutex_fastunlock(struct rt_mutex *lock,
 		slowfn(lock);
 }
 
+/* XXX: start lock */
 /**
  * rt_mutex_lock - lock a rt_mutex
  *
@@ -847,6 +855,7 @@ void __sched rt_mutex_lock(struct rt_mutex *lock)
 }
 EXPORT_SYMBOL_GPL(rt_mutex_lock);
 
+/* XXX: start interrtupable lock */
 /**
  * rt_mutex_lock_interruptible - lock a rt_mutex interruptible
  *
@@ -868,6 +877,7 @@ int __sched rt_mutex_lock_interruptible(struct rt_mutex *lock,
 }
 EXPORT_SYMBOL_GPL(rt_mutex_lock_interruptible);
 
+/* XXX: start timed lock */
 /**
  * rt_mutex_lock_interruptible_ktime - lock a rt_mutex interruptible
  *				       the timeout structure is provided
@@ -894,6 +904,7 @@ rt_mutex_timed_lock(struct rt_mutex *lock, struct hrtimer_sleeper *timeout,
 }
 EXPORT_SYMBOL_GPL(rt_mutex_timed_lock);
 
+/* XXX: start lock */
 /**
  * rt_mutex_trylock - try to lock a rt_mutex
  *
@@ -907,6 +918,7 @@ int __sched rt_mutex_trylock(struct rt_mutex *lock)
 }
 EXPORT_SYMBOL_GPL(rt_mutex_trylock);
 
+/* XXX: start unlock */
 /**
  * rt_mutex_unlock - unlock a rt_mutex
  *
@@ -918,6 +930,7 @@ void __sched rt_mutex_unlock(struct rt_mutex *lock)
 }
 EXPORT_SYMBOL_GPL(rt_mutex_unlock);
 
+/* XXX: start destory */
 /***
  * rt_mutex_destroy - mark a mutex unusable
  * @lock: the mutex to be destroyed
@@ -936,6 +949,7 @@ void rt_mutex_destroy(struct rt_mutex *lock)
 
 EXPORT_SYMBOL_GPL(rt_mutex_destroy);
 
+/* XXX: start init */
 /**
  * __rt_mutex_init - initialize the rt lock
  *
