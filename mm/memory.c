@@ -418,6 +418,25 @@ struct page *vm_normal_page(struct vm_area_struct *vma, unsigned long addr, pte_
 	return pfn_to_page(pfn);
 }
 
+/* XXX: copy_one_pte() */
+/* XXX:
+ *  Its not allocating the new pages
+ *  we are just going to share the same swap_entry
+ *  or we will be doing cow.
+ *
+ *  yes this is a new mapping, but rmap is not good enough
+ *  its just keep incrementing the refcount but no
+ *  idea which new vma it is? - Not true TODO: see rmap logic next
+ *
+ *
+ *  in linux-1.2.13 swap worked simpler way, we dont start swaping
+ *  the page frames, we start with the 
+ *  - dirty file (disk) backed pages
+ *  - clean file (disk) backed pages
+ *  - shared pages - file backed but no disk
+ *  - swap the process mm struct itself 
+ *  something like that see the swap branch please.
+ */
 /*
  * copy one vm_area from one task to the other. Assumes the page tables
  * already present in the new task to be cleared in the whole range
@@ -489,6 +508,7 @@ out_set_pte:
 	set_pte_at(dst_mm, addr, dst_pte, pte);
 }
 
+/* XXX: copy_pte_range() */
 static int copy_pte_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
 		pmd_t *dst_pmd, pmd_t *src_pmd, struct vm_area_struct *vma,
 		unsigned long addr, unsigned long end)
@@ -524,6 +544,7 @@ again:
 			progress++;
 			continue;
 		}
+        /* XXX: copy_one_pte() */
 		copy_one_pte(dst_mm, src_mm, dst_pte, src_pte, vma, addr, rss);
 		progress += 8;
 	} while (dst_pte++, src_pte++, addr += PAGE_SIZE, addr != end);
@@ -539,6 +560,7 @@ again:
 	return 0;
 }
 
+/* XXX: copy_pmd_range() */
 static inline int copy_pmd_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
 		pud_t *dst_pud, pud_t *src_pud, struct vm_area_struct *vma,
 		unsigned long addr, unsigned long end)
@@ -554,6 +576,7 @@ static inline int copy_pmd_range(struct mm_struct *dst_mm, struct mm_struct *src
 		next = pmd_addr_end(addr, end);
 		if (pmd_none_or_clear_bad(src_pmd))
 			continue;
+        /* XXX: copy_pte_range() */
 		if (copy_pte_range(dst_mm, src_mm, dst_pmd, src_pmd,
 						vma, addr, next))
 			return -ENOMEM;
@@ -561,6 +584,7 @@ static inline int copy_pmd_range(struct mm_struct *dst_mm, struct mm_struct *src
 	return 0;
 }
 
+/* XXX: copy_pud_range */
 static inline int copy_pud_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
 		pgd_t *dst_pgd, pgd_t *src_pgd, struct vm_area_struct *vma,
 		unsigned long addr, unsigned long end)
@@ -583,6 +607,19 @@ static inline int copy_pud_range(struct mm_struct *dst_mm, struct mm_struct *src
 	return 0;
 }
 
+/* XXX:
+ *  copy page range
+ *  src pages can already be swapped
+ *  cow
+ *  eager
+ *  vma can belongs to anything (vma->fops will be there to giude
+ *  means iof we do swappedout vma->fops->read();
+ *
+ *
+ *  args 0: destination mm_struct
+ *  args 1: source mm_struct
+ *  args 2: source vm_area_struct
+ */
 int copy_page_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
 		struct vm_area_struct *vma)
 {
@@ -611,6 +648,7 @@ int copy_page_range(struct mm_struct *dst_mm, struct mm_struct *src_mm,
 		next = pgd_addr_end(addr, end);
 		if (pgd_none_or_clear_bad(src_pgd))
 			continue;
+        /* XXX: copy_pud_range() */
 		if (copy_pud_range(dst_mm, src_mm, dst_pgd, src_pgd,
 						vma, addr, next))
 			return -ENOMEM;

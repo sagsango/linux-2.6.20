@@ -87,6 +87,10 @@ struct vm_area_struct {
 		struct raw_prio_tree_node prio_tree_node;
 	} shared;
 
+    /* XXX: where anon vma lives
+     *      NOTE: MAP_PRIVATE pages of a file vma
+     *      becomes the anon vma
+     */
 	/*
 	 * A file's MAP_PRIVATE vma can be in both i_mmap tree and anon_vma
 	 * list, after a COW of one of the file pages.  A MAP_SHARED vma

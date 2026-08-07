@@ -32,6 +32,12 @@
 
 /* XXX: called by the dup_mmap()
  * 	in TODO list
+ *
+ *
+ * XXX: when same vma is mapped to multiple processes
+ *      adress space privetly; then all those
+ *      vma lives at same
+ *      offset for file_mapping
  */
 /*
  * Radix priority search tree for address_space->i_mmap

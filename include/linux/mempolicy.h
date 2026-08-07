@@ -9,10 +9,10 @@
  */
 
 /* Policies */
-#define MPOL_DEFAULT	0
-#define MPOL_PREFERRED	1
-#define MPOL_BIND	2
-#define MPOL_INTERLEAVE	3
+#define MPOL_DEFAULT	0   /* XXX: default */
+#define MPOL_PREFERRED	1   /* XXX: prefer one spesific numa node, during allocation*/ 
+#define MPOL_BIND	2       /* XXX: force use only one numa node, during allocation*/
+#define MPOL_INTERLEAVE	3   /* XXX: round robin in numa node, during allocation*/
 
 #define MPOL_MAX MPOL_INTERLEAVE
 

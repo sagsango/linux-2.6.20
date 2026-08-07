@@ -9,6 +9,7 @@
 #include <linux/mm.h>
 #include <linux/spinlock.h>
 
+/* XXX: anon_vma have this link */
 /*
  * The anon_vma heads a list of private "related" vmas, to scan if
  * an anonymous page pointing to this anon_vma needs to be unmapped:
@@ -74,6 +75,13 @@ void page_add_new_anon_rmap(struct page *, struct vm_area_struct *, unsigned lon
 void page_add_file_rmap(struct page *);
 void page_remove_rmap(struct page *, struct vm_area_struct *);
 
+/* XXX: just incr the ref for new mapping no
+ *      exact reverse mapping is made here 
+ *      in case of copy_one_pte()
+ *
+ *
+ *      TODO: rmap
+ */
 /**
  * page_dup_rmap - duplicate pte mapping to a page
  * @page:	the page to add the mapping to

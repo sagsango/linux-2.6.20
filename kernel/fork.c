@@ -280,7 +280,8 @@ static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 		retval = PTR_ERR(pol);
 		if (IS_ERR(pol))
 			goto fail_nomem_policy;
-		/* XXX: Ohh every vma has its own cache policy
+		/* XXX: Ohh every vma has its own numa node, memory
+         *  allocaton policy
 		 * 	make sence; but its kind of mind blowing
 		 */
 		vma_set_policy(tmp, pol);
@@ -289,19 +290,18 @@ static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 		tmp->vm_mm = mm;
 		tmp->vm_next = NULL;
 		/* XXX: XXX: allocated vma also should be get into
-		 * 	     the rmap
+		 * 	     the rmap (not right now because it may be lazy mapping
+         * 	     see copy_page_range() fuction call bellow)
 		 * 	     TODO: ^
 		 * 	     	   |
 		 *
 		 * 	     TODO: |
 		 * 	     	   v
-		 *
-		 *
-		 *
 		 * 	     also this should be added in the file's
-		 * 	     mapping
+		 * 	     mapping.
+         * 	     Yes we do that right now!
 		 */
-		anon_vma_link(tmp);
+		anon_vma_link(tmp); /* XXX: per task tracking within */
 		file = tmp->vm_file;
 		/* XXX: If vma belongs to the file */
 		if (file) {
@@ -311,11 +311,18 @@ static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 			if (tmp->vm_flags & VM_DENYWRITE) /* XXX: if this vma 
 							     not writeable */
 				atomic_dec(&inode->i_writecount);
-      
+
+            /* XXX: isert this vms into the file's vma map  maping*/
 			/* insert tmp into the share list, just after mpnt */
 			spin_lock(&file->f_mapping->i_mmap_lock);
 			tmp->vm_truncate_count = mpnt->vm_truncate_count;
 			flush_dcache_mmap_lock(file->f_mapping); /* XXX: datacache = pagecahce ? */
+
+            /* XXX: when same vma is mapped to multiple processes
+             *      adress space privetly; then all those
+             *      vma lives at same
+             *      offset for file_mapping 
+             */
 			vma_prio_tree_add(tmp, mpnt);
 			flush_dcache_mmap_unlock(file->f_mapping);
 			spin_unlock(&file->f_mapping->i_mmap_lock);
