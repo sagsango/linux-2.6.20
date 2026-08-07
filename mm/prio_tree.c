@@ -30,6 +30,9 @@
 /* avoid overflow */
 #define HEAP_INDEX(vma)   ((vma)->vm_pgoff + (VMA_SIZE(vma) - 1))
 
+/* XXX: called by the dup_mmap()
+ * 	in TODO list
+ */
 /*
  * Radix priority search tree for address_space->i_mmap
  *

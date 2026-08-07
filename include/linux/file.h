@@ -35,6 +35,7 @@ struct fdtable {
 	struct fdtable *next;
 };
 
+/* XXX: It is a guard on the fdtable */
 /*
  * Open file table structure
  */

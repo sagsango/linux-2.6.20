@@ -1,3 +1,8 @@
+/* XXX: per task delay accounting!!! 
+ *
+ * 	TODO: How to use and when to use
+ * 	      Is this a stopwatch at the end of the day?
+ */
 /* delayacct.c - per-task delay accounting
  *
  * Copyright (C) Shailabh Nagar, IBM Corp. 2006

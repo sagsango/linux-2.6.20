@@ -189,6 +189,9 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 	tsk->thread_info = ti;
 	setup_thread_stack(tsk, orig);
 
+	/* XXX: stack_canary is already discussed in its
+	 * 	own branch
+	 */
 #ifdef CONFIG_CC_STACKPROTECTOR
 	tsk->stack_canary = get_random_int();
 #endif
@@ -205,6 +208,10 @@ static struct task_struct *dup_task_struct(struct task_struct *orig)
 }
 
 #ifdef CONFIG_MMU
+/* XXX: copies all the vmas 
+ * 	called by the dup_mm();
+ * 	which already did inited the pgd = 0
+ */
 static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 {
 	/* XXX: vma pointers */
@@ -243,6 +250,10 @@ static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 	for (mpnt = oldmm->mmap; mpnt; mpnt = mpnt->vm_next) {
 		struct file *file;
 
+		/* XXX: Ohh parent can have VM_DONTCOPY
+		 * 	flag in vma, which will be skipped
+		 * 	during the fork(), vma copying
+		 */
 		if (mpnt->vm_flags & VM_DONTCOPY) {
 			long pages = vma_pages(mpnt);
 			mm->total_vm -= pages;
@@ -257,30 +268,54 @@ static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 				goto fail_nomem;
 			charge = len;
 		}
+		/* XXX: NOTE: Here we allocate the new vma */
 		tmp = kmem_cache_alloc(vm_area_cachep, GFP_KERNEL);
 		if (!tmp)
 			goto fail_nomem;
+		/* XXX: now copy the old vma value into the newly
+		 * 	allocated vma
+		 */
 		*tmp = *mpnt;
 		pol = mpol_copy(vma_policy(mpnt));
 		retval = PTR_ERR(pol);
 		if (IS_ERR(pol))
 			goto fail_nomem_policy;
+		/* XXX: Ohh every vma has its own cache policy
+		 * 	make sence; but its kind of mind blowing
+		 */
 		vma_set_policy(tmp, pol);
+		/* XXX: also make sure childs vma are unlocked */
 		tmp->vm_flags &= ~VM_LOCKED;
 		tmp->vm_mm = mm;
 		tmp->vm_next = NULL;
+		/* XXX: XXX: allocated vma also should be get into
+		 * 	     the rmap
+		 * 	     TODO: ^
+		 * 	     	   |
+		 *
+		 * 	     TODO: |
+		 * 	     	   v
+		 *
+		 *
+		 *
+		 * 	     also this should be added in the file's
+		 * 	     mapping
+		 */
 		anon_vma_link(tmp);
 		file = tmp->vm_file;
+		/* XXX: If vma belongs to the file */
 		if (file) {
 			struct inode *inode = file->f_path.dentry->d_inode;
+			/* XXX: we need to get the refcount on file */
 			get_file(file);
-			if (tmp->vm_flags & VM_DENYWRITE)
+			if (tmp->vm_flags & VM_DENYWRITE) /* XXX: if this vma 
+							     not writeable */
 				atomic_dec(&inode->i_writecount);
       
 			/* insert tmp into the share list, just after mpnt */
 			spin_lock(&file->f_mapping->i_mmap_lock);
 			tmp->vm_truncate_count = mpnt->vm_truncate_count;
-			flush_dcache_mmap_lock(file->f_mapping);
+			flush_dcache_mmap_lock(file->f_mapping); /* XXX: datacache = pagecahce ? */
 			vma_prio_tree_add(tmp, mpnt);
 			flush_dcache_mmap_unlock(file->f_mapping);
 			spin_unlock(&file->f_mapping->i_mmap_lock);
@@ -292,13 +327,28 @@ static inline int dup_mmap(struct mm_struct *mm, struct mm_struct *oldmm)
 		*pprev = tmp;
 		pprev = &tmp->vm_next;
 
+		/* XXX: vma also should goi inside the xarray/redix-tree/rbtree
+		 * 	vma's for the mm
+		 */
 		__vma_link_rb(mm, tmp, rb_link, rb_parent);
 		rb_link = &tmp->vm_rb.rb_right;
 		rb_parent = &tmp->vm_rb;
 
 		mm->map_count++;
+		/* XXX: do cow or do eager 
+		 *
+		 * 	in case of eager what if
+		 * 	the page is already swapped out
+		 */
 		retval = copy_page_range(mm, oldmm, mpnt);
 
+		/* XXX: ohh - these vma can belogs to a file
+		 * 	device, etc.
+		 *	
+		 *	TODO:
+		 * 	because we are opening the new instance
+		 * 	we should call the vma-ops->open
+		 */
 		if (tmp->vm_ops && tmp->vm_ops->open)
 			tmp->vm_ops->open(tmp);
 
@@ -512,12 +562,23 @@ static struct mm_struct *dup_mm(struct task_struct *tsk)
 	mm->token_priority = 0;
 	mm->last_interval = 0;
 
+	/* XXX: most of the things which got 
+	 * 	copied unnecessarly during
+	 * 	memcpy from oldmm going to
+	 * 	be reset here;
+	 *
+	 * 	a. pgd also will become 0 here
+	 * 	b. mmap_sem will be inited
+	 * 	c. mmlist will be inited
+	 * 	d. page_table_lock will be inited
+	 */
 	if (!mm_init(mm))
 		goto fail_nomem;
 
 	if (init_new_context(tsk, mm))
 		goto fail_nocontext;
 
+	/* XXX: does  copies all vmas */
 	err = dup_mmap(mm, oldmm);
 	if (err)
 		goto free_pt;
@@ -528,7 +589,6 @@ static struct mm_struct *dup_mm(struct task_struct *tsk)
 	return mm;
 
 free_pt:
-	mmput(mm);
 
 fail_nomem:
 	return NULL;
@@ -773,11 +833,17 @@ static int copy_files(unsigned long clone_flags, struct task_struct * tsk)
 	if (!oldf)
 		goto out;
 
+	/* XXX: if clone then only 
+	 * 	only refcount for the fdtable
+	 * 	get incremented
+	 */
 	if (clone_flags & CLONE_FILES) {
 		atomic_inc(&oldf->count);
 		goto out;
 	}
 
+	/* XXX: or dup fd in case of the no CLONE_FILES flag
+	 */
 	/*
 	 * Note: we may be using current for both targets (See exec.c)
 	 * This works because we cache current->files (old) as oldf. Don't
@@ -1035,6 +1101,9 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	DEBUG_LOCKS_WARN_ON(!p->softirqs_enabled);
 #endif
 	retval = -EAGAIN;
+	/* XXX: If user is out of resource then 
+	 * 	we cant do anything
+	 */
 	if (atomic_read(&p->user->processes) >=
 			p->signal->rlim[RLIMIT_NPROC].rlim_cur) {
 		if (!capable(CAP_SYS_ADMIN) && !capable(CAP_SYS_RESOURCE) &&
@@ -1042,6 +1111,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 			goto bad_fork_free;
 	}
 
+	/* XXX: take refcount on shared data */
 	atomic_inc(&p->user->__count);
 	atomic_inc(&p->user->processes);
 	get_group_info(p->group_info);
@@ -1061,6 +1131,14 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 		goto bad_fork_cleanup_put_domain;
 
 	p->did_exec = 0;
+	/* XXX: 3. per-task delay accounting
+	 * 	cpu wait
+	 * 	io wait
+	 * 	paging wait etc
+	 *
+	 *
+	 * 	TODO: A. How it does that?
+	 */
 	delayacct_tsk_init(p);	/* Must remain after dup_task_struct() */
 	copy_flags(clone_flags, p);
 	p->pid = pid;
@@ -1069,6 +1147,9 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 		if (put_user(p->pid, parent_tidptr))
 			goto bad_fork_cleanup_delays_binfmt;
 
+	/* XXX: 4. children and sibling
+	 * 	parent and real_parent alreay done
+	 */
 	INIT_LIST_HEAD(&p->children);
 	INIT_LIST_HEAD(&p->sibling);
 	p->vfork_done = NULL;
@@ -1110,6 +1191,7 @@ static struct task_struct *copy_process(unsigned long clone_flags,
  	}
 	mpol_fix_fork_child_flag(p);
 #endif
+	/* XXX: 5.  TODO: B. todo experiment */
 #ifdef CONFIG_TRACE_IRQFLAGS
 	p->irq_events = 0;
 #ifdef __ARCH_WANT_INTERRUPTS_ON_CTXSW
@@ -1129,12 +1211,19 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	p->hardirq_context = 0;
 	p->softirq_context = 0;
 #endif
+	/* XXX: 6. TODO: C. lock dependency validation */
 #ifdef CONFIG_LOCKDEP
 	p->lockdep_depth = 0; /* no locks held yet */
 	p->curr_chain_key = 0;
 	p->lockdep_recursion = 0;
 #endif
 
+	/* XXX: 7. TODO: D. its the dependecy for the 
+	 * 	RT_MUTEX so that it does the priority
+	 * 	inharitance.
+	 *
+	 * 	But this thing alone what advatnages give?
+	 */
 #ifdef CONFIG_DEBUG_MUTEXES
 	p->blocked_on = NULL; /* not blocked yet */
 #endif
@@ -1150,20 +1239,28 @@ static struct task_struct *copy_process(unsigned long clone_flags,
 	/* copy all the process information */
 	if ((retval = copy_semundo(clone_flags, p)))
 		goto bad_fork_cleanup_audit;
+	/* XXX: 8. copy files */
 	if ((retval = copy_files(clone_flags, p)))
 		goto bad_fork_cleanup_semundo;
+	/* XXX: 9. copy fs */
 	if ((retval = copy_fs(clone_flags, p)))
 		goto bad_fork_cleanup_files;
+	/* XXX: 10. copy sighanders */
 	if ((retval = copy_sighand(clone_flags, p)))
 		goto bad_fork_cleanup_fs;
+	/* XXX: 11. copy signal */
 	if ((retval = copy_signal(clone_flags, p)))
 		goto bad_fork_cleanup_sighand;
+	/* XXX: 12. copy mm */
 	if ((retval = copy_mm(clone_flags, p)))
 		goto bad_fork_cleanup_signal;
+	/* XXX: copyt keys */
 	if ((retval = copy_keys(clone_flags, p)))
 		goto bad_fork_cleanup_mm;
+	/* XXX: copy namespace */
 	if ((retval = copy_namespaces(clone_flags, p)))
 		goto bad_fork_cleanup_keys;
+	/* XXX: cooy thread */
 	retval = copy_thread(0, clone_flags, stack_start, stack_size, p, regs);
 	if (retval)
 		goto bad_fork_cleanup_namespaces;

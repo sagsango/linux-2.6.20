@@ -531,6 +531,7 @@ struct signal_struct {
 #define is_rt_policy(p)		((p) != SCHED_NORMAL && (p) != SCHED_BATCH)
 #define has_rt_policy(p)	unlikely(is_rt_policy((p)->policy))
 
+/* XXX: user's resource counting */
 /*
  * Some day this will be a full-fledged user tracking system..
  */
