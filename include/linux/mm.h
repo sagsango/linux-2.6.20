@@ -99,6 +99,12 @@ struct vm_area_struct {
 	/* Function pointers to deal with this struct. */
 	struct vm_operations_struct * vm_ops;
 
+
+    /* XXX: File backed vma will have thier own offset 
+     *      which is starting offset of this whol vma
+     *
+     *      file_offset = vma_offset + page->index
+     */
 	/* Information about our backing store: */
 	unsigned long vm_pgoff;		/* Offset (within vm_file) in PAGE_SIZE
 					   units, *not* PAGE_CACHE_SIZE */

@@ -33,7 +33,12 @@ struct page {
 						 * indicates order in the buddy
 						 * system if PG_buddy is set.
 						 */
-		/* XXX: 2nd thing for rmap */
+		/* XXX: 2nd thing for rmap
+         *  
+         *      points to either of these:-
+         *      a. vma
+         *      b. address_space
+         */
 		struct address_space *mapping;	/* If low bit clear, points to
 						 * inode address_space, or NULL.
 						 * If page mapped as anonymous

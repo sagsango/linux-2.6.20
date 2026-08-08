@@ -458,6 +458,7 @@ static int hugetlb_cow(struct mm_struct *mm, struct vm_area_struct *vma,
 	return VM_FAULT_MINOR;
 }
 
+/* XXX: 3.1.1 */
 int hugetlb_no_page(struct mm_struct *mm, struct vm_area_struct *vma,
 			unsigned long address, pte_t *ptep, int write_access)
 {
@@ -468,6 +469,11 @@ int hugetlb_no_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	struct address_space *mapping;
 	pte_t new_pte;
 
+    /* XXX: get the mapping and the index 
+     *      so index servcse 2 purpose
+     *      1. index inside a vma
+     *      2. index inside the mmaping (page-cache)
+     */
 	mapping = vma->vm_file->f_mapping;
 	idx = ((address - vma->vm_start) >> HPAGE_SHIFT)
 		+ (vma->vm_pgoff >> (HPAGE_SHIFT - PAGE_SHIFT));
@@ -477,6 +483,7 @@ int hugetlb_no_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	 * before we get page_table_lock.
 	 */
 retry:
+    /* XXX: get the page at given index in the mapping */
 	page = find_lock_page(mapping, idx);
 	if (!page) {
 		size = i_size_read(mapping->host) >> HPAGE_SHIFT;
@@ -495,6 +502,7 @@ retry:
 		if (vma->vm_flags & VM_SHARED) {
 			int err;
 
+            /* XXX: add to pagecache + init rmap and index for page */
 			err = add_to_page_cache(page, mapping, idx, GFP_KERNEL);
 			if (err) {
 				put_page(page);
@@ -538,6 +546,7 @@ backout:
 	goto out;
 }
 
+/* XXX: 3.1 */
 int hugetlb_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 			unsigned long address, int write_access)
 {
@@ -558,6 +567,7 @@ int hugetlb_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 	mutex_lock(&hugetlb_instantiation_mutex);
 	entry = *ptep;
 	if (pte_none(entry)) {
+        /* XXX: 3.1.1 there is no page */
 		ret = hugetlb_no_page(mm, vma, address, ptep, write_access);
 		mutex_unlock(&hugetlb_instantiation_mutex);
 		return ret;
@@ -569,6 +579,7 @@ int hugetlb_fault(struct mm_struct *mm, struct vm_area_struct *vma,
 	/* Check for a racing update before calling hugetlb_cow */
 	if (likely(pte_same(entry, *ptep)))
 		if (write_access && !pte_write(entry))
+            /* XXX: 3.1.2 this is cow */
 			ret = hugetlb_cow(mm, vma, address, ptep, entry);
 	spin_unlock(&mm->page_table_lock);
 	mutex_unlock(&hugetlb_instantiation_mutex);
