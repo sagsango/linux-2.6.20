@@ -421,6 +421,7 @@ int filemap_write_and_wait_range(struct address_space *mapping,
 	return err;
 }
 
+/* XXX: all the files backed mapiing's rmap get index here */
 /**
  * add_to_page_cache - add newly allocated pagecache pages
  * @page:	page to add

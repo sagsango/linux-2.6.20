@@ -497,6 +497,7 @@ int page_mkclean(struct page *page)
 	return ret;
 }
 
+/* XXX: all the anon mapping's ramp getting inted here *
 /**
  * page_set_anon_rmap - setup new anonymous rmap
  * @page:	the page to add the mapping to
