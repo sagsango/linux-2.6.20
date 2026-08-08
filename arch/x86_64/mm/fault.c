@@ -325,6 +325,12 @@ static int vmalloc_fault(unsigned long address)
 int page_fault_trace = 0;
 int exception_trace = 1;
 
+/* XXX: 1. do_page_fault()
+ * 	
+ * 	as we saw in clone almost everything was lazy mapped
+ * 	(but not all) lets see where during the page fault
+ * 	they make the revserse mapping
+ */
 /*
  * This routine handles page faults.  It determines the address,
  * and the problem, and then passes it off to one of the appropriate
@@ -473,6 +479,7 @@ good_area:
 	 * make sure we exit gracefully rather than endlessly redo
 	 * the fault.
 	 */
+	/* XXX: going to 2 handle_mm_fault() */
 	switch (handle_mm_fault(mm, vma, address, write)) {
 	case VM_FAULT_MINOR:
 		tsk->min_flt++;

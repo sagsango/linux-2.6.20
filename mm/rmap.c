@@ -510,6 +510,14 @@ static void __page_set_anon_rmap(struct page *page,
 
 	BUG_ON(!anon_vma);
 	anon_vma = (void *) anon_vma + PAGE_MAPPING_ANON;
+	/* XXX: ramp mappin init 
+	 * 	because anon mapping it will either be
+	 * 	1. mapped by one one process at given address
+	 * 	   so page->index is fixed
+	 * 	2. or mapped by processes who have parent
+	 *         child relationship so again page->index
+	 *         is fixed
+	 */
 	page->mapping = (struct address_space *) anon_vma;
 
 	page->index = linear_page_index(vma, address);

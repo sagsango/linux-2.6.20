@@ -2369,6 +2369,7 @@ static int do_file_page(struct mm_struct *mm, struct vm_area_struct *vma,
 	return VM_FAULT_MAJOR;
 }
 
+/* XXX: 4. handle_pte_fault */
 /*
  * These routines also need to handle stuff like marking pages dirty
  * and/or accessed for architectures that don't do it in hardware (most
@@ -2394,6 +2395,7 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 	if (!pte_present(entry)) {
 		if (pte_none(entry)) {
 			if (vma->vm_ops) {
+				/* XXX: 5a */
 				if (vma->vm_ops->nopage)
 					return do_no_page(mm, vma, address,
 							  pte, pmd,
@@ -2402,12 +2404,15 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 					return do_no_pfn(mm, vma, address, pte,
 							 pmd, write_access);
 			}
+			/* XXX: 5b */
 			return do_anonymous_page(mm, vma, address,
-						 pte, pmd, write_access);
+				handle_pte_fault		 pte, pmd, write_access);
 		}
 		if (pte_file(entry))
+			/* XXX: 5c */
 			return do_file_page(mm, vma, address,
 					pte, pmd, write_access, entry);
+		/* XXX: 5d */
 		return do_swap_page(mm, vma, address,
 					pte, pmd, write_access, entry);
 	}
@@ -2418,6 +2423,7 @@ static inline int handle_pte_fault(struct mm_struct *mm,
 		goto unlock;
 	if (write_access) {
 		if (!pte_write(entry))
+			/* XXX: 5e */
 			return do_wp_page(mm, vma, address,
 					pte, pmd, ptl, entry);
 		entry = pte_mkdirty(entry);
@@ -2442,6 +2448,7 @@ unlock:
 	return VM_FAULT_MINOR;
 }
 
+/* XXX: 3. __handle_mm_fault() */
 /*
  * By the time we get here, we already hold the mm semaphore
  */

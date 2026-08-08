@@ -19,6 +19,7 @@ struct page {
 	unsigned long flags;		/* Atomic flags, some possibly
 					 * updated asynchronously */
 	atomic_t _count;		/* Usage count, see below. */
+	/* XXX: 1st thing for rmap */
 	atomic_t _mapcount;		/* Count of ptes mapped in mms,
 					 * to show when page is mapped
 					 * & limit reverse map searches.
@@ -32,6 +33,7 @@ struct page {
 						 * indicates order in the buddy
 						 * system if PG_buddy is set.
 						 */
+		/* XXX: 2nd thing for rmap */
 		struct address_space *mapping;	/* If low bit clear, points to
 						 * inode address_space, or NULL.
 						 * If page mapped as anonymous
@@ -44,6 +46,13 @@ struct page {
 	    spinlock_t ptl;
 #endif
 	};
+	/* XXX: what is index?
+	 * 	index is within the vma
+	 * 	so vma can be mapped at diff address 
+	 * 	in multiple mm_struct or within same
+	 * 	mm_struct, but index will always be
+	 * 	the same within every vma
+	 */
 	pgoff_t index;			/* Our offset within mapping. */
 	struct list_head lru;		/* Pageout list, eg. active_list
 					 * protected by zone->lru_lock !

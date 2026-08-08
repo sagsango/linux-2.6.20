@@ -756,6 +756,7 @@ extern int install_file_pte(struct mm_struct *mm, struct vm_area_struct *vma, un
 extern int __handle_mm_fault(struct mm_struct *mm,struct vm_area_struct *vma,
 			unsigned long address, int write_access);
 
+/* XXX: 2. handle_mm_fault() */
 static inline int handle_mm_fault(struct mm_struct *mm,
 			struct vm_area_struct *vma, unsigned long address,
 			int write_access)

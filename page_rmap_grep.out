@@ -1,0 +1,268 @@
+Documentation/cachetlb.txt:	page->mapping->i_mmap is an empty tree and ->i_mmap_nonlinear
+arch/sh64/lib/dbg.c:	printk("       address_space = %p, pages =%ld\n", page->mapping,
+arch/sh64/lib/dbg.c:	       page->mapping->nrpages);
+fs/fuse/file.c:	struct inode *inode = page->mapping->host;
+fs/fuse/file.c:	struct inode *inode = page->mapping->host;
+fs/ntfs/compress.c:	struct address_space *mapping = page->mapping;
+fs/ntfs/ChangeLog:	  needed ntfs inode is available via NTFS_I(page->mapping->host).
+fs/ntfs/aops.c:	vi = page->mapping->host;
+fs/ntfs/aops.c:	vi = page->mapping->host;
+fs/ntfs/aops.c:	vi = page->mapping->host;
+fs/ntfs/aops.c:	vi = page->mapping->host;
+fs/ntfs/aops.c:	struct inode *vi = page->mapping->host;
+fs/ntfs/aops.c:	struct inode *vi = page->mapping->host;
+fs/ntfs/aops.c:	struct address_space *mapping = page->mapping;
+fs/ntfs/file.c:	vi = page->mapping->host;
+fs/ncpfs/symlink.c:	struct inode *inode = page->mapping->host;
+fs/adfs/inode.c:		&ADFS_I(page->mapping->host)->mmu_private);
+fs/smbfs/file.c:	struct address_space *mapping = page->mapping;
+fs/ext4/inode.c:	mapping = page->mapping;
+fs/ext4/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext4/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext4/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext4/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext4/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext4/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext4/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext4/inode.c:	journal_t *journal = EXT4_JOURNAL(page->mapping->host);
+fs/ext4/inode.c:	journal_t *journal = EXT4_JOURNAL(page->mapping->host);
+fs/xfs/linux-2.6/xfs_aops.c:	if (page->mapping && PageDirty(page)) {
+fs/xfs/linux-2.6/xfs_aops.c:	if (page->mapping && page_has_buffers(page)) {
+fs/xfs/linux-2.6/xfs_aops.c:	if (page->mapping != inode->i_mapping)
+fs/xfs/linux-2.6/xfs_aops.c:	struct inode		*inode = page->mapping->host;
+fs/xfs/linux-2.6/xfs_aops.c:	struct inode		*inode = page->mapping->host;
+fs/xfs/linux-2.6/xfs_aops.c:			page->mapping->host, page, offset);
+fs/afs/file.c:	inode = page->mapping->host;
+fs/afs/file.c:		struct afs_vnode *vnode = AFS_FS_I(page->mapping->host);
+fs/afs/file.c:				ret = page->mapping->a_ops->releasepage(page,
+fs/afs/file.c:		struct afs_vnode *vnode = AFS_FS_I(page->mapping->host);
+fs/buffer.c:		set_bit(AS_EIO, &page->mapping->flags);
+fs/buffer.c:	struct address_space *buffer_mapping = bh->b_page->mapping;
+fs/buffer.c:	if (page->mapping) {	/* Race with truncate? */
+fs/buffer.c: * mark_buffer_dirty() is atomic.  It takes bh->b_page->mapping->private_lock,
+fs/buffer.c:		struct address_space *buffer_mapping = bh->b_page->mapping;
+fs/buffer.c:	spin_lock(&page->mapping->private_lock);
+fs/buffer.c:	spin_unlock(&page->mapping->private_lock);
+fs/buffer.c:	struct inode *inode = page->mapping->host;
+fs/buffer.c:	struct address_space *mapping = page->mapping;
+fs/buffer.c:	struct inode *inode = page->mapping->host;
+fs/buffer.c:	struct inode *inode = page->mapping->host;
+fs/buffer.c:	struct inode *inode = page->mapping->host;
+fs/buffer.c:	struct inode *inode = page->mapping->host;
+fs/buffer.c:	struct inode *inode = page->mapping->host;
+fs/buffer.c:	struct inode * const inode = page->mapping->host;
+fs/buffer.c:		if (page->mapping->a_ops->invalidatepage)
+fs/buffer.c:			page->mapping->a_ops->invalidatepage(page, offset);
+fs/buffer.c:	struct inode * const inode = page->mapping->host;
+fs/buffer.c:		if (buffer_write_io_error(bh) && page->mapping)
+fs/buffer.c:			set_bit(AS_EIO, &page->mapping->flags);
+fs/buffer.c:	struct address_space * const mapping = page->mapping;
+fs/sysv/dir.c:	struct inode *dir = (struct inode *)page->mapping->host;
+fs/sysv/dir.c:	page->mapping->a_ops->commit_write(NULL, page, from, to);
+fs/sysv/dir.c:	err = page->mapping->a_ops->prepare_write(NULL, page, from, to);
+fs/sysv/dir.c:	struct address_space *mapping = page->mapping;
+fs/sysv/dir.c:	struct inode *dir = (struct inode*)page->mapping->host;
+fs/sysv/dir.c:	err = page->mapping->a_ops->prepare_write(NULL, page, from, to);
+fs/ext2/dir.c:	struct inode *dir = page->mapping->host;
+fs/ext2/dir.c:	page->mapping->a_ops->commit_write(NULL, page, from, to);
+fs/ext2/dir.c:	struct inode *dir = page->mapping->host;
+fs/ext2/dir.c:	err = page->mapping->a_ops->prepare_write(NULL, page, from, to);
+fs/ext2/dir.c:	err = page->mapping->a_ops->prepare_write(NULL, page, from, to);
+fs/ext2/dir.c:	struct address_space *mapping = page->mapping;
+fs/hfs/inode.c:				  &HFS_I(page->mapping->host)->phys_size);
+fs/hfs/inode.c:	struct inode *inode = page->mapping->host;
+fs/ufs/dir.c:	struct inode *dir = page->mapping->host;
+fs/ufs/dir.c:	page->mapping->a_ops->commit_write(NULL, page, from, to);
+fs/ufs/dir.c:	err = page->mapping->a_ops->prepare_write(NULL, page, from, to);
+fs/ufs/dir.c:	struct inode *dir = page->mapping->host;
+fs/ufs/dir.c:	err = page->mapping->a_ops->prepare_write(NULL, page, from, to);
+fs/ufs/dir.c:	struct address_space *mapping = page->mapping;
+fs/ufs/util.c:		if (unlikely(page->mapping == NULL)) {
+fs/minix/dir.c:	struct inode *dir = (struct inode *)page->mapping->host;
+fs/minix/dir.c:	page->mapping->a_ops->commit_write(NULL, page, from, to);
+fs/minix/dir.c:	err = page->mapping->a_ops->prepare_write(NULL, page, from, to);
+fs/minix/dir.c:	struct address_space *mapping = page->mapping;
+fs/minix/dir.c:	struct inode *dir = (struct inode*)page->mapping->host;
+fs/minix/dir.c:	err = page->mapping->a_ops->prepare_write(NULL, page, from, to);
+fs/cramfs/inode.c:	struct inode *inode = page->mapping->host;
+fs/hpfs/namei.c:	struct inode *i = page->mapping->host;
+fs/hpfs/file.c:		&hpfs_i(page->mapping->host)->mmu_private);
+fs/hfsplus/inode.c:		&HFSPLUS_I(page->mapping->host).phys_size);
+fs/hfsplus/inode.c:	struct inode *inode = page->mapping->host;
+fs/udf/file.c:	struct inode *inode = page->mapping->host;
+fs/udf/file.c:	struct inode *inode = page->mapping->host;
+fs/udf/file.c:	struct inode *inode = page->mapping->host;
+fs/udf/symlink.c:	struct inode *inode = page->mapping->host;
+fs/jbd2/journal.c:			(bh->b_page && bh->b_page->mapping));
+fs/jbd2/commit.c:	if (page->mapping)
+fs/efs/symlink.c:	struct inode * inode = page->mapping->host;
+fs/jbd/journal.c:			(bh->b_page && bh->b_page->mapping));
+fs/jbd/commit.c:	if (page->mapping)
+fs/fat/inode.c:				  &MSDOS_I(page->mapping->host)->mmu_private);
+fs/fat/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext3/inode.c:	mapping = page->mapping;
+fs/ext3/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext3/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext3/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext3/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext3/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext3/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext3/inode.c:	struct inode *inode = page->mapping->host;
+fs/ext3/inode.c:	journal_t *journal = EXT3_JOURNAL(page->mapping->host);
+fs/ext3/inode.c:	journal_t *journal = EXT3_JOURNAL(page->mapping->host);
+fs/fs-writeback.c: * page->mapping->host, so the page-dirtying time is recorded in the internal
+fs/qnx4/inode.c:	struct qnx4_inode_info *qnx4_inode = qnx4_i(page->mapping->host);
+fs/romfs/inode.c:	struct inode *inode = page->mapping->host;
+fs/jfs/jfs_metapage.c:		l2mp_blocks = L2PSIZE - page->mapping->host->i_blkbits;
+fs/jfs/jfs_metapage.c:	int l2mp_blocks = L2PSIZE - page->mapping->host->i_blkbits;
+fs/jfs/jfs_metapage.c:	struct inode *inode = page->mapping->host;
+fs/jfs/jfs_metapage.c:	struct inode *inode = page->mapping->host;
+fs/nfs/write.c:	spinlock_t *req_lock = &NFS_I(page->mapping->host)->req_lock;
+fs/nfs/write.c:	struct inode *inode = page->mapping->host;
+fs/nfs/write.c:		ret = nfs_wb_page(page->mapping->host, page);
+fs/nfs/write.c:	spinlock_t *req_lock = &NFS_I(page->mapping->host)->req_lock;
+fs/nfs/write.c:	struct inode *inode = page->mapping->host;
+fs/nfs/write.c:		nfs_flush_mapping(page->mapping, wbc, wb_priority(wbc));
+fs/nfs/write.c:	struct inode *inode = page->mapping->host;
+fs/nfs/write.c:	if (nfs_wait_on_write_congestion(page->mapping, NFS_SERVER(inode)->flags & NFS_MOUNT_INTR))
+fs/nfs/write.c:		status = nfs_wb_page(page->mapping->host, page);
+fs/nfs/write.c:	struct inode	*inode = page->mapping->host;
+fs/nfs/write.c:		.bdi = page->mapping->backing_dev_info,
+fs/nfs/write.c:	ret = nfs_sync_mapping_wait(page->mapping, &wbc, how);
+fs/nfs/internal.h:	loff_t i_size = i_size_read(page->mapping->host);
+fs/nfs/pagelist.c:	BUG_ON(page->mapping->host != inode);
+fs/nfs/read.c:	struct inode *inode = page->mapping->host;
+fs/nfs/read.c:	struct inode *inode = page->mapping->host;
+fs/nfs/file.c:	nfs_wb_page_priority(page->mapping->host, page, FLUSH_INVALIDATE);
+fs/nfs/file.c:	return nfs_wb_page(page->mapping->host, page);
+fs/ocfs2/aops.c:	struct inode *inode = page->mapping->host;
+fs/ocfs2/aops.c:	struct inode *inode = page->mapping->host;
+fs/ocfs2/aops.c:	struct inode *inode = page->mapping->host;
+fs/jffs/inode-v23.c:	struct inode *inode = (struct inode*)page->mapping->host;
+fs/isofs/rock.c:	struct inode *inode = page->mapping->host;
+fs/ecryptfs/crypto.c:	lower_inode = ecryptfs_inode_to_lower(ctx->page->mapping->host);
+fs/ecryptfs/crypto.c:	inode_info = ecryptfs_inode_to_private(ctx->page->mapping->host);
+fs/ecryptfs/crypto.c:			       page->mapping->host)->crypt_stat);
+fs/ecryptfs/crypto.c:	lower_inode = ecryptfs_inode_to_lower(page->mapping->host);
+fs/ecryptfs/mmap.c:	struct inode *inode = page->mapping->host;
+fs/ecryptfs/mmap.c:	inode = page->mapping->host;
+fs/ecryptfs/mmap.c:	inode = page->mapping->host;
+fs/ecryptfs/mmap.c:	lower_page->mapping->a_ops->sync_page(lower_page);
+fs/cifs/file.c:	struct address_space *mapping = page->mapping;
+fs/cifs/file.c:	inode = page->mapping->host;
+fs/cifs/file.c:			 * invalidated (changing page->mapping to NULL), or even
+fs/cifs/file.c:			if (unlikely(page->mapping != mapping)) {
+fs/cifs/file.c:	struct inode *inode = page->mapping->host;
+fs/cifs/file.c:	mapping = page->mapping;
+fs/libfs.c:	struct inode *inode = page->mapping->host;
+fs/gfs2/lops.c:	struct address_space *mapping = bd->bd_bh->b_page->mapping;
+fs/gfs2/ops_address.c:	struct inode *inode = page->mapping->host;
+fs/gfs2/ops_address.c:		page->mapping->a_ops->invalidatepage(page, 0);
+fs/gfs2/ops_address.c:	struct gfs2_inode *ip = GFS2_I(page->mapping->host);
+fs/gfs2/ops_address.c:	struct gfs2_sbd *sdp = GFS2_SB(page->mapping->host);
+fs/gfs2/ops_address.c:	struct gfs2_inode *ip = GFS2_I(page->mapping->host);
+fs/gfs2/ops_address.c:	struct gfs2_sbd *sdp = GFS2_SB(page->mapping->host);
+fs/gfs2/ops_address.c:	struct inode *inode = page->mapping->host;
+fs/gfs2/ops_address.c:	struct gfs2_sbd *sdp = GFS2_SB(page->mapping->host);
+fs/gfs2/ops_address.c:	struct inode *inode = bh->b_page->mapping->host;
+fs/gfs2/ops_address.c:	struct inode *aspace = page->mapping->host;
+fs/coda/symlink.c:	struct inode *inode = page->mapping->host;
+fs/hostfs/hostfs_kern.c:	struct address_space *mapping = page->mapping;
+fs/hostfs/hostfs_kern.c:	struct address_space *mapping = page->mapping;
+fs/hostfs/hostfs_kern.c:	name = inode_name(page->mapping->host, 0);
+fs/mpage.c:			if (page->mapping)
+fs/mpage.c:				set_bit(AS_EIO, &page->mapping->flags);
+fs/mpage.c:	struct inode *inode = page->mapping->host;
+fs/mpage.c:	struct inode *inode = page->mapping->host;
+fs/mpage.c:	struct address_space *mapping = page->mapping;
+fs/mpage.c:	struct inode *inode = page->mapping->host;
+fs/mpage.c:			 * invalidated (changing page->mapping to NULL), or even
+fs/mpage.c:			if (unlikely(page->mapping != mapping)) {
+fs/mpage.c:						page->mapping->a_ops->writepage);
+fs/affs/file.c:		&AFFS_I(page->mapping->host)->mmu_private);
+fs/affs/file.c:	struct inode *inode = page->mapping->host;
+fs/affs/file.c:	struct inode *inode = page->mapping->host;
+fs/affs/file.c:	struct inode *inode = page->mapping->host;
+fs/affs/file.c:	struct inode *inode = page->mapping->host;
+fs/affs/symlink.c:	struct inode *inode = page->mapping->host;
+fs/splice.c:		if (!page->mapping) {
+fs/splice.c:			if (!page->mapping) {
+fs/splice.c:					if (!page->mapping) {
+fs/reiserfs/inode.c:	struct inode *inode = page->mapping->host;
+fs/reiserfs/inode.c:	struct inode *inode = page->mapping->host;
+fs/reiserfs/inode.c:	struct inode *inode = page->mapping->host;
+fs/reiserfs/inode.c:	struct inode *inode = page->mapping->host;
+fs/reiserfs/inode.c:	struct inode *inode = page->mapping->host;
+fs/reiserfs/inode.c:	struct inode *inode = page->mapping->host;
+fs/reiserfs/inode.c:	struct inode *inode = page->mapping->host;
+fs/reiserfs/tail_conversion.c:		struct inode *inode = bh->b_page->mapping->host;
+fs/reiserfs/journal.c:		if (buffer_dirty(bh) && unlikely(bh->b_page->mapping == NULL)) {
+grep: page_rmap_grep.out: input file is also the output
+mm/truncate.c:	invalidatepage = page->mapping->a_ops->invalidatepage;
+mm/truncate.c:		struct address_space *mapping = page->mapping;
+mm/truncate.c: * We need to bale out if page->mapping is no longer equal to the original
+mm/truncate.c:	if (page->mapping != mapping)
+mm/truncate.c:	if (page->mapping != mapping)
+mm/truncate.c:	if (page->mapping != mapping)
+mm/truncate.c:	if (page->mapping != mapping || mapping->a_ops->launder_page == NULL)
+mm/truncate.c:			if (page->mapping != mapping) {
+mm/page_alloc.c:		(unsigned long)page->flags, page->mapping,
+mm/page_alloc.c:	page->mapping = NULL;
+mm/page_alloc.c:		(page->mapping != NULL)  |
+mm/page_alloc.c:		(page->mapping != NULL)  |
+mm/page_alloc.c:		page->mapping = NULL;
+mm/page-writeback.c:			 * invalidated (changing page->mapping to NULL), or even
+mm/page-writeback.c:			if (unlikely(page->mapping != mapping)) {
+mm/page-writeback.c:	struct address_space *mapping = page->mapping;
+mm/page-writeback.c: * page->mapping->host, and if the page is unlocked.  This is because another
+mm/shmem.c:	mapping = page->mapping;
+mm/shmem.c:	struct inode *inode = page->mapping->host;
+grep: mm/.memory.c.swp: binary file matches
+mm/memory.c:				    details->check_mapping != page->mapping)
+mm/rmap.c:	anon_mapping = (unsigned long) page->mapping;
+mm/rmap.c:		    (void *)page->mapping - PAGE_MAPPING_ANON)
+mm/rmap.c:	} else if (page->mapping && !(vma->vm_flags & VM_NONLINEAR)) {
+mm/rmap.c:		    vma->vm_file->f_mapping != page->mapping)
+mm/rmap.c: * check/clear the referenced flag.  This is done by following the page->mapping
+mm/rmap.c:	struct address_space *mapping = page->mapping;
+mm/rmap.c:	 * The caller's checks on page->mapping and !PageAnon have made
+mm/rmap.c:	 * sure that this is a file page: the check for page->mapping
+mm/rmap.c:	 * The page lock not only makes sure that page->mapping cannot
+mm/rmap.c:	if (page_mapped(page) && page->mapping) {
+mm/rmap.c:			if (page->mapping)
+mm/rmap.c:	page->mapping = (struct address_space *) anon_vma;
+mm/rmap.c:			printk (KERN_EMERG "  page->mapping = %p\n", page->mapping);
+mm/rmap.c:	struct address_space *mapping = page->mapping;
+grep: mm/.memory.c.swo: binary file matches
+mm/fremap.c:	if (!page->mapping || page->index >= size)
+mm/filemap.c:	struct address_space *mapping = page->mapping;
+mm/filemap.c:	page->mapping = NULL;
+mm/filemap.c:	struct address_space *mapping = page->mapping;
+mm/filemap.c:			page->mapping = mapping;
+mm/filemap.c:			if (unlikely(page->mapping != mapping ||
+mm/filemap.c:		if (!page->mapping) {
+mm/filemap.c:				if (page->mapping == NULL) {
+mm/filemap.c:	if (!page->mapping) {
+mm/filemap.c:	if (!page->mapping) {
+mm/filemap.c:	if (!page->mapping) {
+mm/filemap.c:	if (!page->mapping) {
+mm/filemap.c:	if (!page->mapping) {
+mm/filemap.c:	struct address_space * const mapping = page->mapping;
+mm/swapfile.c:	if (page->mapping) {
+mm/swapfile.c:		bdi = page->mapping->backing_dev_info;
+mm/migrate.c:	page->mapping = NULL;
+mm/migrate.c:	newpage->mapping = page->mapping;
+mm/migrate.c:		newpage->mapping = NULL;
+mm/vmscan.c:		 * page->mapping == NULL while being dirty with clean buffers.
+include/linux/mm.h: * - cache mapping   (page->mapping)
+include/linux/mm.h: * A page may belong to an inode's memory mapping. In this case, page->mapping
+include/linux/mm.h: * page->mapping points to its anon_vma, not to a struct address_space;
+include/linux/mm.h:	struct address_space *mapping = page->mapping;
+include/linux/mm.h:	return ((unsigned long)page->mapping & PAGE_MAPPING_ANON) != 0;
+include/linux/mm.h:	struct address_space *check_mapping;	/* Check page->mapping if set */
+include/linux/mm.h: * When freeing, reset page->mapping so free_pages_check won't complain.
+grep: include/linux/.mm.h.swp: binary file matches
+drivers/infiniband/hw/mthca/mthca_memfree.c:					  &page->mapping, GFP_KERNEL);
+drivers/infiniband/hw/mthca/mthca_memfree.c:	ret = mthca_MAP_ICM_page(dev, page->mapping,
+drivers/infiniband/hw/mthca/mthca_memfree.c:				  page->db_rec, page->mapping);
+drivers/infiniband/hw/mthca/mthca_memfree.c:				  page->db_rec, page->mapping);
