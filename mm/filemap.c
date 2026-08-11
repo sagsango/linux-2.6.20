@@ -1399,6 +1399,17 @@ retry_find:
 		did_readaround = 1;
 		ra_pages = max_sane_readahead(file->f_ra.ra_pages);
 		if (ra_pages) {
+			/* XXX: readaround happens when file is mmaped
+			 * 	(readahead happens in case of the file read)
+			 *
+			 * 	readaround - get the pages before and after 
+			 * 	readahead - get the pages after only
+			 *
+			 * 	readaround is good in case of the random reads
+			 *
+			 *
+* 	Paper: https://www.kernel.org/doc/ols/2007/ols2007v2-pages-273-284.pdf
+			 */
 			pgoff_t start = 0;
 
 			if (pgoff > ra_pages / 2)

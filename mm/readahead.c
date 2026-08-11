@@ -75,6 +75,7 @@ static inline void ra_off(struct file_ra_state *ra)
 	return;
 }
 
+/* XXX: readahead size will always be 2x or 4x */
 /*
  * Set the initial window size, round to next power of 2 and square
  * for small size, x 4 for medium, and x 2 for large
@@ -438,6 +439,10 @@ static int make_ahead_window(struct address_space *mapping, struct file *filp,
 	return ret;
 }
 
+/* XXX:
+ * 	do_generic_mapping_read: readahead() for 
+ * 	generic read() system call
+ */
 /**
  * page_cache_readahead - generic adaptive readahead
  * @mapping: address_space which holds the pagecache and I/O vectors
@@ -569,6 +574,7 @@ void handle_ra_miss(struct address_space *mapping,
 	ra->cache_hit = 0;
 }
 
+/* XXX: readaround size */
 /*
  * Given a desired number of PAGE_CACHE_SIZE readahead pages, return a
  * sensible upper limit.
