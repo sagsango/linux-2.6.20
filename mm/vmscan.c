@@ -431,6 +431,15 @@ int remove_mapping(struct address_space *mapping, struct page *page)
 		return 1;
 	}
 
+	/* XXX: Remeber the use of page cache, is for 
+	 * 	multiple process having mapped the swap entries
+	 * 	while first page falut did swap in but other
+	 * 	are still unaware of it.
+	 *
+	 * 	when page fault happens from then they will check
+	 * 	the swap entry in the swap cache if page already has
+	 * 	been swaped in
+	 */
 	__remove_from_page_cache(page);
 	write_unlock_irq(&mapping->tree_lock);
 	__put_page(page);
