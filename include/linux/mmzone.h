@@ -69,6 +69,10 @@ enum zone_stat_item {
 #endif
 	NR_VM_ZONE_STAT_ITEMS };
 
+/* XXX: percpu cache 
+ * 	(hot and cold)
+ * 	it has its own metadata for draning
+ */
 struct per_cpu_pages {
 	int count;		/* number of pages in the list */
 	int high;		/* high watermark, emptying needed */
@@ -76,6 +80,27 @@ struct per_cpu_pages {
 	struct list_head list;	/* the list of pages */
 };
 
+/* XXX: per cpu page cache has 2 sets of pages
+ * 	hot & cold
+ *
+ * 	XXX: hot &  cold pages
+ * 	     hot where access bit is set, 
+ * 	     time to time we reviste the list reset the page access bit
+ * 	     and put the page into the cold list; 
+ *
+ * 	     now when evicting we will do that from cold list first but
+ * 	     if page got again access we will put that into hot.
+ *
+ * 	     so cold list is actually the potantial candidates for eviction
+ * 	     but the pages which are frequent used will atomatically make
+ * 	     themsleves as accessed so that we will put those back into 
+ * 	     the hot list.
+ *
+ *
+ * 	     so cold list is afilter for old pages; but it redirect them
+ * 	     into 2 parts  a. hot if cold page got accessed, b. old page
+ * 	     because it did not got accessed.
+ */
 struct per_cpu_pageset {
 	struct per_cpu_pages pcp[2];	/* 0: hot.  1: cold */
 #ifdef CONFIG_SMP
@@ -174,6 +199,7 @@ struct zone {
 	 */
 	unsigned long		min_unmapped_pages;
 	unsigned long		min_slab_pages;
+	/* XXX: per_cpu_pageset = per cpu page cache */
 	struct per_cpu_pageset	*pageset[NR_CPUS];
 #else
 	struct per_cpu_pageset	pageset[NR_CPUS];

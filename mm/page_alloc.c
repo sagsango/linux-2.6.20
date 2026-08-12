@@ -206,6 +206,19 @@ static void bad_page(struct page *page)
 	add_taint(TAINT_BAD_PAGE);
 }
 
+/* XXX: compound page 
+ * 	TODO: - page metadata which one to use,
+ * 	      	count, lru etc, when to use
+ *	      - first tails, lru->next & lru-Prev are
+ *	      	in use, so where we track the comound page lru
+ *	      	or compound page lru does not exist.
+ * 	TODO: TOPIC - buddy
+ *
+ *
+ *	Buddy allocator = mechanism for obtaining physically contiguous pages.
+ *	Compound page = a kernel memory-management abstraction that groups 
+ *			those pages into one logical page.
+ */
 /*
  * Higher-order pages are called "compound pages".  They are structured thusly:
  *
@@ -231,6 +244,8 @@ static void prep_compound_page(struct page *page, unsigned long order)
 	int i;
 	int nr_pages = 1 << order;
 
+	/* XXX: set the compound page's put_page function()
+	 */
 	set_compound_page_dtor(page, free_compound_page);
 	page[1].lru.prev = (void *)order;
 	for (i = 0; i < nr_pages; i++) {
@@ -295,6 +310,7 @@ static inline void rmv_page_order(struct page *page)
 	set_page_private(page, 0);
 }
 
+/* XXX: find the buddy */
 /*
  * Locate the struct page for both the matching buddy in our
  * pair (buddy1) and the combined O(n+1) page they form (page).
@@ -357,6 +373,15 @@ static inline int page_is_buddy(struct page *page, struct page *buddy,
 	return 0;
 }
 
+/* XXX: This frees :-
+ * 		normal pagesa of given order
+ * 		conmpound pages
+ * 			(seesm like compound pages
+ * 			 are also continous; - YES)
+ *
+ * 		pages of 0 order = page
+ * 		pages of non zero order = compound page
+ */
 /*
  * Freeing function for a buddy system allocator.
  *
@@ -365,7 +390,7 @@ static inline int page_is_buddy(struct page *page, struct page *buddy,
  * The bottom level table contains the map for the smallest allocatable
  * units of memory (here, pages), and each level above it describes
  * pairs of units from the levels below, hence, "buddies".
- * At a high level, all that happens here is marking the table entry
+ * At a hig__ClearPageBuddy__ClearPageBuddyh level, all that happens here is marking the table entry
  * at the bottom level available, and propagating the changes upward
  * as necessary, plus some accounting needed to play nicely with other
  * parts of the VM system.
@@ -396,6 +421,10 @@ static inline void __free_one_page(struct page *page,
 	VM_BUG_ON(bad_range(zone, page));
 
 	zone->free_pages += order_size;
+	/* XXX: find the buddy and make it next order page 
+	 * 	recursivly
+	 * 	TODO: TOPIC - buddy
+	 */
 	while (order < MAX_ORDER-1) {
 		unsigned long combined_idx;
 		struct free_area *area;
@@ -414,6 +443,10 @@ static inline void __free_one_page(struct page *page,
 		page_idx = combined_idx;
 		order++;
 	}
+	/* XXX: Now set the page order and
+	 * 	add it to the respective free list of given order
+	 * 	of his zone
+	 */
 	set_page_order(page, order);
 	list_add(&page->lru, &zone->free_area[order].free_list);
 	zone->free_area[order].nr_free++;
@@ -446,6 +479,14 @@ static inline int free_pages_check(struct page *page)
 	return PageReserved(page);
 }
 
+/* XXX: NOTE:
+ * 	next 2 free functions are making 
+ * 		        zone->all_unreclaimable = 0;
+ * 		        zone->pages_scanned = 0;
+ *	remmeber we will need this in future
+ *	brobably zone's active and inactive list
+ *	transition
+ */
 /*
  * Frees a list of pages. 
  * Assumes all pages on list are in same zone, and of same order.
@@ -492,6 +533,10 @@ static void __free_pages_ok(struct page *page, unsigned int order)
 
 	for (i = 0 ; i < (1 << order) ; ++i)
 		reserved += free_pages_check(page + i);
+	/* XXX: if any of the pages of the compound-page
+	 * 	are reserved then we can not free the
+	 * 	compound-page
+	 */
 	if (reserved)
 		return;
 
@@ -612,6 +657,12 @@ static int prep_new_page(struct page *page, int order, gfp_t gfp_flags)
 	return 0;
 }
 
+/* XXX:
+ * Find a free block of at least the requested order,
+ * remove it from the buddy free lists, split it if necessary,
+ * and return the requested-size block.
+ */
+
 /* 
  * Do the hard work of removing an element from the buddy allocator.
  * Call me with the zone->lock already held.
@@ -661,6 +712,9 @@ static int rmqueue_bulk(struct zone *zone, unsigned int order,
 }
 
 #ifdef CONFIG_NUMA
+/* XXX: percpu page reaper 
+ * 	pcp  = per cpu cache
+ */
 /*
  * Called from the slab reaper to drain pagesets on a particular node that
  * belongs to the currently executing processor.
@@ -679,8 +733,12 @@ void drain_node_pages(int nodeid)
 
 		if (!populated_zone(zone))
 			continue;
-
+		/* XXX: get the percpu cache */
 		pset = zone_pcp(zone, smp_processor_id());
+		/* XXX: go all the levels in the per cpu cache
+		 * 	0: hot
+		 * 	1: cold
+		 */
 		for (i = 0; i < ARRAY_SIZE(pset->pcp); i++) {
 			struct per_cpu_pages *pcp;
 
@@ -729,6 +787,17 @@ static void __drain_pages(unsigned int cpu)
 
 #ifdef CONFIG_PM
 
+/* XXX:
+ * This individual page is currently part of a free buddy
+ * block, so it is free and doesn't need to be saved.
+ *
+ * means for order which is greater that zero
+ * only the first or head page will be the part of
+ * buddy list, the reset pages are free but not 
+ * part of the buddy free list
+ *
+ * TODO: understad it better
+ */
 void mark_free_pages(struct zone *zone)
 {
 	unsigned long pfn, max_zone_pfn;
@@ -741,6 +810,7 @@ void mark_free_pages(struct zone *zone)
 
 	spin_lock_irqsave(&zone->lock, flags);
 
+	/* XXX: get the start and end pfn for the given zone */
 	max_zone_pfn = zone->zone_start_pfn + zone->spanned_pages;
 	for (pfn = zone->zone_start_pfn; pfn < max_zone_pfn; pfn++)
 		if (pfn_valid(pfn)) {
@@ -775,6 +845,16 @@ void drain_local_pages(void)
 }
 #endif /* CONFIG_PM */
 
+/* XXX:
+ * 	free_hot_cold_page() does NOT immediately put the page
+ * 	into zone->free_area[0].free_list.
+ *
+ * 	It first puts the page into a per-CPU page cache (PCP). 
+ * 	Later, when that PCP cache gets sufficiently full, 
+ * 	pages are moved in bulk to the buddy allocator.
+ *
+ * 	TODO: TOPIC - per cpu cache
+*/
 /*
  * Free a 0-order page
  */
@@ -800,6 +880,10 @@ static void fastcall free_hot_cold_page(struct page *page, int cold)
 	list_add(&page->lru, &pcp->list);
 	pcp->count++;
 	if (pcp->count >= pcp->high) {
+		/*XXX: todo where we move hot to cold ? 
+		 *     because heare we are moving the hot/cold 
+		 *     list pages to buddy allocator
+		 */
 		free_pages_bulk(zone, pcp->batch, &pcp->list, 0);
 		pcp->count -= pcp->batch;
 	}
@@ -835,6 +919,13 @@ void split_page(struct page *page, unsigned int order)
 		set_page_refcounted(page + i);
 }
 
+
+/*
+ * XXX:
+ * 	For order-0 allocations, try to get a page from the per-CPU 
+ * 	page cache (PCP) first. For higher-order allocations, go 
+ * 	directly to the buddy allocator.
+ */
 /*
  * Really, prep_compound_page() should be called from __rmqueue_bulk().  But
  * we cheat by calling it from here, in the order > 0 path.  Saves a branch
@@ -856,6 +947,10 @@ again:
 		pcp = &zone_pcp(zone, cpu)->pcp[cold];
 		local_irq_save(flags);
 		if (!pcp->count) {
+			/* XXX: if cpercpu cache is empty
+			 * 	preallocate/bulk allocate
+			 * 	first
+			 */
 			pcp->count = rmqueue_bulk(zone, 0,
 						pcp->batch, &pcp->list);
 			if (unlikely(!pcp->count))
@@ -896,6 +991,7 @@ failed:
 #define ALLOC_HIGH		0x20 /* __GFP_HIGH set */
 #define ALLOC_CPUSET		0x40 /* check for correct cpuset */
 
+/* XXX: these are for testing purpose */
 #ifdef CONFIG_FAIL_PAGE_ALLOC
 
 static struct fail_page_alloc_attr {
@@ -1011,6 +1107,8 @@ int zone_watermark_ok(struct zone *z, int order, unsigned long mark,
 	}
 	return 1;
 }
+
+/* XXX: BOOKMARK; XXX: Start from here */
 
 #ifdef CONFIG_NUMA
 /*
