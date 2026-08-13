@@ -1108,9 +1108,13 @@ int zone_watermark_ok(struct zone *z, int order, unsigned long mark,
 	return 1;
 }
 
-/* XXX: BOOKMARK; XXX: Start from here */
 
 #ifdef CONFIG_NUMA
+/* XXX:
+ *  Instead of repeatedly scanning every zone in a zonelist, the kernel remembers which zones are probably full or not allowed, so future allocations can skip them quickly.
+ *
+ *  Lets skip this for now
+ */
 /*
  * zlc_setup - Setup for "zonelist cache".  Uses cached zone data to
  * skip over zones that are not allowed by the cpuset, or that have
@@ -1230,6 +1234,7 @@ static void zlc_mark_zone_full(struct zonelist *zonelist, struct zone **z)
 }
 #endif	/* CONFIG_NUMA */
 
+/* XXX: BOOKMARK; XXX: Start from here */
 /*
  * get_page_from_freelist goes through the zonelist trying to allocate
  * a page.
@@ -1254,10 +1259,12 @@ zonelist_scan:
 	z = zonelist->zones;
 
 	do {
+        /* XXX: zonelist cache has bit 0 for this zone */
 		if (NUMA_BUILD && zlc_active &&
 			!zlc_zone_worth_trying(zonelist, z, allowednodes))
 				continue;
 		zone = *z;
+        /* XXX: TODO */
 		if (unlikely(NUMA_BUILD && (gfp_mask & __GFP_THISNODE) &&
 			zone->zone_pgdat != zonelist->zones[0]->zone_pgdat))
 				break;
@@ -1349,6 +1356,7 @@ restart:
 	if (NUMA_BUILD && (gfp_mask & GFP_THISNODE) == GFP_THISNODE)
 		goto nopage;
 
+    /* XXX: we have to wakeup the swapd in all the zones */
 	for (z = zonelist->zones; *z; z++)
 		wakeup_kswapd(*z, order);
 

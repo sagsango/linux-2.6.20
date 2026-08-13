@@ -281,6 +281,10 @@ struct zone {
 	unsigned long		wait_table_hash_nr_entries;
 	unsigned long		wait_table_bits;
 
+    /* XXX:
+     *      zone_pgdat is a pointer to the struct pglist_data 
+     *      that owns the current memory zone.
+     */
 	/*
 	 * Discontig memory support fields.
 	 */
@@ -386,6 +390,28 @@ struct zonelist_cache {
 struct zonelist_cache;
 #endif
 
+
+/* XXX:
+ *  zonelist contains the zone from all the numa nodes
+ *  
+ *
+  zonelist
+   |
+   +-- [0] → A = Node 0 NORMAL
+   |
+   +-- [1] → B = Node 0 DMA
+   |
+   +-- [2] → C = Node 1 NORMAL
+   |
+   +-- [3] → D = Node 1 DMA
+   |
+   +-- [4] → NULL
+ *
+ *
+ *
+ *  all candidate zones arranged in the order the allocator
+ *  should consider them.
+ */
 /*
  * One allocation request operates on a zonelist. A zonelist
  * is a list of zones, the first one is the 'goal' of the
