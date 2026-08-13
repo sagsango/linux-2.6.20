@@ -443,6 +443,7 @@ struct node_active_region {
 extern struct page *mem_map;
 #endif
 
+/* XXX: TODO: TOPIC: NUMA_NODE DONE - one NUMA node's memory. */
 /*
  * The pg_data_t structure is used in machines with CONFIG_DISCONTIGMEM
  * (mostly NUMA machines?) to denote a higher-level memory zone than the

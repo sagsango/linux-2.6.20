@@ -1234,7 +1234,6 @@ static void zlc_mark_zone_full(struct zonelist *zonelist, struct zone **z)
 }
 #endif	/* CONFIG_NUMA */
 
-/* XXX: BOOKMARK; XXX: Start from here */
 /*
  * get_page_from_freelist goes through the zonelist trying to allocate
  * a page.
@@ -1264,7 +1263,10 @@ zonelist_scan:
 			!zlc_zone_worth_trying(zonelist, z, allowednodes))
 				continue;
 		zone = *z;
-        /* XXX: TODO */
+        /* XXX: TODO: DONE
+	 * 	zonelist contains the all numa nodes in priority order
+	 * 	see the cmts on the struct zonelist
+	 */
 		if (unlikely(NUMA_BUILD && (gfp_mask & __GFP_THISNODE) &&
 			zone->zone_pgdat != zonelist->zones[0]->zone_pgdat))
 				break;
@@ -1288,11 +1290,14 @@ zonelist_scan:
 			}
 		}
 
+		/* XXX: try to get from the per cpu cache if 0 order
+		 * 	otherwise try buddy 
+		 */
 		page = buffered_rmqueue(zonelist, zone, order, gfp_mask);
 		if (page)
 			break;
 this_zone_full:
-		if (NUMA_BUILD)
+		if (NUMA_BUILD) /* XXX: zone list cache */
 			zlc_mark_zone_full(zonelist, z);
 try_next_zone:
 		if (NUMA_BUILD && !did_zlc_setup) {
@@ -1311,6 +1316,7 @@ try_next_zone:
 	return page;
 }
 
+/* XXX: general __alloc_pages */
 /*
  * This is the 'heart' of the zoned buddy allocator.
  */
@@ -1340,6 +1346,7 @@ restart:
 		return NULL;
 	}
 
+	/* XXX: 1st soft try */
 	page = get_page_from_freelist(gfp_mask|__GFP_HARDWALL, order,
 				zonelist, ALLOC_WMARK_LOW|ALLOC_CPUSET);
 	if (page)
@@ -1356,7 +1363,9 @@ restart:
 	if (NUMA_BUILD && (gfp_mask & GFP_THISNODE) == GFP_THISNODE)
 		goto nopage;
 
-    /* XXX: we have to wakeup the swapd in all the zones */
+    	/* XXX: we have to wakeup the swapd in all the zones 
+	 * 	TODO: TOPIC : swapd
+	 */
 	for (z = zonelist->zones; *z; z++)
 		wakeup_kswapd(*z, order);
 
@@ -1378,6 +1387,8 @@ restart:
 	if (wait)
 		alloc_flags |= ALLOC_CPUSET;
 
+	/* XXX: 2nd hard try
+	 * 	after the swap wakeup */
 	/*
 	 * Go through the zonelist again. Let __GFP_HIGH and allocations
 	 * coming from realtime tasks go deeper into reserves.
@@ -1397,6 +1408,17 @@ rebalance:
 			&& !in_interrupt()) {
 		if (!(gfp_mask & __GFP_NOMEMALLOC)) {
 nofail_alloc:
+/* XXX: 3rd try 
+1st try → normal allocation, LOW watermark
+             ↓ fail
+       wake kswapd
+             ↓
+2nd try → MIN watermark, can dip into reserves
+             ↓ fail
+       only privileged/reclaim contexts
+             ↓
+3rd try → NO WATERMARKS AT ALL
+*/
 			/* go through the zonelist yet again, ignoring mins */
 			page = get_page_from_freelist(gfp_mask, order,
 				zonelist, ALLOC_NO_WATERMARKS);
@@ -1416,6 +1438,7 @@ nofail_alloc:
 
 	cond_resched();
 
+	/* XXX: Now synchonus freeing */
 	/* We now go into synchronous reclaim */
 	cpuset_memory_pressure_bump();
 	p->flags |= PF_MEMALLOC;
@@ -1430,6 +1453,7 @@ nofail_alloc:
 	cond_resched();
 
 	if (likely(did_some_progress)) {
+		/* XXX: 4th try after synchonous freeing */
 		page = get_page_from_freelist(gfp_mask, order,
 						zonelist, alloc_flags);
 		if (page)
@@ -1450,6 +1474,7 @@ nofail_alloc:
 		goto restart;
 	}
 
+	/* XXX: Lets retry again if retry flag is set */
 	/*
 	 * Don't let big-order allocations loop unless the caller explicitly
 	 * requests that.  Wait for some write requests to complete then retry.
@@ -1466,6 +1491,7 @@ nofail_alloc:
 	}
 	if (do_retry) {
 		congestion_wait(WRITE, HZ/50);
+		/* XXX: 5th retry - start gain */
 		goto rebalance;
 	}
 
@@ -1483,6 +1509,9 @@ got_pg:
 
 EXPORT_SYMBOL(__alloc_pages);
 
+/* XXX: numa policy is taken care then at the end calls __alloc_pages
+ * 	with proper zonelist
+ */
 /*
  * Common helper functions.
  */
@@ -1562,6 +1591,7 @@ unsigned int nr_free_pages(void)
 EXPORT_SYMBOL(nr_free_pages);
 
 #ifdef CONFIG_NUMA
+/* XXX: pg_data_t = one numa node */
 unsigned int nr_free_pages_pgdat(pg_data_t *pgdat)
 {
 	unsigned int sum = 0;
@@ -1574,6 +1604,8 @@ unsigned int nr_free_pages_pgdat(pg_data_t *pgdat)
 }
 #endif
 
+/* XXX: offset is an 
+ * index selecting which zonelist inside pg_data_t->node_zonelists[] */
 static unsigned int nr_free_zone_pages(int offset)
 {
 	/* Just pick one node, since fallback list is circular */
@@ -1756,6 +1788,7 @@ void show_free_areas(void)
 	show_swap_cache_info();
 }
 
+/* XXX: TODO: DONE; make the zonelist */
 /*
  * Builds allocation fallback zone lists.
  *
@@ -1844,6 +1877,7 @@ static int __meminit find_next_best_node(int node, nodemask_t *used_node_mask)
 	return best_node;
 }
 
+/* XXX: here we have better function to create the zonelist */
 static void __meminit build_zonelists(pg_data_t *pgdat)
 {
 	int j, node, local_node;
@@ -1893,6 +1927,7 @@ static void __meminit build_zonelists(pg_data_t *pgdat)
 	}
 }
 
+/* XXX: build zlc */
 /* Construct the zonelist performance cache - see further mmzone.h */
 static void __meminit build_zonelist_cache(pg_data_t *pgdat)
 {
@@ -1912,7 +1947,7 @@ static void __meminit build_zonelist_cache(pg_data_t *pgdat)
 }
 
 #else	/* CONFIG_NUMA */
-
+/* XXX: BOOKMARK; XXX: Start from here */
 static void __meminit build_zonelists(pg_data_t *pgdat)
 {
 	int node, local_node;
@@ -2055,6 +2090,7 @@ static inline unsigned long wait_table_bits(unsigned long size)
 
 #define LONG_ALIGN(x) (((x)+(sizeof(long))-1)&~((sizeof(long))-1))
 
+/* XXX: init_zone */
 /*
  * Initially all pages are reserved - free ones are freed
  * up by free_all_bootmem() once the early boot process is
@@ -2287,6 +2323,25 @@ void __init setup_per_cpu_pageset(void)
 
 #endif
 
+/* XXX: wait for memory to become aviable etc.
+ * 	kind of wait and signal data structure
+try allocation
+      |
+      v
+not available
+      |
+      v
+sleep on wait queue
+      |
+      v
+memory becomes available
+      |
+      v
+wake up
+      |
+      v
+try again
+*/
 static __meminit
 int zone_wait_table_init(struct zone *zone, unsigned long zone_size_pages)
 {

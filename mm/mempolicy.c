@@ -1220,6 +1220,31 @@ struct zonelist *huge_zonelist(struct vm_area_struct *vma, unsigned long addr)
 }
 #endif
 
+/* XXX: spread teh allocation betwwen all numa nodes
+ *              NUMA memory policy
+                     |
+                     v
+          alloc_page_interleave()
+                     |
+              choose NUMA node
+                     |
+                     v
+               zonelist
+                     |
+                     v
+         get_page_from_freelist()
+                     |
+              choose zone
+                     |
+                     v
+             buffered_rmqueue()
+                     |
+              +------+------+
+              |             |
+            order 0       order > 0
+              |             |
+             PCP           Buddy
+*/
 /* Allocate a page in interleaved policy.
    Own path because it needs to do special accounting. */
 static struct page *alloc_page_interleave(gfp_t gfp, unsigned order,
@@ -1301,6 +1326,7 @@ struct page *alloc_pages_current(gfp_t gfp, unsigned order)
 	if (!pol || in_interrupt() || (gfp & __GFP_THISNODE))
 		pol = &default_policy;
 	if (pol->policy == MPOL_INTERLEAVE)
+		/* XXX: spread the allocation between all numa nodes */
 		return alloc_page_interleave(gfp, order, interleave_nodes(pol));
 	return __alloc_pages(gfp, order, zonelist_policy(gfp, pol));
 }
