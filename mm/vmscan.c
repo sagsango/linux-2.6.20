@@ -422,6 +422,11 @@ int remove_mapping(struct address_space *mapping, struct page *page)
 	if (unlikely(PageDirty(page)))
 		goto cannot_free;
 
+	/* XXX: If we are here means there are only 2 users
+	 * 	page_count(page) = 2
+	 * 	so we can free the swap cache entry and also
+	 * 	the swapedout page in the bdi (backing device info)
+	 */
 	if (PageSwapCache(page)) {
 		swp_entry_t swap = { .val = page_private(page) };
 		__delete_from_swap_cache(page);
@@ -489,6 +494,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 			goto activate_locked;
 
 #ifdef CONFIG_SWAP
+		/* XXX: NOTE anonumus mem can be backedup */
 		/*
 		 * Anonymous process memory has backing store?
 		 * Try to allocate it some swap space here.
