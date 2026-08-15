@@ -471,6 +471,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 		page = lru_to_page(page_list);
 		list_del(&page->lru);
 
+        /* XXX: cant free now */
 		if (TestSetPageLocked(page))
 			goto keep;
 
@@ -478,6 +479,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 
 		sc->nr_scanned++;
 
+        /* XXX: cant free right now*/
 		if (!sc->may_swap && page_mapped(page))
 			goto keep_locked;
 
@@ -485,11 +487,13 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 		if (page_mapped(page) || PageSwapCache(page))
 			sc->nr_scanned++;
 
+        /* XXX: cant free  right now*/
 		if (PageWriteback(page))
 			goto keep_locked;
 
 		referenced = page_referenced(page, 1);
 		/* In active use or really unfreeable?  Activate it. */
+        /* XXX: cant free right now */
 		if (referenced && page_mapping_inuse(page))
 			goto activate_locked;
 
@@ -500,7 +504,17 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 		 * Try to allocate it some swap space here.
 		 */
 		if (PageAnon(page) && !PageSwapCache(page))
-			if (!add_to_swap(page, GFP_ATOMIC))
+			if (!add_to_swap(page, GFP_ATOMIC)) /* XXX: if cant swap
+                                                   then cant free 
+            NOTE: if we were sucessful, then we added the swap entry
+            to redix tree, and updated
+            page->private = swap_entry; 
+
+            but we havent updated the page table entry yet to swap entry
+            and also did not wrote this page to the swap-device
+
+
+            that work will be doe later in try_to_unmap() */
 				goto activate_locked;
 #endif /* CONFIG_SWAP */
 
@@ -513,6 +527,11 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 		 * processes. Try to unmap it here.
 		 */
 		if (page_mapped(page) && mapping) {
+            /* XXX: try_to_unmap() will replace the
+             * page with its swap_entry present in
+             * page->private which was added by the
+             * add_to_swap() previously
+             */
 			switch (try_to_unmap(page, 0)) {
 			case SWAP_FAIL:
 				goto activate_locked;
@@ -523,6 +542,14 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 			}
 		}
 
+        /* XXX: now pte have been replaced by
+         *      its swap_entries
+         *
+         *
+         *      what is page was not dirty?
+         *      and swap_entry has been written
+         *      in the page table?
+         */
 		if (PageDirty(page)) {
 			if (referenced)
 				goto keep_locked;
@@ -531,6 +558,7 @@ static unsigned long shrink_page_list(struct list_head *page_list,
 			if (!sc->may_writepage)
 				goto keep_locked;
 
+            /* XXX: dirty page write */
 			/* Page is dirty, try to write it out here */
 			switch(pageout(page, mapping)) {
 			case PAGE_KEEP:
@@ -642,6 +670,11 @@ static unsigned long isolate_lru_pages(unsigned long nr_to_scan,
 
 		list_del(&page->lru);
 		target = src;
+        /* XXX: Take an additional reference to this page, but only if the
+         * page's current reference count is not already zero." This prevents
+         * the reclaim code from isolating a page that is already in the process
+         * of being freed.
+         */
 		if (likely(get_page_unless_zero(page))) {
 			/*
 			 * Be careful not to clear PageLRU until after we're
@@ -682,6 +715,9 @@ static unsigned long shrink_inactive_list(unsigned long max_scan,
 		unsigned long nr_scan;
 		unsigned long nr_freed;
 
+        /* XXX: take pages from the inactive list 
+         *      and try to free them
+         */
 		nr_taken = isolate_lru_pages(sc->swap_cluster_max,
 					     &zone->inactive_list,
 					     &page_list, &nr_scan);
@@ -690,6 +726,7 @@ static unsigned long shrink_inactive_list(unsigned long max_scan,
 		spin_unlock_irq(&zone->lru_lock);
 
 		nr_scanned += nr_scan;
+        /* XXX: here try to free them */
 		nr_freed = shrink_page_list(&page_list, sc);
 		nr_reclaimed += nr_freed;
 		local_irq_disable();
@@ -712,6 +749,11 @@ static unsigned long shrink_inactive_list(unsigned long max_scan,
 			VM_BUG_ON(PageLRU(page));
 			SetPageLRU(page);
 			list_del(&page->lru);
+            /* XXX: page if unfreeable
+             *      put it back
+             *          eiter in active
+             *          or inactive list
+             */
 			if (PageActive(page))
 				add_page_to_active_list(zone, page);
 			else
@@ -828,12 +870,22 @@ force_reclaim_mapped:
 
 	lru_add_drain();
 	spin_lock_irq(&zone->lru_lock);
+    /* XXX: simlar to the shrink_inactive_list() 
+     *      get the pages from the active list this time
+     */
 	pgmoved = isolate_lru_pages(nr_pages, &zone->active_list,
 				    &l_hold, &pgscanned);
 	zone->pages_scanned += pgscanned;
 	zone->nr_active -= pgmoved;
 	spin_unlock_irq(&zone->lru_lock);
 
+    /* XXX: first seperate out into 
+     *      active_list 
+     *      inactive_list
+     *
+     *      these are not the zone's list
+     *      there are local lists
+     */
 	while (!list_empty(&l_hold)) {
 		cond_resched();
 		page = lru_to_page(&l_hold);
@@ -841,7 +893,7 @@ force_reclaim_mapped:
 		if (page_mapped(page)) {
 			if (!reclaim_mapped ||
 			    (total_swap_pages == 0 && PageAnon(page)) ||
-			    page_referenced(page, 0)) {
+/* XXX:intersting count all pined uses */page_referenced(page, 0)) {
 				list_add(&page->lru, &l_active);
 				continue;
 			}
@@ -852,6 +904,8 @@ force_reclaim_mapped:
 	pagevec_init(&pvec, 1);
 	pgmoved = 0;
 	spin_lock_irq(&zone->lru_lock);
+    /* XXX: now work on inactive list 
+     *      it adds the pages to zone's inactive list*/
 	while (!list_empty(&l_inactive)) {
 		page = lru_to_page(&l_inactive);
 		prefetchw_prev_lru_page(page, &l_inactive, flags);
@@ -882,6 +936,8 @@ force_reclaim_mapped:
 	}
 
 	pgmoved = 0;
+    /* XXX: now work on active list;
+     *      it adds the pages to zone->active list*/
 	while (!list_empty(&l_active)) {
 		page = lru_to_page(&l_active);
 		prefetchw_prev_lru_page(page, &l_active, flags);
@@ -907,6 +963,10 @@ force_reclaim_mapped:
 	pagevec_release(&pvec);
 }
 
+
+
+/* XXX: shrink zone means
+ *      
 /*
  * This is a basic per-zone page freer.  Used by both kswapd and direct reclaim.
  */
@@ -943,6 +1003,9 @@ static unsigned long shrink_zone(int priority, struct zone *zone,
 			nr_to_scan = min(nr_active,
 					(unsigned long)sc->swap_cluster_max);
 			nr_active -= nr_to_scan;
+            /* XXX: shrink active list;
+             *      it just moves few pages from inactive list
+             *      no direct freeing or swapping*/
 			shrink_active_list(nr_to_scan, zone, sc, priority);
 		}
 
@@ -950,6 +1013,7 @@ static unsigned long shrink_zone(int priority, struct zone *zone,
 			nr_to_scan = min(nr_inactive,
 					(unsigned long)sc->swap_cluster_max);
 			nr_inactive -= nr_to_scan;
+            /* XXX: shrink inactive list */
 			nr_reclaimed += shrink_inactive_list(nr_to_scan, zone,
 								sc);
 		}
@@ -1103,6 +1167,7 @@ out:
 	return ret;
 }
 
+/* XXX: balance the numa nodes */
 /*
  * For kswapd, balance_pgdat() will work across all this node's zones until
  * they are all at pages_high.
@@ -1276,6 +1341,9 @@ out:
 	return nr_reclaimed;
 }
 
+/* XXX: BOOKMARK start from here next time;
+ *      rest of the code I just had quick glance */
+/* XXX: kswap deamon */
 /*
  * The background pageout daemon, started as a kernel thread
  * from the init process. 
@@ -1566,6 +1634,7 @@ static int __init kswapd_init(void)
 	int nid;
 
 	swap_setup();
+    /* XXX: for each numa_node run one swapd */
 	for_each_online_node(nid)
  		kswapd_run(nid);
 	hotcpu_notifier(cpu_callback, 0);

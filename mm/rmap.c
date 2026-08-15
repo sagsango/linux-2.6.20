@@ -1,3 +1,4 @@
+/* XXX: swapping out the pages */
 /*
  * mm/rmap.c - physical to virtual reverse mappings
  *
@@ -338,6 +339,9 @@ static int page_referenced_anon(struct page *page)
 	return referenced;
 }
 
+/* XXX: called by shrink_active_list() to check how many
+ *      pte's point to it and also are pinned
+ */
 /**
  * page_referenced_file - referenced check for object-based rmap
  * @page: the page we're checking references on.
@@ -818,6 +822,7 @@ static int try_to_unmap_anon(struct page *page, int migration)
  */
 static int try_to_unmap_file(struct page *page, int migration)
 {
+    /* XXX: get the mapping and page-offset */
 	struct address_space *mapping = page->mapping;
 	pgoff_t pgoff = page->index << (PAGE_CACHE_SHIFT - PAGE_SHIFT);
 	struct vm_area_struct *vma;
@@ -828,6 +833,7 @@ static int try_to_unmap_file(struct page *page, int migration)
 	unsigned long max_nl_size = 0;
 	unsigned int mapcount;
 
+    /* XXX: now go to all vma's, page is part of */
 	spin_lock(&mapping->i_mmap_lock);
 	vma_prio_tree_foreach(vma, &iter, &mapping->i_mmap, pgoff, pgoff) {
 		ret = try_to_unmap_one(page, vma, migration);
@@ -838,6 +844,18 @@ static int try_to_unmap_file(struct page *page, int migration)
 	if (list_empty(&mapping->i_mmap_nonlinear))
 		goto out;
 
+    /* XXX: TODO: what are mmap_nonliner vma's
+     *      older kernel supported that, and 
+     *      this is an example.
+     *
+     *      Virtual address:
+     *      0x100000 ──────── file page P0
+     *      0x101000 ──────── file page P7
+     *      0x102000 ──────── file page P2
+     *      0x103000 ──────── file page P15
+     *      0x104000 ──────── file page P4
+    ? 
+    */
 	list_for_each_entry(vma, &mapping->i_mmap_nonlinear,
 						shared.vm_set.list) {
 		if ((vma->vm_flags & VM_LOCKED) && !migration)
@@ -879,6 +897,7 @@ static int try_to_unmap_file(struct page *page, int migration)
 			cursor = (unsigned long) vma->vm_private_data;
 			while ( cursor < max_nl_cursor &&
 				cursor < vma->vm_end - vma->vm_start) {
+                /* XXX: unmap nlm */
 				try_to_unmap_cluster(cursor, &mapcount, vma);
 				cursor += CLUSTER_SIZE;
 				vma->vm_private_data = (void *) cursor;
@@ -903,6 +922,14 @@ out:
 	return ret;
 }
 
+
+/* XXX:
+ * 1.   shrink_inactive_list() -> shrink_page_list() -> try_to_unmap()
+ *      try_to_unmap() will replace the
+ *      page with its swap_entry present in
+ *      page->private which was added by the
+ *      add_to_swap() previously
+ **/
 /**
  * try_to_unmap - try to remove all page table mappings to a page
  * @page: the page to get unmapped
@@ -921,9 +948,18 @@ int try_to_unmap(struct page *page, int migration)
 
 	BUG_ON(!PageLocked(page));
 
+    /* XXX: anon should be simple
+     *      thread - one anon_vma
+     *      fork - copy the anon to new one
+     *
+     *      so one anon vma only
+     */
 	if (PageAnon(page))
 		ret = try_to_unmap_anon(page, migration);
 	else
+        /* XXX: now these pages can be part of
+         *      multiple different vma's
+         */
 		ret = try_to_unmap_file(page, migration);
 
 	if (!page_mapped(page))

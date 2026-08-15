@@ -178,6 +178,21 @@ enum zone_type {
 #define ZONES_SHIFT 2
 #endif
 
+
+/* XXX:
+    active/inactive LRU lists are primarily about pages that are in 
+    use/cache-backed and potentially reclaimable.
+
+1.  these are totally free and are fastest to allocate
+    struct per_cpu_pageset  *pageset[NR_CPUS];
+2.  these are also free but cpu-lock will require
+    struct free_area    free_area[MAX_ORDER];
+3.  these are the slowest to allocate, as these are not free pages
+    these are way to track which pages we can free first.
+    struct list_head    active_list;
+    struct list_head    inactive_list;
+*/
+
 struct zone {
 	/* Fields commonly accessed by the page allocator */
 	unsigned long		free_pages;
