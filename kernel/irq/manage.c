@@ -1,3 +1,4 @@
+/* XXX: x86 32 bits use this */
 /*
  * linux/kernel/irq/manage.c
  *
