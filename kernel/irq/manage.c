@@ -33,6 +33,7 @@ void synchronize_irq(unsigned int irq)
 	if (irq >= NR_IRQS)
 		return;
 
+    /* XXX: data races */
 	while (desc->status & IRQ_INPROGRESS)
 		cpu_relax();
 }
@@ -62,6 +63,8 @@ void disable_irq_nosync(unsigned int irq)
 	spin_lock_irqsave(&desc->lock, flags);
 	if (!desc->depth++) {
 		desc->status |= IRQ_DISABLED;
+        /* XXX: see we will disable the irq through the chip
+         * which is APIC or PIC */
 		desc->chip->disable(irq);
 	}
 	spin_unlock_irqrestore(&desc->lock, flags);
@@ -89,7 +92,11 @@ void disable_irq(unsigned int irq)
 
 	disable_irq_nosync(irq);
 	if (desc->action)
-		synchronize_irq(irq);
+		synchronize_irq(irq); /* XXX: good that we wait
+                                 after disableing so that
+                                 interupt hander which started
+                                 before the disabeling can 
+                                 complete */
 }
 EXPORT_SYMBOL(disable_irq);
 
@@ -111,7 +118,15 @@ void enable_irq(unsigned int irq)
 	if (irq >= NR_IRQS)
 		return;
 
-	spin_lock_irqsave(&desc->lock, flags);
+    /* XXX:
+     *      correct call sequence:
+     *      [ <= disable
+     *      ] <= enable
+     *
+     *      so total number of disablement and enablement
+     *      will be balanced bracket sequence
+     */
+	spin_lock_irqsave(&desc->lock, flags); /* XXX: fine gran lock */
 	switch (desc->depth) {
 	case 0:
 		printk(KERN_WARNING "Unbalanced enable for IRQ %d\n", irq);
@@ -122,6 +137,11 @@ void enable_irq(unsigned int irq)
 
 		/* Prevent probing on this irq: */
 		desc->status = status | IRQ_NOPROBE;
+        /* XXX: as discussed before when we disabled it through
+         * the chip then the chip = APIC, PIC chip has irq status
+         * but it did not send it to current cpu, but hardware
+         * might not send again, so ask chip to send it here
+         */
 		check_irq_resend(desc, irq);
 		/* fall-through */
 	}
@@ -132,6 +152,32 @@ void enable_irq(unsigned int irq)
 }
 EXPORT_SYMBOL(enable_irq);
 
+
+
+/* XXX:
+    interrupt + power-management architecture. The key idea is:
+    set_irq_wake() tells the interrupt subsystem: “this particular
+    IRQ is allowed to wake the machine from a system sleep state.”
+    It does not enable the interrupt itself, and it does not mean
+    “wake the CPU whenever this IRQ fires.” It configures the IRQ
+    as a system wakeup source for suspend/resume.
+
+    TODO:
+        Powermanagemnet wake
+        seems like it is for active power menegement means
+        the cpu is still alive but in low power mode
+        so that at least it can handler the wakeups
+        but why this irq is special? mean does chip dont
+        forward any other interrups other than this?
+
+
+    TODO:
+        lets make the system in active low powermode and then
+        see how its come to wakeup and which stack trace.
+
+
+    TODO: who calls it?
+*/
 /**
  *	set_irq_wake - control irq power management wakeup
  *	@irq:	interrupt to control
@@ -177,6 +223,7 @@ int set_irq_wake(unsigned int irq, unsigned int on)
 }
 EXPORT_SYMBOL(set_irq_wake);
 
+/* XXX: check if unallocated */
 /*
  * Internal function that tells the architecture code whether a
  * particular irq has been exclusively allocated or is available
@@ -197,6 +244,8 @@ int can_request_irq(unsigned int irq, unsigned long irqflags)
 	return !action;
 }
 
+/* XXX: todo when do we init the handler to bad
+ * during the init of irq_desc table */
 void compat_irq_chip_set_default_handler(struct irq_desc *desc)
 {
 	/*
@@ -282,6 +331,7 @@ int setup_irq(unsigned int irq, struct irqaction *new)
 		desc->status |= IRQ_PER_CPU;
 #endif
 	if (!shared) {
+        /* XXX: why ? only for not shared ones*/
 		irq_chip_set_defaults(desc->chip);
 
 		/* Setup the type (level, edge polarity) if configured: */
@@ -386,6 +436,14 @@ void free_irq(unsigned int irq, void *dev_id)
 
 			if (!desc->action) {
 				desc->status |= IRQ_DISABLED;
+                /* XXX: what it means in the hardware
+                 *      level
+                 *
+                 *
+                 *      “The driver is done with this IRQ, so 
+                 *      ask the interrupt-controller hardware
+                 *      to completely shut down this IRQ line.”
+                 */
 				if (desc->chip->shutdown)
 					desc->chip->shutdown(irq);
 				else
@@ -474,7 +532,10 @@ int request_irq(unsigned int irq, irq_handler_t handler,
 	action->dev_id = dev_id;
 
 	select_smp_affinity(irq);
-
+    
+    /* XXX: think about the share inteerupt line
+     *      setup_irq() will take care of all those
+     */
 	retval = setup_irq(irq, action);
 	if (retval)
 		kfree(action);

@@ -58,6 +58,11 @@ void move_masked_irq(int irq)
 	cpus_clear(irq_desc[irq].pending_mask);
 }
 
+/* XXX: TODO:
+ *      If an IRQ has been requested to move to another CPU,
+ *      temporarily disable/mask the IRQ, change the hardware
+ *      IRQ routing, then re-enable it.
+ */
 void move_native_irq(int irq)
 {
 	struct irq_desc *desc = irq_desc + irq;

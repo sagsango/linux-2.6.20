@@ -1,3 +1,37 @@
+/* XXX:
+ * spurious = fake / false
+ *         Hardware device
+              |
+              | IRQ
+              v
+       Interrupt Controller
+        (IOAPIC / PIC)
+              |
+              v
+             CPU
+              |
+              v
+       Linux interrupt entry
+              |
+              v
+        generic_handle_irq()
+              |
+              v
+       IRQ handler(s)
+              |
+              v
+       Device acknowledges
+
+
+       The interrupt controller may report an interrupt 
+       whose underlying condition has disappeared.
+
+       So by the time the driver checks the device:
+       "Nothing to handle."
+
+
+    XXX: TODO: why, how etc.
+*/
 /*
  * linux/kernel/irq/spurious.c
  *

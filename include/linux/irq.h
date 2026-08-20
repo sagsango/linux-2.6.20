@@ -69,6 +69,7 @@ typedef	void fastcall (*irq_flow_handler_t)(unsigned int irq,
 
 struct proc_dir_entry;
 
+/* XXX: TODO: irq_chip */
 /**
  * struct irq_chip - hardware interrupt chip descriptor
  *
@@ -121,6 +122,7 @@ struct irq_chip {
 	const char	*typename;
 };
 
+/* XXX: TODO: irq_dsec */
 /**
  * struct irq_desc - interrupt descriptor
  *
@@ -157,6 +159,7 @@ struct irq_desc {
 	unsigned int		wake_depth;	/* nested wake enables */
 	unsigned int		irq_count;	/* For detecting broken IRQs */
 	unsigned int		irqs_unhandled;
+    /* XXX: we have spinlock for the inidivisual irq_desc */
 	spinlock_t		lock;
 #ifdef CONFIG_SMP
 	cpumask_t		affinity;
@@ -171,6 +174,9 @@ struct irq_desc {
 	const char		*name;
 } ____cacheline_aligned;
 
+/* XXX: so x86 has fine grain loking per indivisual irq_desc
+ *      instead of one course grain lock for whole 
+ *      irq_desc table */
 extern struct irq_desc irq_desc[NR_IRQS];
 
 /*
