@@ -1,3 +1,12 @@
+/* XXX:
+ * POSIX Timers (posix-timers.h)
+ * Standardized Interface: Implements standard UNIX APIs (timer_create, timer_settime) for broad portability across Linux and Unix platforms.
+ * Backend: Utilizes the high-resolution hrtimer Red-Black tree system to manage tracking.
+ * Accuracy: Offers granular, nanosecond-level precision instead of coarse jiffy ticks.
+ * Notification Methods: Can alert user-space programs using custom signals, thread creation, or file descriptors.
+ * Clock Flexibility: Supports multiple system time bases, including wall-clock time (CLOCK_REALTIME) and system uptime (CLOCK_MONOTONIC).
+ * Target Audience: General application developers writing standard user-space software (C/C++ apps).
+ */
 #ifndef _linux_POSIX_TIMERS_H
 #define _linux_POSIX_TIMERS_H
 

@@ -1,4 +1,12 @@
 /*
+ * XXX:
+ * Hardware Focused: Originally designed by Intel and SGI to interact directly with hardware timers on high-performance multi-node architectures.
+ * Backend: Bypasses normal timer data structures to map directly to physical hardware registers and ioctl control tracks.
+ * Zero-Overhead Reading: Allows programs to use mmap() to read physical hardware clock cycles directly, avoiding system call overhead.
+ * Specialized Purpose: Tailored specifically for low-latency audio/video synchronization, MIDI engines, and industrial clustering.
+ * Target Audience: Infrastructure developers working on high-performance multimedia engines or massive enterprise servers.
+ */
+/*
  * Intel Multimedia Timer device interface
  *
  * This file is subject to the terms and conditions of the GNU General Public

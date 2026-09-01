@@ -1,3 +1,6 @@
+/* XXX: high resolution timer;
+ * 	executed by the top half
+ */
 /*
  *  linux/kernel/hrtimer.c
  *

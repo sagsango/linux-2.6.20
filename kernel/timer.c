@@ -63,6 +63,9 @@ typedef struct tvec_root_s {
 	struct list_head vec[TVR_SIZE];
 } tvec_root_t;
 
+/* XXX: 5 level low resolution timer;
+ * 	handeled by the bottom half
+ */
 struct tvec_t_base_s {
 	spinlock_t lock;
 	struct timer_list *running_timer;

@@ -38,6 +38,7 @@ enum hrtimer_restart {
 
 struct hrtimer_base;
 
+/* XXX: Hight resolution timer */
 /**
  * struct hrtimer - the basic hrtimer structure
  * @node:	red black tree node for time ordered insertion

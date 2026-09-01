@@ -1,4 +1,8 @@
 /*
+ * XXX:
+ * itimer.cLegacy Interval TimersLimited to 3 fixed slots per process; fires SIGALRM/SIGVTALRM/SIGPROF.
+ */
+/*
  * linux/kernel/itimer.c
  *
  * Copyright (C) 1992 Darren Senn

@@ -7,6 +7,7 @@
 
 struct tvec_t_base_s;
 
+/* XXX: low resolutiuon timer */
 struct timer_list {
 	struct list_head entry;
 	unsigned long expires;
